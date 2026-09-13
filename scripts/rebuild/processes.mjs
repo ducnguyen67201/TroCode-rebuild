@@ -1,7 +1,9 @@
 import { spawn } from 'node:child_process';
 const owned = new Set();
 const stopping = new WeakSet();
+let interruption;
 export function start(command, args, options = {}) {
+  if (interruption) throw interruption;
   const child = spawn(command, args, {
     stdio: 'inherit',
     shell: false,
@@ -16,13 +18,8 @@ export function start(command, args, options = {}) {
     });
     child.once('exit', (code, signal) => {
       owned.delete(child);
-      if (
-        stopping.has(child) ||
-        code === 0 ||
-        signal === 'SIGTERM' ||
-        signal === 'SIGINT'
-      )
-        resolve();
+      if (interruption) reject(interruption);
+      else if (stopping.has(child) || code === 0) resolve();
       else reject(new Error(`${command} exited with ${code ?? signal}`));
     });
   });
@@ -50,4 +47,8 @@ export function stopChild(child) {
 }
 export function stopOwned() {
   for (const child of owned) stopChild(child);
+}
+export function interruptOwned(signal) {
+  interruption ??= new Error(`Workflow interrupted by ${signal}`);
+  stopOwned();
 }

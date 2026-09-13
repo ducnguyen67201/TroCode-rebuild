@@ -14,7 +14,7 @@ services:
       timeout: 2s
       retries: 30
   storage:
-    image: minio/minio@sha256:d249d1fb6966de4d8ad26c04754b545205ff15a62e4fd19ebd0f26fa5baacbc0
+    image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     command: ["server", "/data"]
     environment:
       MINIO_ROOT_USER: ${TRO_S3_KEY:?Run npm run setup}
@@ -22,7 +22,7 @@ services:
     ports: ["127.0.0.1:19000:9000"]
     volumes: ["object-data:/data"]
   bucket:
-    image: minio/mc@sha256:fb8f773eac8ef9d6da0486d5dec2f42f219358bcb8de579d1623d518c9ebd4cc
+    image: quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     depends_on: [storage]
     environment:
       TRO_S3_KEY: ${TRO_S3_KEY}

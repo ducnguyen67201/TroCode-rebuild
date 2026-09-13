@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { access } from 'node:fs/promises';
-import { run, start, stopOwned, stopChild } from './processes.mjs';
+import { run, start, stopOwned, stopChild, interruptOwned } from './processes.mjs';
 import { root, fixtureEnvironment } from './environment.mjs';
 import { verify } from './verify.mjs';
 const action = process.argv[2];
@@ -10,8 +10,12 @@ const node = process.execPath;
 const npmCli = process.env.npm_execpath;
 const npm = (args) => run(node, [npmCli, ...args], { cwd: root });
 const compose = ['compose', '-f', resolve(root, 'infra/compose.test.yml')];
-process.on('SIGINT', stopOwned);
-process.on('SIGTERM', stopOwned);
+for (const [signal, exitCode] of [['SIGINT', 130], ['SIGTERM', 143]]) {
+  process.on(signal, () => {
+    process.exitCode = exitCode;
+    interruptOwned(signal);
+  });
+}
 async function databaseUp(env) {
   await run(
     'docker',
@@ -155,5 +159,5 @@ try {
 } catch (error) {
   console.error(error.message);
   stopOwned();
-  process.exitCode = 1;
+  process.exitCode ||= 1;
 }
