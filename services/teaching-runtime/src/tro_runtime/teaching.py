@@ -51,6 +51,9 @@ class TeachingSession:
         self.revision += 1
         observation = asdict(self.observation) if self.observation else None
         if observation is not None:
+            observation["screenshot_id"] = (
+                self.observation.screenshot_id if self.observation else None
+            )
             observation.pop("image", None)  # Image bytes remain inside the Python/model boundary.
         return {
             "revision": self.revision,
@@ -230,7 +233,7 @@ class TeachingSession:
         before = self.progress.index
         was_shown = self.progress.shown
         try:
-            fresh = await self.source.observe(self.target, include_image=False)
+            fresh = await self.source.observe(self.target, include_image=self.progress.needs_image)
             cue = self.progress.observe(fresh)
         except Exception:
             self.progress.pause("Observation is unavailable. Check access and resume explicitly.")

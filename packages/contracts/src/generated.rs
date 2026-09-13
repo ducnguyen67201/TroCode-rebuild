@@ -1217,6 +1217,17 @@ impl<'de> ::serde::Deserialize<'de> for JourneyStepsItem {
 ///      "type": "string",
 ///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 ///    },
+///    "screenshot_id": {
+///      "anyOf": [
+///        {
+///          "type": "string",
+///          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///        },
+///        {
+///          "type": "null"
+///        }
+///      ]
+///    },
 ///    "target": {
 ///      "$ref": "#/definitions/Target"
 ///    }
@@ -1232,6 +1243,8 @@ pub struct Observation {
     pub complete: bool,
     pub elements: ::std::vec::Vec<Element>,
     pub id: ObservationId,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub screenshot_id: ::std::option::Option<ObservationScreenshotId>,
     pub target: Target,
 }
 impl ::std::convert::From<&Observation> for Observation {
@@ -1315,6 +1328,93 @@ impl ::std::convert::TryFrom<::std::string::String> for ObservationId {
     }
 }
 impl<'de> ::serde::Deserialize<'de> for ObservationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`ObservationScreenshotId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct ObservationScreenshotId(::std::string::String);
+impl ::std::ops::Deref for ObservationScreenshotId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<ObservationScreenshotId> for ::std::string::String {
+    fn from(value: ObservationScreenshotId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&ObservationScreenshotId> for ObservationScreenshotId {
+    fn from(value: &ObservationScreenshotId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for ObservationScreenshotId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for ObservationScreenshotId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for ObservationScreenshotId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for ObservationScreenshotId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for ObservationScreenshotId {
     fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
     where
         D: ::serde::Deserializer<'de>,
@@ -18599,6 +18699,13 @@ impl<'de> ::serde::Deserialize<'de> for TargetTitle {
 ///        "scroll"
 ///      ]
 ///    },
+///    "grounding": {
+///      "type": "string",
+///      "enum": [
+///        "accessibility",
+///        "visual"
+///      ]
+///    },
 ///    "id": {
 ///      "type": "string",
 ///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
@@ -18613,6 +18720,17 @@ impl<'de> ::serde::Deserialize<'de> for TargetTitle {
 ///    "observation_id": {
 ///      "type": "string",
 ///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "screenshot_id": {
+///      "anyOf": [
+///        {
+///          "type": "string",
+///          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///        },
+///        {
+///          "type": "null"
+///        }
+///      ]
 ///    },
 ///    "source": {
 ///      "$ref": "#/definitions/Rect"
@@ -18631,9 +18749,13 @@ pub struct TeachingCue {
     pub element_id: TeachingCueElementId,
     pub expires_at: f64,
     pub gesture: TeachingCueGesture,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub grounding: ::std::option::Option<TeachingCueGrounding>,
     pub id: TeachingCueId,
     pub locale: TeachingCueLocale,
     pub observation_id: TeachingCueObservationId,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub screenshot_id: ::std::option::Option<TeachingCueScreenshotId>,
     pub source: Rect,
 }
 impl ::std::convert::From<&TeachingCue> for TeachingCue {
@@ -18986,6 +19108,87 @@ impl ::std::convert::TryFrom<::std::string::String> for TeachingCueGesture {
         value.parse()
     }
 }
+///`TeachingCueGrounding`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "accessibility",
+///    "visual"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TeachingCueGrounding {
+    #[serde(rename = "accessibility")]
+    Accessibility,
+    #[serde(rename = "visual")]
+    Visual,
+}
+impl ::std::convert::From<&Self> for TeachingCueGrounding {
+    fn from(value: &TeachingCueGrounding) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TeachingCueGrounding {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Accessibility => f.write_str("accessibility"),
+            Self::Visual => f.write_str("visual"),
+        }
+    }
+}
+impl ::std::str::FromStr for TeachingCueGrounding {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "accessibility" => Ok(Self::Accessibility),
+            "visual" => Ok(Self::Visual),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingCueGrounding {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TeachingCueGrounding {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TeachingCueGrounding {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
 ///`TeachingCueId`
 ///
 /// <details><summary>JSON schema</summary>
@@ -19230,6 +19433,93 @@ impl ::std::convert::TryFrom<::std::string::String> for TeachingCueObservationId
     }
 }
 impl<'de> ::serde::Deserialize<'de> for TeachingCueObservationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`TeachingCueScreenshotId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct TeachingCueScreenshotId(::std::string::String);
+impl ::std::ops::Deref for TeachingCueScreenshotId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<TeachingCueScreenshotId> for ::std::string::String {
+    fn from(value: TeachingCueScreenshotId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&TeachingCueScreenshotId> for TeachingCueScreenshotId {
+    fn from(value: &TeachingCueScreenshotId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for TeachingCueScreenshotId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingCueScreenshotId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TeachingCueScreenshotId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TeachingCueScreenshotId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for TeachingCueScreenshotId {
     fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
     where
         D: ::serde::Deserializer<'de>,

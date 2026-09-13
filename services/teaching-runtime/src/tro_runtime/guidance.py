@@ -21,6 +21,8 @@ class Cue:
     destination: Rect | None
     direction: Literal["up", "down", "left", "right"] | None
     expires_at: float
+    grounding: str = "accessibility"
+    screenshot_id: str | None = None
 
 
 def make_cue(
@@ -32,6 +34,7 @@ def make_cue(
     now: float,
     destination_id: str | None = None,
     direction: Literal["up", "down", "left", "right"] | None = None,
+    visual_bounds: tuple[Rect, Rect | None] | None = None,
 ) -> Cue:
     if now < observation.captured_at or now - observation.captured_at > 1:
         raise ValueError("Observe the window again before showing guidance.")
@@ -45,8 +48,15 @@ def make_cue(
         raise ValueError("A scroll cue requires a direction.")
     if direction is not None and direction not in ("up", "down", "left", "right"):
         raise ValueError("Invalid scroll direction.")
-    source = observation.element(element_id).bounds
-    destination = observation.element(destination_id).bounds if destination_id else None
+    if visual_bounds is not None:
+        if observation.image is None:
+            raise ValueError("Visual guidance requires a fresh screenshot.")
+        source, destination = visual_bounds
+        if (gesture == "drag") != (destination is not None):
+            raise ValueError("Visual drag requires a destination rectangle.")
+    else:
+        source = observation.element(element_id).bounds
+        destination = observation.element(destination_id).bounds if destination_id else None
     if not observation.target.bounds.contains(source) or (
         destination is not None and not observation.target.bounds.contains(destination)
     ):
@@ -62,6 +72,8 @@ def make_cue(
         destination,
         direction,
         observation.captured_at + 1,
+        "visual" if visual_bounds is not None else "accessibility",
+        observation.screenshot_id if visual_bounds is not None else None,
     )
 
 

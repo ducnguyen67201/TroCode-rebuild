@@ -61,6 +61,10 @@ class Observation:
     complete: bool
     image: str | None = field(default=None, repr=False, compare=False)
 
+    @property
+    def screenshot_id(self) -> str | None:
+        return self.id if self.image is not None else None
+
     def element(self, element_id: str) -> Element:
         matches = [item for item in self.elements if item.id == element_id]
         if len(matches) != 1:

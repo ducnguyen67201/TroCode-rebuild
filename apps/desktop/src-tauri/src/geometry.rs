@@ -36,11 +36,19 @@ pub fn grounded(state: &Value) -> bool {
     let Some(elements) = observation["elements"].as_array() else {
         return false;
     };
+    let visual = cue["grounding"].as_str() == Some("visual");
+    if visual
+        && (observation["screenshot_id"].as_str().is_none()
+            || cue["screenshot_id"] != observation["screenshot_id"]
+            || observation["screenshot_id"] != observation["id"])
+    {
+        return false;
+    }
     let matches: Vec<_> = elements
         .iter()
         .filter(|element| element["id"] == cue["element_id"])
         .collect();
-    if matches.len() != 1 || rect(&matches[0]["bounds"]) != Some(source) {
+    if !visual && (matches.len() != 1 || rect(&matches[0]["bounds"]) != Some(source)) {
         return false;
     }
     match cue["gesture"].as_str() {
@@ -50,9 +58,10 @@ pub fn grounded(state: &Value) -> bool {
             };
             cue["direction"].is_null()
                 && contains(target, destination)
-                && elements
-                    .iter()
-                    .any(|element| rect(&element["bounds"]) == Some(destination))
+                && (visual
+                    || elements
+                        .iter()
+                        .any(|element| rect(&element["bounds"]) == Some(destination)))
         }
         Some("scroll") => {
             cue["destination"].is_null()
@@ -81,6 +90,20 @@ mod tests {
         assert!(!grounded(&state));
         state["cue"]["source"] = source;
         state["cue"]["observation_id"] = json!("stale");
+        assert!(!grounded(&state));
+    }
+    #[test]
+    fn visual_regions_require_current_screenshot_and_window_bounds() {
+        let target = json!({"bounds":{"x":-100,"y":0,"width":500,"height":400}});
+        let mut state = json!({"target":target,"observation":{"id":"fresh","screenshot_id":"fresh","target":target,"elements":[]},"cue":{"gesture":"click","grounding":"visual","screenshot_id":"fresh","observation_id":"fresh","element_id":"visual","source":{"x":0,"y":100,"width":50,"height":40},"destination":null,"direction":null}});
+        assert!(grounded(&state));
+        state["cue"]["screenshot_id"] = json!("old");
+        assert!(!grounded(&state));
+        state["cue"]["screenshot_id"] = json!("fresh");
+        state["cue"]["source"]["x"] = json!(600);
+        assert!(!grounded(&state));
+        state["cue"]["source"]["x"] = json!(0);
+        state["cue"]["grounding"] = json!("accessibility");
         assert!(!grounded(&state));
     }
 }

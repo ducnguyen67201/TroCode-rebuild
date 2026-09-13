@@ -1,5 +1,6 @@
 """Semantic plans and a deterministic, observation-only step controller."""
 
+import hashlib
 import time
 from dataclasses import replace
 from typing import Literal
@@ -8,7 +9,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from tro_runtime.guidance import Cue, make_cue
-from tro_runtime.observations import Element, Observation
+from tro_runtime.observations import Element, Observation, Rect
 
 
 class Selector(BaseModel):
@@ -19,6 +20,39 @@ class Selector(BaseModel):
     def resolve(self, observation: Observation) -> Element | None:
         matches = [e for e in observation.elements if (e.role, e.label) == (self.role, self.label)]
         return matches[0] if len(matches) == 1 else None
+
+
+class VisualTarget(BaseModel):
+    """Region normalized to the entire selected-window screenshot, never the desktop."""
+
+    model_config = ConfigDict(extra="forbid")
+    description: str = Field(min_length=1, max_length=160)
+    x: float = Field(ge=0, le=1, allow_inf_nan=False)
+    y: float = Field(ge=0, le=1, allow_inf_nan=False)
+    width: float = Field(gt=0, le=1, allow_inf_nan=False)
+    height: float = Field(gt=0, le=1, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def contained(self) -> "VisualTarget":
+        if self.x + self.width > 1 or self.y + self.height > 1:
+            raise ValueError("Visual target exceeds the screenshot.")
+        return self
+
+    def resolve(self, observation: Observation) -> Element | None:
+        if observation.image is None:
+            return None
+        window = observation.target.bounds
+        bounds = Rect(
+            window.x + self.x * window.width,
+            window.y + self.y * window.height,
+            self.width * window.width,
+            self.height * window.height,
+        )
+        return Element("visual", self.description, "visual-region", bounds, "")
+
+
+def image_fingerprint(observation: Observation) -> str | None:
+    return hashlib.sha256(observation.image.encode()).hexdigest() if observation.image else None
 
 
 class Postcondition(BaseModel):
@@ -33,10 +67,10 @@ class Postcondition(BaseModel):
 
 class PlannedStep(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    target: Selector
+    target: Selector | VisualTarget
     gesture: Literal["point", "click", "drag", "type", "scroll"]
     caption: str = Field(min_length=1, max_length=400)
-    destination: Selector | None
+    destination: Selector | VisualTarget | None
     direction: Literal["up", "down", "left", "right"] | None
     expected: Postcondition | None
 
@@ -62,6 +96,8 @@ class PlanProgress:
         self.cue_id = str(uuid4())
         self.needs_replan = False
         self.plan = plan
+        self.image_fingerprint = image_fingerprint(observation)
+        self.image_bounds = observation.target.bounds
         self.locale = locale
         self.window = (observation.target.pid, observation.target.window_id)
         self.index = 0
@@ -73,6 +109,14 @@ class PlanProgress:
         self.last_id = ""
         self.started = time.monotonic()
         self.shown = False
+
+    @property
+    def needs_image(self) -> bool:
+        # Capture when any remaining step may use pixels, including a step reached this tick.
+        return any(
+            isinstance(s.target, VisualTarget) or isinstance(s.destination, VisualTarget)
+            for s in self.plan.steps[self.index :]
+        )
 
     def projection(self) -> dict[str, object]:
         return {
@@ -123,7 +167,7 @@ class PlanProgress:
             self.pause("The selected window changed. Request a revised plan.")
             return None
         if (
-            not observation.complete
+            (not observation.complete and not self.needs_image)
             or observation.id == self.last_id
             or observation.captured_at <= self.last_time
             or not 0 <= time.time() - observation.captured_at <= 1
@@ -132,7 +176,9 @@ class PlanProgress:
             return None
         self.last_id, self.last_time = observation.id, observation.captured_at
         step = self.plan.steps[self.index]
-        if self.shown and step.expected is not None:
+        if not observation.complete:
+            self.matches = 0
+        if self.shown and step.expected is not None and observation.complete:
             matches = step.expected.matches(observation)
             if matches is False:
                 self.armed = True
@@ -142,6 +188,22 @@ class PlanProgress:
                 if self.status == "completed":
                     return None
                 step = self.plan.steps[self.index]
+        visual = isinstance(step.target, VisualTarget) or isinstance(step.destination, VisualTarget)
+        if visual and observation.image is None:
+            self.pause("Screen capture is unavailable. Check observation access and resume.")
+            return None
+        if visual and (
+            self.image_fingerprint is None
+            or image_fingerprint(observation) != self.image_fingerprint
+            or observation.target.bounds != self.image_bounds
+        ):
+            if self.matches == 1:
+                # Keep pixels hidden while the second local postcondition sample arrives.
+                # A successful learner action often changes the screenshot itself.
+                return None
+            self.pause("The screen changed. Visual guidance needs a fresh location.")
+            self.needs_replan = True
+            return None
         source = step.target.resolve(observation)
         destination = step.destination.resolve(observation) if step.destination else None
         if source is None or (step.destination is not None and destination is None):
@@ -151,7 +213,11 @@ class PlanProgress:
                 self.needs_replan = True
             return None
         if not self.shown:
-            self.armed = step.expected is not None and step.expected.matches(observation) is False
+            self.armed = (
+                observation.complete
+                and step.expected is not None
+                and step.expected.matches(observation) is False
+            )
             self.status = "running" if self.armed else "awaiting_confirmation"
             self.message = (
                 "Watching for the expected visible change."
@@ -167,6 +233,7 @@ class PlanProgress:
             time.time(),
             destination.id if destination else None,
             step.direction,
+            (source.bounds, destination.bounds if destination else None) if visual else None,
         )
         self.shown = True
         return replace(cue, id=self.cue_id)

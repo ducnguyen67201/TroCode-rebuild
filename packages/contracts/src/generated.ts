@@ -181,6 +181,7 @@ export interface Observation {
    */
   elements: Element[];
   complete: boolean;
+  screenshot_id?: string | null;
 }
 export interface Element {
   id: string;
@@ -200,6 +201,8 @@ export interface TeachingCue {
   destination: Rect | null;
   direction: ('up' | 'down' | 'left' | 'right') | null;
   expires_at: number;
+  screenshot_id?: string | null;
+  grounding?: 'accessibility' | 'visual';
 }
 export interface CheckResult {
   outcome: 'confirmed' | 'mismatch' | 'unknown';

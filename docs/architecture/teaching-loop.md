@@ -6,11 +6,12 @@ foundation. It does not establish full P1 platform acceptance or complete P2.
 ## Plan once, guide locally
 
 `runtime.ask` observes the selected window and calls the local Agents SDK to
-prepare one to three steps. Each step contains a semantic target (exact role and
-label), caption, visual gesture, optional drag destination/scroll direction, and
+prepare one to three steps. Each step contains an accessibility selector or normalized
+screenshot region, caption, visual gesture, optional drag destination/scroll direction, and
 an optional expected accessibility value. The first target must uniquely exist
 in the planning observation. Future targets may appear after earlier steps.
-Plans do not contain executable native actions or cached screen coordinates.
+Plans never contain executable native actions. Visual regions are bound to their
+planning screenshot; see [visual targeting](visual-targeting.md) for freshness rules.
 
 The controller takes a fresh observation before presenting. Every later cue is
 resolved again against the selected window. Duplicate or missing semantic targets
@@ -36,7 +37,8 @@ stateDiagram-v2
 The host performs sequential read-only refreshes, waiting 250 ms between completed
 requests. There is no overlapping polling or model call per frame/step. This is
 bounded polling, not an OS change-event subscription. Actual cadence includes
-native observation latency. Refresh uses accessibility data without screenshots.
+native observation latency. Accessibility-only plans refresh without screenshots;
+plans with remaining visual targets also capture images to detect stale locations.
 
 Automatic advancement requires a previously observed nonmatching expected value
 for the current step, followed by two distinct, complete, fresh matching observations
@@ -56,7 +58,8 @@ resume reestablishes a baseline. Stop cancels work and clears the in-memory plan
 
 ## Model use and scope
 
-A missing target persisting for ten seconds permits one automatic replan per learner
+A changed visual frame or a missing semantic target persisting for ten seconds
+permits one automatic replan per learner
 request, using the objective and fresh screen. If recovery fails or the replacement
 plan also loses its target, guidance pauses. Permission/observation failures do not
 trigger model calls. Learners can explicitly request another plan at any time.

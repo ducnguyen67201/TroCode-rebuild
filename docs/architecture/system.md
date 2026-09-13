@@ -31,7 +31,7 @@ The overlay cannot invoke teaching, account or worker control commands.
 
 | Module | Responsibility |
 | --- | --- |
-| `planning.py` | Semantic plan types, unique target resolution and deterministic step progression |
+| `planning.py` | Accessibility/visual plan types, bounded target resolution and deterministic step progression |
 | `agent.py` | Local Agents SDK calls producing structured proposals/plans, with no callable tools |
 | `observations.py` | Immutable window, element and geometry values |
 | `observation_source.py` | Read-only CUA adapter and bounded selected-window native policy |

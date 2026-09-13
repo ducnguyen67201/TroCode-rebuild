@@ -321,6 +321,12 @@ class Observation(BaseModel):
     captured_at: confloat(ge=0.0)
     elements: list[Element] = Field(..., max_length=200)
     complete: bool
+    screenshot_id: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    ) = None
 
 
 class Gesture(Enum):
@@ -343,6 +349,11 @@ class Direction(Enum):
     right = 'right'
 
 
+class Grounding(Enum):
+    accessibility = 'accessibility'
+    visual = 'visual'
+
+
 class TeachingCue(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -361,6 +372,13 @@ class TeachingCue(BaseModel):
     destination: Rect | None
     direction: Direction | None
     expires_at: confloat(ge=0.0)
+    screenshot_id: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    ) = None
+    grounding: Grounding | None = None
 
 
 class Outcome(Enum):

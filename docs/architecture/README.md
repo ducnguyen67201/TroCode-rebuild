@@ -8,8 +8,9 @@ The learner performs every external-app action (F10).
 
 1. [System and ownership](system.md): processes, modules, data flow and trust boundaries.
 2. [Teaching loop](teaching-loop.md): planning, local checks, uncertainty and responsiveness.
-3. [Contracts and lifecycle](contracts-and-lifecycle.md): routing, cancellation and state delivery.
-4. [Development and acceptance](development.md): extending the system, tests and limitations.
+3. [Visual targeting](visual-targeting.md): screenshot coordinates and accessibility fallback.
+4. [Contracts and lifecycle](contracts-and-lifecycle.md): routing, cancellation and state delivery.
+5. [Development and acceptance](development.md): extending the system, tests and limitations.
 
 ## Overview
 

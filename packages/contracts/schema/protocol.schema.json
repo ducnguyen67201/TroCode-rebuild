@@ -707,6 +707,17 @@
         },
         "complete": {
           "type": "boolean"
+        },
+        "screenshot_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -788,6 +799,24 @@
         "expires_at": {
           "type": "number",
           "minimum": 0
+        },
+        "screenshot_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grounding": {
+          "type": "string",
+          "enum": [
+            "accessibility",
+            "visual"
+          ]
         }
       },
       "required": [

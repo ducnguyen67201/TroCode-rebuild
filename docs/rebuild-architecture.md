@@ -855,3 +855,18 @@ Verification scope and remaining acceptance are described in
 Plans are in memory; durable plan resume, longer lessons, materials and adaptive
 model-assisted replanning remain open. See [code architecture](architecture/README.md)
 for module ownership, request routing, exact checking rules and limitations.
+
+
+### Screenshot targeting refinement — 2026-09-13
+
+Founder approved visual coordinate targeting alongside accessibility selectors.
+Planned targets may identify a rectangle normalized to the selected-window screenshot,
+allowing guidance on canvases and unlabelled controls. The runtime binds these regions
+to the planning image and window geometry, maps them to native coordinates, and
+invalidates them when the image or bounds change. The existing bounded replan allowance
+applies; no native input capabilities are added (F10).
+
+Screenshot-only observations may guide without complete accessibility data, but cannot
+establish automatic completion from missing/partial AX evidence. Visual-only outcomes
+use learner confirmation. See [visual targeting](architecture/visual-targeting.md) for
+coordinate mapping, permission requirements and conservative image-comparison limits.

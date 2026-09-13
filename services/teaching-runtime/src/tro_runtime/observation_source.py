@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Protocol
 from uuid import uuid4
 
 if TYPE_CHECKING:
-    from cua_driver import CuaDriver
+    from cua_driver import CuaDriver, WindowStateOutput
 
 from tro_runtime.observations import Element, Observation, Rect, Target
 
@@ -119,31 +119,36 @@ class CuaObservationSource:
         from cua_driver import GetWindowStateInput
 
         driver = await self._connect(target)
-        result = await asyncio.wait_for(
-            driver.get_window_state(
+
+        async def capture(accessibility: bool) -> WindowStateOutput:
+            return await driver.get_window_state(
                 GetWindowStateInput(
                     pid=target.pid,
                     window_id=target.window_id,
                     session=None,
                     query=None,
-                    include_accessibility_tree=True,
+                    include_accessibility_tree=accessibility,
                     include_screenshot=include_image,
                     screenshot_out_file=None,
                     max_elements=200,
                     max_depth=20,
                     max_dimension=1200,
                 )
-            ),
-            10,
-        )
+            )
+
+        async def capture_available() -> WindowStateOutput:
+            try:
+                return await capture(True)
+            except Exception:
+                if not include_image:
+                    raise
+                # Screen-only guidance remains possible when AX access is unavailable.
+                return await capture(False)
+
+        result = await asyncio.wait_for(capture_available(), 10)
         bounds = result.window_bounds
-        if (
-            result.pid != target.pid
-            or result.window_id != target.window_id
-            or bounds is None
-            or result.degraded
-        ):
-            raise ValueError("Selected window is unavailable or observation is degraded.")
+        if result.pid != target.pid or result.window_id != target.window_id or bounds is None:
+            raise ValueError("Selected window is unavailable.")
         current = Target(
             target.pid,
             target.window_id,
@@ -171,7 +176,16 @@ class CuaObservationSource:
                 )
             )
         image = None
-        if include_image and result.screenshot_frame_valid:
+        if (
+            include_image
+            and result.screenshot_frame_valid
+            and result.screenshot_width
+            and result.screenshot_height
+        ):
+            # Reject mismatched/cropped aspect ratios before normalized image mapping.
+            width, height = result.screenshot_width, result.screenshot_height
+            if abs(width - height * current.bounds.width / current.bounds.height) > 2:
+                raise ValueError("Screenshot geometry does not match the selected window.")
             for snapshot in result.images[:1]:
                 if (
                     snapshot.mime_type not in ("image/png", "image/jpeg")
@@ -186,7 +200,7 @@ class CuaObservationSource:
             current,
             time.time(),
             tuple(elements),
-            result.elements_complete is True and not result.truncated,
+            result.elements_complete is True and not result.truncated and not result.degraded,
             image,
         )
 
