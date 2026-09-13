@@ -1,3 +1,9 @@
-export type { RuntimeMessage } from './generated';
+export type {
+  RuntimeMessage,
+  TeachingState,
+  TeachingCue,
+  Observation,
+  Target,
+} from './generated';
 export type { RuntimeStatus } from './generated-status';
-export { parseMessage, parseStatus } from './validate';
+export { parseMessage, parseStatus, parseTeaching } from './validate';

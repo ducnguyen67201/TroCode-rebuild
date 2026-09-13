@@ -1,0 +1,20 @@
+{
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": {
+      "resources/runtime/": "runtime/"
+    },
+    "macOS": {
+      "minimumSystemVersion": "13.0"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

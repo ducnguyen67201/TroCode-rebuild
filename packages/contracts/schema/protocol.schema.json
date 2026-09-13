@@ -34,6 +34,60 @@
     },
     {
       "$ref": "#/definitions/RuntimeError"
+    },
+    {
+      "$ref": "#/definitions/RuntimeListTargets"
+    },
+    {
+      "$ref": "#/definitions/RuntimeListTargetsResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeSelectTarget"
+    },
+    {
+      "$ref": "#/definitions/RuntimeSelectTargetResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeObserve"
+    },
+    {
+      "$ref": "#/definitions/RuntimeObserveResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeExplain"
+    },
+    {
+      "$ref": "#/definitions/RuntimeExplainResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeCheck"
+    },
+    {
+      "$ref": "#/definitions/RuntimeCheckResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimePresentationAck"
+    },
+    {
+      "$ref": "#/definitions/RuntimePresentationAckResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeConfigure"
+    },
+    {
+      "$ref": "#/definitions/RuntimeConfigured"
+    },
+    {
+      "$ref": "#/definitions/RuntimeAsk"
+    },
+    {
+      "$ref": "#/definitions/RuntimeAskResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeRefreshCue"
+    },
+    {
+      "$ref": "#/definitions/RuntimeRefreshCueResult"
     }
   ],
   "definitions": {
@@ -44,7 +98,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -95,7 +149,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -150,7 +204,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -188,7 +242,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -235,7 +289,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -278,7 +332,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -321,7 +375,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -359,7 +413,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -397,7 +451,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -435,7 +489,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -473,7 +527,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            1
+            2
           ]
         },
         "requestId": {
@@ -526,6 +580,1197 @@
         "code",
         "message",
         "retryable"
+      ],
+      "additionalProperties": false
+    },
+    "Rect": {
+      "title": "Rect",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100000
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100000
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "Target": {
+      "title": "Target",
+      "type": "object",
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "window_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "bounds": {
+          "$ref": "#/definitions/Rect"
+        }
+      },
+      "required": [
+        "pid",
+        "window_id",
+        "title",
+        "bounds"
+      ],
+      "additionalProperties": false
+    },
+    "Element": {
+      "title": "Element",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "bounds": {
+          "$ref": "#/definitions/Rect"
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "role",
+        "bounds",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "Observation": {
+      "title": "Observation",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "captured_at": {
+          "type": "number",
+          "minimum": 0
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Element"
+          },
+          "maxItems": 200
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "target",
+        "captured_at",
+        "elements",
+        "complete"
+      ],
+      "additionalProperties": false
+    },
+    "TeachingCue": {
+      "title": "TeachingCue",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "observation_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "element_id": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "gesture": {
+          "type": "string",
+          "enum": [
+            "point",
+            "click",
+            "drag",
+            "type",
+            "scroll"
+          ]
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "en",
+            "vi"
+          ]
+        },
+        "source": {
+          "$ref": "#/definitions/Rect"
+        },
+        "destination": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Rect"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "up",
+                "down",
+                "left",
+                "right"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expires_at": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "observation_id",
+        "element_id",
+        "gesture",
+        "caption",
+        "locale",
+        "source",
+        "destination",
+        "direction",
+        "expires_at"
+      ],
+      "additionalProperties": false
+    },
+    "CheckResult": {
+      "title": "CheckResult",
+      "type": "object",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "mismatch",
+            "unknown"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "fresh_observation"
+          ]
+        },
+        "observation_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "checked_at": {
+          "type": "number",
+          "minimum": 0
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "outcome",
+        "source",
+        "observation_id",
+        "checked_at",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "TeachingState": {
+      "title": "TeachingState",
+      "type": "object",
+      "properties": {
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Target"
+          },
+          "maxItems": 100
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Target"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Observation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cue": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TeachingCue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "check": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CheckResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "revision",
+        "session_id",
+        "targets",
+        "target",
+        "observation",
+        "cue",
+        "check"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeListTargets": {
+      "title": "RuntimeListTargets",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.listTargets"
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeListTargetsResult": {
+      "title": "RuntimeListTargetsResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.targetsResult"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeSelectTarget": {
+      "title": "RuntimeSelectTarget",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.selectTarget"
+          ]
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "windowId": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "pid",
+        "windowId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeSelectTargetResult": {
+      "title": "RuntimeSelectTargetResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.targetSelected"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeObserve": {
+      "title": "RuntimeObserve",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.observe"
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeObserveResult": {
+      "title": "RuntimeObserveResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.observationResult"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeExplain": {
+      "title": "RuntimeExplain",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.explain"
+          ]
+        },
+        "elementId": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "gesture": {
+          "type": "string",
+          "enum": [
+            "point",
+            "click",
+            "drag",
+            "type",
+            "scroll"
+          ]
+        },
+        "caption": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "en",
+            "vi"
+          ]
+        },
+        "destinationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "up",
+                "down",
+                "left",
+                "right"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "elementId",
+        "gesture",
+        "caption",
+        "locale",
+        "destinationId",
+        "direction"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeExplainResult": {
+      "title": "RuntimeExplainResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.explanationResult"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeCheck": {
+      "title": "RuntimeCheck",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.check"
+          ]
+        },
+        "cueId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "expected": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "cueId",
+        "label",
+        "expected"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeCheckResult": {
+      "title": "RuntimeCheckResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.checkResult"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimePresentationAck": {
+      "title": "RuntimePresentationAck",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.presentationAck"
+          ]
+        },
+        "cueId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "cueId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimePresentationAckResult": {
+      "title": "RuntimePresentationAckResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.presentationAckResult"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeConfigure": {
+      "title": "RuntimeConfigure",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.configure"
+          ]
+        },
+        "storageRoot": {
+          "type": "string",
+          "maxLength": 4096,
+          "minLength": 1
+        },
+        "modelConfig": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "origin": {
+                  "type": "string",
+                  "maxLength": 2048
+                },
+                "grant": {
+                  "type": "string",
+                  "minLength": 64,
+                  "maxLength": 64
+                },
+                "model": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
+              },
+              "required": [
+                "origin",
+                "grant",
+                "model"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "storageRoot",
+        "modelConfig"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeConfigured": {
+      "title": "RuntimeConfigured",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.configured"
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeAsk": {
+      "title": "RuntimeAsk",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.ask"
+          ]
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "en",
+            "vi"
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "question",
+        "locale"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeAskResult": {
+      "title": "RuntimeAskResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.askResult"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeRefreshCue": {
+      "title": "RuntimeRefreshCue",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.refreshCue"
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeRefreshCueResult": {
+      "title": "RuntimeRefreshCueResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            2
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.cueRefreshResult"
+          ]
+        },
+        "state": {
+          "$ref": "#/definitions/TeachingState"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "state"
       ],
       "additionalProperties": false
     }

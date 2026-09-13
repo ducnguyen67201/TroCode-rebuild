@@ -2,7 +2,7 @@ name: Foundation
 on:
   pull_request:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -97,7 +97,11 @@ jobs:
     if: contains(fromJSON(needs.plan.outputs.scopes), 'native') || contains(fromJSON(needs.plan.outputs.scopes), 'contracts')
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            bundles: app,dmg
+          - os: windows-latest
+            bundles: nsis
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -111,3 +115,19 @@ jobs:
       - run: npm run build -w @tro/desktop
       - run: cargo build --locked -p tro-desktop
       - run: cargo test --locked -p tro-desktop --test worker_lifecycle
+      - run: npm run package:runtime
+      - run: npm run package:check
+      - name: Build native installer
+        working-directory: apps/desktop
+        run: node ../../node_modules/@tauri-apps/cli/tauri.js build --config src-tauri/tauri.package.conf.json --bundles ${{ matrix.bundles }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: runtime-manifest-${{ matrix.os }}
+          path: apps/desktop/src-tauri/resources/runtime/manifest.json
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: unsigned-native-proof-${{ matrix.os }}
+          path: target/release/bundle/
+          retention-days: 7
+          if-no-files-found: error

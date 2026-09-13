@@ -11,10 +11,28 @@ export type RuntimeMessage =
   | RuntimeStopped
   | RuntimeShutdown
   | RuntimeShutdownComplete
-  | RuntimeError;
+  | RuntimeError
+  | RuntimeListTargets
+  | RuntimeListTargetsResult
+  | RuntimeSelectTarget
+  | RuntimeSelectTargetResult
+  | RuntimeObserve
+  | RuntimeObserveResult
+  | RuntimeExplain
+  | RuntimeExplainResult
+  | RuntimeCheck
+  | RuntimeCheckResult
+  | RuntimePresentationAck
+  | RuntimePresentationAckResult
+  | RuntimeConfigure
+  | RuntimeConfigured
+  | RuntimeAsk
+  | RuntimeAskResult
+  | RuntimeRefreshCue
+  | RuntimeRefreshCueResult;
 
 export interface RuntimeInitialize {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
@@ -23,7 +41,7 @@ export interface RuntimeInitialize {
   accountId: string | null;
 }
 export interface RuntimeReady {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
@@ -35,14 +53,14 @@ export interface RuntimeReady {
   capabilities: [] | ['diagnostic'];
 }
 export interface RuntimeHealth {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
   kind: 'runtime.health';
 }
 export interface RuntimeHealthResult {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
@@ -50,7 +68,7 @@ export interface RuntimeHealthResult {
   state: 'ready' | 'running' | 'stopped';
 }
 export interface RuntimeStart {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
@@ -58,7 +76,7 @@ export interface RuntimeStart {
   sessionId: string;
 }
 export interface RuntimeStarted {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
@@ -66,35 +84,35 @@ export interface RuntimeStarted {
   sessionId: string;
 }
 export interface RuntimeStop {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
   kind: 'runtime.stop';
 }
 export interface RuntimeStopped {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
   kind: 'runtime.stopped';
 }
 export interface RuntimeShutdown {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
   kind: 'runtime.shutdown';
 }
 export interface RuntimeShutdownComplete {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
   kind: 'runtime.shutdownComplete';
 }
 export interface RuntimeError {
-  protocolVersion: 1;
+  protocolVersion: 2;
   requestId: string;
   correlationId: string;
   generationId: string;
@@ -111,4 +129,218 @@ export interface RuntimeError {
     | 'INTERNAL';
   message: string;
   retryable: boolean;
+}
+export interface RuntimeListTargets {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.listTargets';
+}
+export interface RuntimeListTargetsResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.targetsResult';
+  state: TeachingState;
+}
+export interface TeachingState {
+  revision: number;
+  session_id: string | null;
+  /**
+   * @maxItems 100
+   */
+  targets: Target[];
+  target: Target | null;
+  observation: Observation | null;
+  cue: TeachingCue | null;
+  check: CheckResult | null;
+}
+export interface Target {
+  pid: number;
+  window_id: number;
+  title: string;
+  bounds: Rect;
+}
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+export interface Observation {
+  id: string;
+  target: Target;
+  captured_at: number;
+  /**
+   * @maxItems 200
+   */
+  elements: Element[];
+  complete: boolean;
+}
+export interface Element {
+  id: string;
+  label: string;
+  role: string;
+  bounds: Rect;
+  value: string;
+}
+export interface TeachingCue {
+  id: string;
+  observation_id: string;
+  element_id: string;
+  gesture: 'point' | 'click' | 'drag' | 'type' | 'scroll';
+  caption: string;
+  locale: 'en' | 'vi';
+  source: Rect;
+  destination: Rect | null;
+  direction: ('up' | 'down' | 'left' | 'right') | null;
+  expires_at: number;
+}
+export interface CheckResult {
+  outcome: 'confirmed' | 'mismatch' | 'unknown';
+  source: 'fresh_observation';
+  observation_id: string;
+  checked_at: number;
+  message: string;
+}
+export interface RuntimeSelectTarget {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.selectTarget';
+  pid: number;
+  windowId: number;
+}
+export interface RuntimeSelectTargetResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.targetSelected';
+  state: TeachingState;
+}
+export interface RuntimeObserve {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.observe';
+}
+export interface RuntimeObserveResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.observationResult';
+  state: TeachingState;
+}
+export interface RuntimeExplain {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.explain';
+  elementId: string;
+  gesture: 'point' | 'click' | 'drag' | 'type' | 'scroll';
+  caption: string;
+  locale: 'en' | 'vi';
+  destinationId: string | null;
+  direction: ('up' | 'down' | 'left' | 'right') | null;
+}
+export interface RuntimeExplainResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.explanationResult';
+  state: TeachingState;
+}
+export interface RuntimeCheck {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.check';
+  cueId: string;
+  label: string;
+  expected: string;
+}
+export interface RuntimeCheckResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.checkResult';
+  state: TeachingState;
+}
+export interface RuntimePresentationAck {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.presentationAck';
+  cueId: string;
+}
+export interface RuntimePresentationAckResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.presentationAckResult';
+  state: TeachingState;
+}
+export interface RuntimeConfigure {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.configure';
+  storageRoot: string;
+  modelConfig: null | {
+    origin: string;
+    grant: string;
+    model: string;
+  };
+}
+export interface RuntimeConfigured {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.configured';
+}
+export interface RuntimeAsk {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.ask';
+  question: string;
+  locale: 'en' | 'vi';
+}
+export interface RuntimeAskResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.askResult';
+  state: TeachingState;
+}
+export interface RuntimeRefreshCue {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.refreshCue';
+}
+export interface RuntimeRefreshCueResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.cueRefreshResult';
+  state: TeachingState;
 }

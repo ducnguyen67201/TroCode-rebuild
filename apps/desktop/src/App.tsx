@@ -1,3 +1,4 @@
+import { TeachingPanel } from './features/teaching/TeachingPanel';
 import type { DesktopClient } from './platform/desktop-client';
 import { RuntimeStatus } from './features/runtime/RuntimeStatus';
 export function App({ client }: { client: DesktopClient }) {
@@ -7,7 +8,7 @@ export function App({ client }: { client: DesktopClient }) {
         <a className="wordmark" href="#">
           tro<span> / foundation</span>
         </a>
-        <span className="phase">P0 · Developer workspace</span>
+        <span className="phase">P1 · Visual teaching foundation</span>
       </header>
       <div className="intro">
         <p className="eyebrow">A solid place to begin</p>
@@ -23,6 +24,7 @@ export function App({ client }: { client: DesktopClient }) {
       </div>
       {client.preview && <p className="preview">Preview — simulated runtime</p>}
       <RuntimeStatus client={client} />
+      <TeachingPanel client={client} />
       <footer>React presentation · Rust supervision · Python runtime</footer>
     </main>
   );

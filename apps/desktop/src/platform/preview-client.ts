@@ -1,3 +1,4 @@
+import { createPreviewTeaching } from './preview-teaching';
 import type { RuntimeStatus } from '@tro/contracts';
 import type { DesktopClient } from './desktop-client';
 export function createPreviewClient(): DesktopClient {
@@ -23,6 +24,7 @@ export function createPreviewClient(): DesktopClient {
   }
   return {
     preview: true,
+    teaching: createPreviewTeaching(),
     status: async () => status,
     start: () => change('running'),
     stop: () => change('stopped'),

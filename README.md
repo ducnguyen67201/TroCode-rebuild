@@ -28,3 +28,10 @@ React edits use HMR. Restart Python using **Restart runtime** inside the desktop
 The diagnostic UI starts a session, checks health and stops/restarts the worker. It performs no model calls, computer actions or learning assessment. The preview is visibly simulated. Development profiles use the local fixture API and never expose tokens to React.
 
 See [navigation/architecture](docs/CODEX-NAVIGATION-GUIDE.md), [test environment](docs/testing/foundation-environment.md), [verification](docs/testing/ci-workflow.md) and [migration inventory](docs/migration-inventory.md). Local credentials live in ignored `.local/` files; setup preserves existing files. No remote, deployment or production migration is configured.
+
+## P1 visual teaching work
+
+P1 implementation is in progress: selected-window observation, visual gesture guidance,
+account evidence, a bounded model gateway, and native runtime packaging. Tro never operates
+the learner's external application. Follow [the native runbook](docs/native-teaching-runbook.md).
+Windows/macOS manual acceptance and signed distribution remain pending.

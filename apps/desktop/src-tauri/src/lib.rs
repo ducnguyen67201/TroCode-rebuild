@@ -1,32 +1,56 @@
+pub mod account;
 #[cfg(feature = "desktop")]
 mod commands;
 pub mod config;
+pub mod geometry;
 pub mod lifecycle;
 pub mod manager;
+#[cfg(feature = "desktop")]
+mod overlay;
+#[cfg(feature = "desktop")]
+mod permissions;
 pub mod worker;
 #[cfg(feature = "desktop")]
 pub fn run() {
     use std::sync::Arc;
     use tauri::{Emitter, Manager};
-    let runtime = Arc::new(manager::RuntimeManager::new(
-        config::development_program().expect("P1 bundled runtime not configured"),
-    ));
+
     let app = tauri::Builder::default()
-        .manage(runtime.clone())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().with_handler(|app, _, event| {
+            if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                overlay::hide(app);
+                let manager=app.state::<Arc<manager::RuntimeManager>>().inner().clone();
+                tauri::async_runtime::spawn(async move { manager.stop().await; });
+            }
+        }).build())
+        .manage(overlay::OverlayState::default())
         .invoke_handler(tauri::generate_handler![
             commands::runtime_start,
             commands::runtime_health,
             commands::runtime_stop,
             commands::runtime_status,
             commands::runtime_restart,
-            commands::account_select
+            commands::account_select,
+            commands::teaching_request,
+            commands::proof_connect,
+            overlay::overlay_current,
+            permissions::observation_permissions
         ])
         .setup(move |app| {
+            let program=if cfg!(debug_assertions) { config::development_program()? }
+                else { config::bundled_program(&app.path().resource_dir()?)? };
+            let runtime=Arc::new(manager::RuntimeManager::new(program));
+            app.manage(runtime.clone());
+            overlay::prepare(app.handle())?;
+            use tauri_plugin_global_shortcut::GlobalShortcutExt;
+            app.global_shortcut().register("CommandOrControl+Shift+Escape")
+                .map_err(|_| "Emergency Stop shortcut is unavailable; resolve the shortcut conflict before starting Tro.")?;
             let handle = app.handle().clone();
             let mut status = runtime.subscribe();
             tauri::async_runtime::spawn(async move {
                 while status.changed().await.is_ok() {
                     let value = status.borrow_and_update().clone();
+                    if value.state != "running" { overlay::hide(&handle); }
                     let _ = handle.emit_to("main", "runtime-status", value);
                 }
             });

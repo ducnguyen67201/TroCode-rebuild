@@ -8,8 +8,10 @@ Detailed defaults remain proposals where the spec says they are unresolved.
 ## Ownership
 
 - Python OpenAI Agents SDK owns one teaching session, its planner and tool loop.
-- CUA Driver supplies native observation and computer actions. One dispatcher
-  and durable outcome journal surround mutations. Never replay an unknown result.
+- CUA Driver is observation-only. Tro shows where/how to click, drag, scroll
+  or type; the learner performs every external-app action (F10). Never expose
+  native input tools, automated demonstrations or a do-it-for-me mode. Store
+  session/guidance evidence, not a new mutation journal; never replay legacy actions.
 - Tauri/Rust owns native windows, shortcuts, permissions and worker supervision.
 - React owns presentation. Keep raw native tools, arbitrary process spawning
   and provider credentials out of the frontend. Validate cross-process messages.

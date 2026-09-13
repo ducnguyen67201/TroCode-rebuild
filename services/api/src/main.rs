@@ -11,6 +11,9 @@ async fn main() {
     }
 }
 async fn run() -> Result<(), &'static str> {
+    if std::env::var("TRO_API_MODE").as_deref() == Ok("proof") {
+        return tro_api::model_gateway::run().await;
+    }
     let config = Config::from_env()?;
     let pool = db::connect(&config)
         .await

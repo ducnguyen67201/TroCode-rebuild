@@ -12,7 +12,11 @@ pub async fn runtime_health(manager: Manager<'_>) -> Result<Status, WorkerError>
     manager.health().await
 }
 #[tauri::command]
-pub async fn runtime_stop(manager: Manager<'_>) -> Result<Status, WorkerError> {
+pub async fn runtime_stop(
+    app: tauri::AppHandle,
+    manager: Manager<'_>,
+) -> Result<Status, WorkerError> {
+    crate::overlay::hide(&app);
     Ok(manager.stop().await)
 }
 #[tauri::command]
@@ -77,4 +81,39 @@ pub async fn account_select(profile: String, manager: Manager<'_>) -> Result<Sta
         .finish_account_change(ticket, Some(account.to_string()))
         .await?;
     Ok(manager.status())
+}
+
+#[tauri::command]
+pub async fn teaching_request(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    kind: String,
+    payload: serde_json::Value,
+    manager: Manager<'_>,
+) -> Result<serde_json::Value, WorkerError> {
+    if window.label() != "main" {
+        return Err(WorkerError::new(
+            "FORBIDDEN",
+            "Teaching controls belong to the main window.",
+        ));
+    }
+    crate::overlay::hide(&app);
+    let epoch = crate::overlay::epoch(&app);
+    let state = manager.teaching(&kind, payload).await?;
+    crate::overlay::present(&app, &state, epoch).await?;
+    if !state["cue"].is_null() {
+        crate::overlay::track(app.clone(), manager.inner().clone(), epoch);
+    }
+    Ok(state)
+}
+
+#[tauri::command]
+pub async fn proof_connect(
+    window: tauri::WebviewWindow,
+    manager: Manager<'_>,
+) -> Result<Status, WorkerError> {
+    if window.label() != "main" {
+        return Err(WorkerError::new("FORBIDDEN", "Main window required."));
+    }
+    manager.connect_proof().await
 }

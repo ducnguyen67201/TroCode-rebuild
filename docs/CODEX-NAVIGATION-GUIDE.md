@@ -1,15 +1,15 @@
 # Foundation navigation and clean architecture
 
-The [master specification](rebuild-architecture.md) owns product decisions and phase acceptance. P0 implements F07/F08 and C08 groundwork.
+The [master specification](rebuild-architecture.md) owns product decisions and phase acceptance. P0 implements F07/F08 and C08 groundwork. P1 adds F10 visual teaching; installed acceptance remains open.
 
 | Surface | Owner/entry | Dependency direction |
 | --- | --- | --- |
-| UI | `apps/desktop/src/features/runtime/RuntimeStatus.tsx` | Feature → DesktopClient; no native tool/credential imports |
+| UI | `apps/desktop/src/features/teaching/TeachingPanel.tsx` | Feature → DesktopClient; no native tool/credential imports |
 | Native adapter | `apps/desktop/src/platform/tauri-client.ts` | Typed Tauri commands; received payloads validated |
 | Host | `apps/desktop/src-tauri/src/commands.rs` | Commands → manager → worker actor |
 | Worker lifecycle | `apps/desktop/src-tauri/src/worker.rs` | Actor owns child/pipes/pending requests; no UI types |
-| Runtime | `services/teaching-runtime/src/tro_runtime/runtime.py` | Pure diagnostic transitions; stdio adapter in `__main__.py` |
-| API | `services/api/src/lib.rs` | HTTP → auth/db/storage modules; one binary |
+| Runtime | `services/teaching-runtime/src/tro_runtime/teaching.py` | Session decisions → read-only observation/model adapters; transport in `__main__.py` |
+| API | `services/api/src/lib.rs`, `model_gateway.rs` | Fixture API and isolated proof mode; provider secrets stay on backend |
 | Contracts | `packages/contracts/schema/` | Single authority → generated bindings/validators |
 | Dev workflow | `scripts/rebuild/cli.mjs` | Thin composition of existing package tools |
 
@@ -28,6 +28,6 @@ Use meaningful names, bounded functions, early error returns and public errors t
 5. Extend the narrow desktop adapter and consuming UI if needed.
 6. Add boundary/lifecycle tests, review the complete milestone, then run the applicable verification batch.
 
-Do not import legacy orchestration or share active state with it. Do not export arbitrary process spawning, raw CUA, account tokens or model keys to React. P1 adds CUA and the durable journal inside Python; no alternate dispatcher should appear in Rust or React.
+Do not import legacy orchestration or share active state with it. Do not export arbitrary process spawning, raw CUA, account tokens or model keys to React. P1 adds read-only CUA and session/guidance evidence inside Python. F10 requires the learner to perform every external-app action: click/drag/type/scroll animations are visual only. No native mutation dispatcher, automated demonstration or do-it-for-me tool should be built.
 
 Use a single npm lockfile, Cargo lockfile and Python project lockfile. Scope changed packages in CI. Generated files are committed and never hand-edited. Native worker tests also run without the desktop feature, avoiding WebView dependencies in Linux source gates.

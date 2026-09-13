@@ -70,6 +70,8 @@ impl Worker {
             "LC_ALL",
             "APPDATA",
             "LOCALAPPDATA",
+            "CUA_DRIVER_POLICY_FILE",
+            "CUA_DRIVER_MANAGED_POLICY_FILE",
         ] {
             if let Some(value) = std::env::var_os(name) {
                 command.env(name, value);
@@ -105,7 +107,7 @@ impl Worker {
             .request(
                 "initialize",
                 json!({"schemaDigest": SCHEMA_DIGEST, "accountId": account}),
-                Duration::from_secs(5),
+                Duration::from_secs(4),
             )
             .await;
         match result {
@@ -134,8 +136,19 @@ impl Worker {
         if self.has_ended() {
             return Err(WorkerError::exited());
         }
-        let mut value = json!({"protocolVersion": 1, "kind": format!("runtime.{kind}"), "requestId": Uuid::new_v4().to_string(), "correlationId": Uuid::new_v4().to_string(), "generationId": self.generation.to_string()});
+        let mut value = json!({"protocolVersion": 2, "kind": format!("runtime.{kind}"), "requestId": Uuid::new_v4().to_string(), "correlationId": Uuid::new_v4().to_string(), "generationId": self.generation.to_string()});
         if let (Some(target), Some(source)) = (value.as_object_mut(), payload.as_object()) {
+            if source.keys().any(|key| {
+                matches!(
+                    key.as_str(),
+                    "protocolVersion" | "kind" | "requestId" | "correlationId" | "generationId"
+                )
+            }) {
+                return Err(WorkerError::new(
+                    "INVALID_MESSAGE",
+                    "Request payload cannot replace protocol identity.",
+                ));
+            }
             target.extend(source.clone());
         }
         parse_message(&serde_json::to_vec(&value).map_err(|_| WorkerError::exited())?)
@@ -207,6 +220,15 @@ fn expected_response(kind: &str) -> Option<&'static str> {
         "runtime.start" => Some("runtime.started"),
         "runtime.stop" => Some("runtime.stopped"),
         "runtime.shutdown" => Some("runtime.shutdownComplete"),
+        "runtime.listTargets" => Some("runtime.targetsResult"),
+        "runtime.selectTarget" => Some("runtime.targetSelected"),
+        "runtime.observe" => Some("runtime.observationResult"),
+        "runtime.explain" => Some("runtime.explanationResult"),
+        "runtime.check" => Some("runtime.checkResult"),
+        "runtime.presentationAck" => Some("runtime.presentationAckResult"),
+        "runtime.configure" => Some("runtime.configured"),
+        "runtime.ask" => Some("runtime.askResult"),
+        "runtime.refreshCue" => Some("runtime.cueRefreshResult"),
         _ => None,
     }
 }
