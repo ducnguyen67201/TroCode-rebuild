@@ -133,3 +133,44 @@ async fn worker_does_not_inherit_arbitrary_parent_environment() {
     );
     worker.shutdown().await;
 }
+
+#[tokio::test]
+async fn payload_cannot_override_the_closed_command_identity() {
+    let worker = Worker::launch(&development_program().unwrap(), None)
+        .await
+        .unwrap();
+    let result = worker
+        .request(
+            "health",
+            json!({"kind":"runtime.shutdown"}),
+            Duration::from_secs(1),
+        )
+        .await;
+    assert_eq!(result.unwrap_err().code, "INVALID_MESSAGE");
+    assert!(
+        worker
+            .request("health", json!({}), Duration::from_secs(1))
+            .await
+            .is_ok()
+    );
+    worker.shutdown().await;
+}
+
+#[tokio::test]
+async fn stop_cancels_bootstrap_without_waiting_for_its_lifecycle_lock() {
+    let manager = std::sync::Arc::new(RuntimeManager::new(fixture("boot-hang")));
+    let starting = manager.clone();
+    let task = tokio::spawn(async move { starting.start().await });
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    let before = std::time::Instant::now();
+    manager.stop().await;
+    assert!(before.elapsed() < Duration::from_millis(500));
+    assert!(
+        tokio::time::timeout(Duration::from_secs(8), task)
+            .await
+            .unwrap()
+            .unwrap()
+            .is_err()
+    );
+    assert_eq!(manager.status().state, "stopped");
+}

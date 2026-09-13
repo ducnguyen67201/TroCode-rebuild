@@ -1,3 +1,4 @@
+import { OverlayWindow } from './features/teaching/OverlayWindow';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
@@ -11,6 +12,10 @@ const client =
     : tauriClient;
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App client={client} />
+    {new URLSearchParams(location.search).has('overlay') ? (
+      <OverlayWindow />
+    ) : (
+      <App client={client} />
+    )}
   </React.StrictMode>,
 );

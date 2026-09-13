@@ -5,11 +5,11 @@ from __future__ import annotations
 
 from enum import Enum, IntEnum
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, constr
+from pydantic import BaseModel, ConfigDict, Field, RootModel, confloat, conint, constr
 
 
 class ProtocolVersion(IntEnum):
-    integer_1 = 1
+    integer_2 = 2
 
 
 class Kind(Enum):
@@ -279,6 +279,639 @@ class RuntimeError(BaseModel):
     retryable: bool
 
 
+class Rect(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    x: confloat(ge=-100000.0, le=100000.0)
+    y: confloat(ge=-100000.0, le=100000.0)
+    width: confloat(le=100000.0, gt=0.0)
+    height: confloat(le=100000.0, gt=0.0)
+
+
+class Target(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    pid: conint(ge=1)
+    window_id: conint(ge=0)
+    title: constr(max_length=256)
+    bounds: Rect
+
+
+class Element(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: constr(max_length=80)
+    label: constr(max_length=256)
+    role: constr(max_length=80)
+    bounds: Rect
+    value: constr(max_length=256)
+
+
+class Observation(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    target: Target
+    captured_at: confloat(ge=0.0)
+    elements: list[Element] = Field(..., max_length=200)
+    complete: bool
+    screenshot_id: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    ) = None
+
+
+class Gesture(Enum):
+    point = 'point'
+    click = 'click'
+    drag = 'drag'
+    type = 'type'
+    scroll = 'scroll'
+
+
+class Locale(Enum):
+    en = 'en'
+    vi = 'vi'
+
+
+class Direction(Enum):
+    up = 'up'
+    down = 'down'
+    left = 'left'
+    right = 'right'
+
+
+class Grounding(Enum):
+    accessibility = 'accessibility'
+    visual = 'visual'
+
+
+class TeachingCue(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    observation_id: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    element_id: constr(max_length=80)
+    gesture: Gesture
+    caption: constr(min_length=1, max_length=400)
+    locale: Locale
+    source: Rect
+    destination: Rect | None
+    direction: Direction | None
+    expires_at: confloat(ge=0.0)
+    screenshot_id: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    ) = None
+    grounding: Grounding | None = None
+
+
+class Outcome(Enum):
+    confirmed = 'confirmed'
+    mismatch = 'mismatch'
+    unknown = 'unknown'
+
+
+class Source(Enum):
+    fresh_observation = 'fresh_observation'
+
+
+class CheckResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    outcome: Outcome
+    source: Source
+    observation_id: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    checked_at: confloat(ge=0.0)
+    message: constr(max_length=256)
+
+
+class Kind11(Enum):
+    runtime_listTargets = 'runtime.listTargets'
+
+
+class RuntimeListTargets(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind11
+
+
+class Kind12(Enum):
+    runtime_targetsResult = 'runtime.targetsResult'
+
+
+class Kind13(Enum):
+    runtime_selectTarget = 'runtime.selectTarget'
+
+
+class RuntimeSelectTarget(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind13
+    pid: conint(ge=1)
+    windowId: conint(ge=0)
+
+
+class Kind14(Enum):
+    runtime_targetSelected = 'runtime.targetSelected'
+
+
+class Kind15(Enum):
+    runtime_observe = 'runtime.observe'
+
+
+class RuntimeObserve(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind15
+
+
+class Kind16(Enum):
+    runtime_observationResult = 'runtime.observationResult'
+
+
+class Kind17(Enum):
+    runtime_explain = 'runtime.explain'
+
+
+class RuntimeExplain(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind17
+    elementId: constr(max_length=80)
+    gesture: Gesture
+    caption: constr(min_length=1, max_length=400)
+    locale: Locale
+    destinationId: constr(max_length=80) | None
+    direction: Direction | None
+
+
+class Kind18(Enum):
+    runtime_explanationResult = 'runtime.explanationResult'
+
+
+class Kind19(Enum):
+    runtime_check = 'runtime.check'
+
+
+class RuntimeCheck(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind19
+    cueId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    label: constr(max_length=256)
+    expected: constr(max_length=256)
+
+
+class Kind20(Enum):
+    runtime_checkResult = 'runtime.checkResult'
+
+
+class Kind21(Enum):
+    runtime_presentationAck = 'runtime.presentationAck'
+
+
+class RuntimePresentationAck(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind21
+    cueId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+
+
+class Kind22(Enum):
+    runtime_presentationAckResult = 'runtime.presentationAckResult'
+
+
+class Kind23(Enum):
+    runtime_configure = 'runtime.configure'
+
+
+class ModelConfig(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    origin: constr(max_length=2048)
+    grant: constr(min_length=64, max_length=64)
+    model: constr(min_length=1, max_length=128)
+
+
+class RuntimeConfigure(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind23
+    storageRoot: constr(min_length=1, max_length=4096)
+    modelConfig: ModelConfig | None
+
+
+class Kind24(Enum):
+    runtime_configured = 'runtime.configured'
+
+
+class RuntimeConfigured(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind24
+
+
+class Kind25(Enum):
+    runtime_ask = 'runtime.ask'
+
+
+class RuntimeAsk(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind25
+    question: constr(min_length=1, max_length=1000)
+    locale: Locale
+
+
+class Kind26(Enum):
+    runtime_askResult = 'runtime.askResult'
+
+
+class Kind27(Enum):
+    runtime_refreshCue = 'runtime.refreshCue'
+
+
+class RuntimeRefreshCue(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind27
+
+
+class Kind28(Enum):
+    runtime_cueRefreshResult = 'runtime.cueRefreshResult'
+
+
+class Status(Enum):
+    running = 'running'
+    awaiting_confirmation = 'awaiting_confirmation'
+    paused = 'paused'
+    completed = 'completed'
+
+
+class Step(RootModel[constr(min_length=1, max_length=400)]):
+    root: constr(min_length=1, max_length=400)
+
+
+class Journey(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    index: conint(ge=0, le=3)
+    status: Status
+    message: constr(max_length=400)
+    steps: list[Step] = Field(..., max_length=3, min_length=1)
+
+
+class Kind29(Enum):
+    runtime_planControl = 'runtime.planControl'
+
+
+class Action(Enum):
+    pause = 'pause'
+    resume = 'resume'
+    confirm = 'confirm'
+
+
+class RuntimePlanControl(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind29
+    action: Action
+
+
+class Kind30(Enum):
+    runtime_planControlResult = 'runtime.planControlResult'
+
+
+class TeachingState(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    revision: conint(ge=0)
+    session_id: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    )
+    targets: list[Target] = Field(..., max_length=100)
+    target: Target | None
+    observation: Observation | None
+    cue: TeachingCue | None
+    check: CheckResult | None
+    journey: Journey | None = None
+
+
+class RuntimeListTargetsResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind12
+    state: TeachingState
+
+
+class RuntimeSelectTargetResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind14
+    state: TeachingState
+
+
+class RuntimeObserveResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind16
+    state: TeachingState
+
+
+class RuntimeExplainResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind18
+    state: TeachingState
+
+
+class RuntimeCheckResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind20
+    state: TeachingState
+
+
+class RuntimePresentationAckResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind22
+    state: TeachingState
+
+
+class RuntimeAskResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind26
+    state: TeachingState
+
+
+class RuntimeRefreshCueResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind28
+    state: TeachingState
+
+
+class RuntimePlanControlResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind30
+    state: TeachingState
+
+
 class RuntimeMessage(
     RootModel[
         RuntimeInitialize
@@ -292,6 +925,26 @@ class RuntimeMessage(
         | RuntimeShutdown
         | RuntimeShutdownComplete
         | RuntimeError
+        | RuntimeListTargets
+        | RuntimeListTargetsResult
+        | RuntimeSelectTarget
+        | RuntimeSelectTargetResult
+        | RuntimeObserve
+        | RuntimeObserveResult
+        | RuntimeExplain
+        | RuntimeExplainResult
+        | RuntimeCheck
+        | RuntimeCheckResult
+        | RuntimePresentationAck
+        | RuntimePresentationAckResult
+        | RuntimeConfigure
+        | RuntimeConfigured
+        | RuntimeAsk
+        | RuntimeAskResult
+        | RuntimeRefreshCue
+        | RuntimeRefreshCueResult
+        | RuntimePlanControl
+        | RuntimePlanControlResult
     ]
 ):
     root: (
@@ -306,4 +959,24 @@ class RuntimeMessage(
         | RuntimeShutdown
         | RuntimeShutdownComplete
         | RuntimeError
+        | RuntimeListTargets
+        | RuntimeListTargetsResult
+        | RuntimeSelectTarget
+        | RuntimeSelectTargetResult
+        | RuntimeObserve
+        | RuntimeObserveResult
+        | RuntimeExplain
+        | RuntimeExplainResult
+        | RuntimeCheck
+        | RuntimeCheckResult
+        | RuntimePresentationAck
+        | RuntimePresentationAckResult
+        | RuntimeConfigure
+        | RuntimeConfigured
+        | RuntimeAsk
+        | RuntimeAskResult
+        | RuntimeRefreshCue
+        | RuntimeRefreshCueResult
+        | RuntimePlanControl
+        | RuntimePlanControlResult
     ) = Field(..., title='RuntimeMessage')

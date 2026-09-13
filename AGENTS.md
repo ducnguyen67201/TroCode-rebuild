@@ -8,8 +8,10 @@ Detailed defaults remain proposals where the spec says they are unresolved.
 ## Ownership
 
 - Python OpenAI Agents SDK owns one teaching session, its planner and tool loop.
-- CUA Driver supplies native observation and computer actions. One dispatcher
-  and durable outcome journal surround mutations. Never replay an unknown result.
+- CUA Driver is observation-only. Tro shows where/how to click, drag, scroll
+  or type; the learner performs every external-app action (F10). Never expose
+  native input tools, automated demonstrations or a do-it-for-me mode. Store
+  session/guidance evidence, not a new mutation journal; never replay legacy actions.
 - Tauri/Rust owns native windows, shortcuts, permissions and worker supervision.
 - React owns presentation. Keep raw native tools, arbitrary process spawning
   and provider credentials out of the frontend. Validate cross-process messages.
@@ -35,7 +37,8 @@ Do not defer all verification until the entire replacement application is built.
 ## Workspace state and external actions
 
 This workspace contains the P0 implementation. Consult the master spec and
-implementation report for verification status; native P1 acceptance is separate.
+PR checks for verification status; native P1 acceptance is separate.
+Keep `.claude/PRPs/plans/` and `.claude/PRPs/reports/` local and untracked.
 Use the `codex/` branch prefix. Preserve other contributors' edits.
 Do not push, publish, deploy, create remote resources or send messages without
 the user's authorization for that action. Local planning and implementation

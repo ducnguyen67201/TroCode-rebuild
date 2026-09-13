@@ -1,9 +1,7 @@
 {
   "identifier": "main",
   "description": "Diagnostic commands in the main local window only.",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:default",
     "allow-runtime-start",
@@ -11,6 +9,9 @@
     "allow-runtime-stop",
     "allow-runtime-status",
     "allow-runtime-restart",
-    "allow-account-select"
+    "allow-account-select",
+    "allow-teaching-request",
+    "allow-proof-connect",
+    "allow-observation-permissions"
   ]
 }

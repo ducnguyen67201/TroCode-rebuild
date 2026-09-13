@@ -2,8 +2,9 @@
 
 Status: master planning specification, 2026-09-13. The founder agreed to the
 stack and product direction; detailed behaviors and phases below are the
-proposed implementation baseline unless explicitly marked agreed. P0 source implementation and local verification are complete; remote CI and
-Windows validation remain pending. Packaged platform validation belongs to P1.
+proposed implementation baseline unless explicitly marked agreed. P0 is merged (PR #1); local verification and final-revision Linux integration/source
+plus Windows/macOS native build/worker CI passed. P1 source and local macOS packaging are implemented; native acceptance remains in progress.
+Interactive packaged-platform validation belongs to P1 and remains unproven.
 
 This is the canonical rebuild spec, now maintained in
 `/Users/ducng/Desktop/workspace/TroCode-rebuild`. Read it before starting any milestone.
@@ -29,6 +30,18 @@ preserves implementation-first execution.
 - All phase checkboxes start unchecked. Code existing in the old app does not
   establish that the replacement meets a phase's acceptance criteria.
 
+## Agreed interaction boundary — learner performs every external-app action
+
+Founder clarification, 2026-09-13 (F10): Tro shows where and how to click,
+drag, scroll or type; the learner performs the action. This supersedes earlier
+proposals for automated setup/demonstration and a native mutation journal.
+CUA is observation-only. Tro must not move the real pointer, inject clicks,
+keystrokes or drags, change focus, or operate another app on the learner's behalf.
+Animation and replay are visual guidance only. There is no “do it for me” mode.
+This restriction concerns external-app/device control; ordinary explicit Tro
+UI operations such as selecting a lesson, asking for help or submitting work
+remain possible under their own authority rules.
+
 ## Evidence register and limits
 
 | ID | Source | What it establishes |
@@ -37,6 +50,7 @@ preserves implementation-first execution.
 | E2 | Same file, timestamped transcript of `New Recording 47.m4a`, 1:53:24 | Classroom observation and discussion; automatic transcription contains substantial noise and overlapping speech |
 | E3 | NoteSystem: `20_Projects/Tro/docs/gtm-cofounder/founder-brief.md` and `gtm-roadmap.md` | Founder vision, screen-aware MVP, teacher-support positioning, buyer and pilot hypotheses |
 | E4 | Founder conversation in this task, 2026-09-13 | SDK controlling CUA, planner, teaching cursor, screen awareness, teacher materials, accepted stack, implementation-first verification |
+| E6 | Founder clarification in this task, 2026-09-13 | Show where/how to act; learner performs every external-app action; no automated demonstration |
 | E5 | Granola: August 19, 16:00 “Short recording”, `9800dff4-f559-484a-bacb-c5d0c7a70887` | Persistent/translucent highlight, tutorial language and readable pacing feedback; speaker is not established as a customer |
 
 E1 and E2 cover one private robotics/programming center. Parent needs are
@@ -59,7 +73,7 @@ The behavior and acceptance columns are our proposed implementation of that need
 | --- | --- | --- | --- | --- |
 | C01 | Teacher manually walks over to inspect/check work. E1; E2 00:45–00:46, 00:50–00:51, 00:58:30–00:59, 01:11:30–01:15 | Live class overview and inspectable student context, with separate progress, help, connectivity and submission facts | Teacher identifies the assigned task, latest reliable state and evidence for each of two students without visiting the device; stale/unknown state is visible | P3, P5 |
 | C02 | Teacher sometimes does not know where a student is stuck; recommendations would help. E1; E2 00:41–00:42, 00:58:30–00:59, 01:45–01:47 | Contextual student help, bounded recovery, and a teacher attention queue; opt-in in-session assistance candidates under D03 | A planted mistake produces a useful next step; unresolved help reaches the teacher with task, step, evidence and attempted guidance; quiet unresolved students are not silently labeled healthy | P2, P5 |
-| C03 | Changing a URL requires walking around to enter it; wants one button for the action. E1; E2 01:25–01:26, 01:30–01:31 | Teacher distributes a URL/resource to selected students; each device executes through the shared local agent and reports its outcome | Correct resource opens once on eligible devices; offline, declined, failed and unknown outcomes remain distinct from success | P4 |
+| C03 | Changing a URL requires walking around to enter it; wants one button for the action. E1; E2 01:25–01:26, 01:30–01:31 | Teacher distributes a URL/resource and guidance; students open it themselves | Delivery and student-reported/observed opening remain distinct; automatic opening is outside F10, so the original one-button outcome is only partially addressed | P4 |
 | C04 | Students enter the wrong thing and cannot understand the result; help takes a long time. E1 and classroom correction passages in E2 | Observe the actual error, explain why it happened, guide recovery while retaining the lesson objective | Student recovers from an agreed real-app error without losing assignment context or receiving an impermissible completed answer | P2 |
 | C05 | “Nếu tự xong, tự submit thì sẽ hay.” Completion/submission concern is explicit in E1; transcript wording is uncertain | Ready/check/submission/review are separate; proposed default is one explicit student submission after preview | Teacher distinguishes finished-but-unsubmitted from submitted; retry does not duplicate a submission; no narration or agent completion submits work | P3, P6; D04 |
 | C06 | Insight into slow/fast students, common difficult steps, and who needs attention. E1; E2 00:04–00:04:30, 00:10:30–00:11:30, 01:14–01:15 | Session and across-session summaries of steps, help, unresolved issues, submissions and interventions | Teacher can locate a repeated difficult step and supporting evidence; disconnected time and model latency are not called poor learning pace | P5, P7 |
@@ -81,15 +95,16 @@ that the customer rejected automation.
 
 | ID | Requirement and source | Implementation boundary | Phase |
 | --- | --- | --- | --- |
-| F01 | OpenAI Agents SDK controls CUA Driver. E4 | Python runtime owns orchestration; CUA is its native capability | P1, P2 |
+| F01 | OpenAI Agents SDK controls CUA Driver. E4 | Python runtime owns orchestration; CUA supplies read-only native observation under F10 | P1, P2 |
 | F02 | Planner. E4 | Structured, revisable teaching plan in the same session; no extra planning microservice | P2 |
 | F03 | Cursor explains “what we are doing, then this, then that.” E4 | Step overview, grounded pointing, explanation, student action, fresh check; presentation does not grade | P1, P2 |
 | F04 | Know what is on screen. E3/E4 | Fresh native/semantic/visual context with target identity, coordinate mapping and stale-target handling | P1, P2 |
 | F05 | Teacher uploads material and uses it to make class work easier. E4 | Upload/ingestion state, review, immutable material versions, assignments and scoped retrieval | P3 |
-| F06 | Help students become independent with teacher guidance. E3/E4 | Guidance first, teacher-controlled demonstrations and answer reveal; recover in the student's current application | P2, P3 |
+| F06 | Help students become independent with teacher guidance. E3/E4 | Visual guidance with learner-performed actions; teacher controls explanation/answer reveal, never external-app automation | P2, P3 |
 | F07 | Cross-platform rebuild using agreed stack. E4 | Tauri + React/TypeScript + bundled Python SDK/CUA + Rust backend | P0, P1, P8 |
 | F08 | Implement first, typecheck and verify afterward. E4 | Complete milestone → review → applicable verification batch → grouped fixes | Every phase |
 | F09 | Readable, persistent, correctly localized teaching cues. E5, unattributed feedback | Highlight persists while relevant; local pacing, repeat/next controls, correct lesson language | P1, P2 |
+| F10 | Show where/how to click, drag, scroll or type; never perform it for the learner. E6 | Read-only CUA, visual gesture cues, learner action then fresh check; no native mutation tools or journal | P1 onward |
 
 Uploads, SDK choice, and the exact cursor teaching loop are founder requirements.
 The interview supports their purpose; do not attribute their detailed design to
@@ -141,7 +156,7 @@ migrations, changing production services, or publishing a replacement build.
 | Desktop shell | Tauri 2 / Rust | Native windows, overlay placement, shortcuts, permissions, worker lifecycle |
 | Interface | React + TypeScript + Vite | Student experience, teacher controls, materials, progress, captions |
 | Teaching runtime | Bundled Python + OpenAI Agents SDK | Planner, teaching session, model/tool loop, evaluation of results |
-| Computer interaction | CUA Driver Python SDK | Native observation and computer actions through the Rust-backed driver |
+| Computer interaction | CUA Driver Python SDK | Read-only window/semantic/screen observation; native input capabilities are disabled |
 | Teaching cursor | Transparent overlay with SVG/CSS presentation | Highlighting, pointing, explanations, local animation |
 | Shared backend | Rust API | Accounts, classroom authority, assignments, submissions, model access/accounting |
 | Shared persistence | PostgreSQL + private object storage | Classroom records and uploaded material bytes |
@@ -156,6 +171,9 @@ the application package. Students must not install Python, Node, or packages.
 Use a supervised private worker with a versioned, schema-validated message
 protocol. Keep arbitrary process spawning and raw CUA access out of the UI.
 Provider keys remain backend-only; the local runtime uses authenticated access.
+The OpenAI Agents SDK and teaching session run on the user's machine inside
+that bundled Python worker. Model inference runs remotely through the backend
+gateway; the backend does not host the teaching agent loop.
 
 ## Ownership
 
@@ -165,14 +183,15 @@ it is not a separate service or competing execution loop. The SDK executes and
 revises the plan using observations and tool results.
 
 Each teaching step identifies its objective, explanation, observed target,
-actor (student or permitted agent action), and evidence required to continue.
+actor (always the learner for external-app actions), and evidence required to continue.
 Preserve assignment version, teacher guidance constraints, learner question,
-current step, and progress when moving between explanation and setup actions.
+current step, and progress while explaining, waiting for the learner and checking fresh evidence.
 
-CUA owns native observation and action mechanics. One application dispatch and
-outcome-recording path surrounds mutations. Do not duplicate computer control
-in Tauri, a lesson-specific executor, and a separate agent loop. A timeout or
-crash with an unknown result must not cause automatic replay.
+CUA supplies read-only observation. Its mutation APIs are neither exposed as
+agent tools nor implemented in the application adapter. Enforce the same
+read-only boundary in native policy, so an unexpected model tool request cannot
+turn into a click, drag, keystroke, app launch or focus change. No native action
+dispatcher or mutation journal is needed in the new implementation.
 
 Tauri owns native presentation and process supervision. The interface animates
 locally from structured presentation requests. The model must not control each
@@ -190,7 +209,7 @@ student understanding, assignment completion, or submission.
 2. Student enters the assignment or asks a question in the current application.
 3. The planner combines material, objective, question, and fresh screen context.
 4. Tro explains and points at the next relevant target.
-5. The student acts, or Tro performs an allowed setup/demonstration action.
+5. The student clicks, drags, scrolls or types; Tro only shows the gesture and explanation.
 6. Tro obtains fresh evidence when needed and continues, revises, or escalates.
 7. The student explicitly submits work; the teacher reviews it.
 
@@ -213,12 +232,12 @@ concepts where their meaning matches; do not keep duplicate writers for aliases.
 | --- | --- | --- |
 | Class / Membership | Backend | Teacher/student membership and effective class permissions |
 | MaterialVersion | Backend metadata + private object store | Immutable bytes/reference, content digest, ingestion status and readable source locations |
-| AssignmentVersion | Backend | Objective, pinned materials, permitted help/demonstration, evidence criteria and submission expectations |
+| AssignmentVersion | Backend | Objective, pinned materials, permitted explanation/visual guidance, evidence criteria and submission expectations |
 | ClassSession | Backend | Teacher-controlled lifecycle and currently assigned work |
 | StudentAttempt | Backend | One student's participation/work, explicit ready/submission/review facts |
 | TeachingSession / PlanRevision | Python runtime, durable local store owned by that runtime | Attempt/version context, question, steps, current position, stop/resume and accumulated evidence |
 | Observation | Local CUA adapter | Observation ID, target identity, freshness, coordinate space and permitted screen/semantic data |
-| ActionRecord | One local dispatcher/journal | Intent, dispatch identity, known result or unresolved outcome; never two independently writable execution journals |
+| GuidanceEvidence | Python session store | Cue identity, rendering acknowledgement, learner report and fresh observation remain distinct; no native dispatch state |
 | HelpCase / ProgressEvidence | Backend, submitted through authenticated scoped requests | Reported issue, origin, timestamp, step, evidence, proposed guidance and teacher resolution |
 | Submission / Review | Backend | Selected artifact versions, receipt and separately authored teacher decision |
 
@@ -233,14 +252,14 @@ presentation acknowledgement. Events include plan revision, grounded cue,
 waiting for learner, observation/result, help escalation, failure and terminal
 state. Include protocol version, request/session IDs and correlation fields.
 UI acknowledgements describe rendering/narration only. Reject incompatible
-worker protocols before admitting work; do not restart and replay a task to
-recover an uncertain action. Use bounded queues and omit screen content from logs.
+worker protocols before admitting work; do not restart and silently resume a stale cue or infer completion from
+a rendered animation. Use bounded queues and omit screen content from logs.
 
-For native mutation, the dispatcher validates current task authority, target
-freshness and device availability, durably records dispatch intent, calls CUA,
-then records the result. A crash across that boundary produces an unknown
-outcome requiring reconciliation. Native actions cannot be assumed exactly-once
-just because class directives or HTTP requests have idempotency keys.
+For visual guidance, validate the observed target and display geometry before
+presenting a cue. A drag cue includes a grounded start, path and destination;
+a typing cue identifies the field and describes what the learner should enter.
+After “I tried it,” obtain fresh evidence and report observed/reported/unknown
+progress separately. A completed animation proves only that guidance was shown.
 
 Teaching session states express preparing, explaining, waiting for student,
 checking, recovering, waiting for teacher, paused and terminal outcomes. A plan
@@ -265,11 +284,11 @@ screens, transcripts, material text or provider secrets by default.
 
 | Phase | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
-| P0 | Scope, ownership/migration inventory and shared test environment | None | Implemented; local verification passed; CI pending |
-| P1 | Packaged native SDK/CUA + teaching cursor proof | P0 technical decisions | Planned |
-| P2 | Adaptive student teaching journey | P1 | Planned |
+| P0 | Scope, ownership/migration inventory and shared test environment | None | Source complete; merged PR #1, local and final-revision CI passed |
+| P1 | Packaged native SDK/CUA + teaching cursor proof | P0 technical decisions | In progress: source and local macOS packaging implemented; native acceptance open. See [architecture and acceptance](architecture/development.md) |
+| P2 | Adaptive student teaching journey | P1 | In progress: bounded planned guidance/local progression slice; full journey acceptance open |
 | P3 | Materials, assignments, roles and teacher class overview | P2 integration; P0 backend | Planned |
-| P4 | Resource distribution and per-device execution receipts | P3 | Planned |
+| P4 | Resource distribution and learner follow-through receipts | P3 | Planned |
 | P5 | Contextual teacher intervention and stuck assistance | P2/P3; observation policy | Planned |
 | P6 | Explicit submissions and teacher review | P2/P3 | Planned |
 | P7 | Classroom voice and evidence-based summaries | P5/P6 | Planned |
@@ -353,13 +372,13 @@ without checking that it includes CUA's native assets in a signed installer.
 | P0-E: test environment | Prepare reproducible database/object-store configuration and teacher/two-student fixtures; identify shared test API, migration version, native test devices and credential provisioning method | Environment can be used for later acceptance; external provisioning remains pending if unavailable/unauthorized |
 | P0-F: foundation verification | After P0 implementation and test code, run applicable CI checks and inspect failures together | Foundation reviewed; unresolved pilot decisions do not block independent P1 work |
 | P1-A: first real observation | Bundle/load CUA in Python; discover and observe an external window; map coordinates to Tauri; show real permission/error states | Real screen context reaches a bounded target presentation |
-| P1-B: cursor + control | Add transparent overlay, highlight/caption, click-through and stop; add single mutation dispatch/journal and one allowed native action | Visual pointing stays separate from actual input; no blind replay |
+| P1-B: visual gestures + learner check | Add click/drag/type/scroll cues, bounded agent explanations, session evidence and I tried it/check | Learner performs every action; native mutation calls remain zero |
 | P1-C: packaged proof | Build Windows/macOS installers after implementation; verify clean machine startup, native assets, permissions, scaling/multi-monitor and worker cleanup | Accept or revise the native/overlay packaging choice before broader features |
 | P2-A: teaching plan | Add SDK model integration, structured plan/step contracts, sample objective/material and session persistence | Request + screen + material produces an inspectable teaching plan |
 | P2-B: learner loop | Add explanation/pointing, repeat, student reply/check, fresh observation, recovery, pause/resume and budget/error states | One complete real-app exercise including a wrong step works in the same session |
 | P3-A: teacher preparation | Implement membership/roles, supported uploads, ingestion status, material preview/versioning and assignment objective/help policy | Teacher can prepare an actual lesson without editing files or config |
 | P3-B: live class | Implement joining, start/pause/end, assigned context and teacher overview of explicit student facts | Teacher and two students work against the same pinned assignment and backend |
-| P4: class setup actions | Add selected-recipient URL/resource distribution, delivery receipts, local execution and disconnect/duplicate handling | Teacher distributes once and sees what actually happened on each device |
+| P4: resource guidance | Add selected-recipient resources/instructions and separate delivery/learner follow-through receipts | Resource delivery never opens or controls an external app automatically |
 | P5: intervention | Add contextual help cases, teacher responses and bounded assistance candidates under D03 | Teacher can understand and resolve a student's difficulty without first walking over |
 | P6: work hand-in | Add selected-work preview, submission receipt, return/review and revision history | Finished, submitted and reviewed work are unambiguously different |
 | P7-A: voice | Add optional push-to-talk/narration, visible input and silent fallback; evaluate actual noisy classroom examples | Voice helps without becoming a prerequisite or accidentally dispatching actions |
@@ -385,10 +404,10 @@ errors or claiming an unbuilt app runs.
 ### Immediate next milestone
 
 P0 planning update, 2026-09-13: the founder requested fast development and room
-for growth through appropriate abstractions. The detailed
-[P0 source-foundation execution packet](../.claude/PRPs/plans/completed/source-foundation.plan.md)
-is subordinate to this specification. Implementation and local verification are complete; see the implementation report
-for pending remote CI, Windows and later native packaging evidence.
+for growth through appropriate abstractions. P0 implementation and verification
+are complete; see the P0 implementation notes below. Native packaged acceptance
+remains a separate gate. Planning packets and working reports stay local and are
+not committed; durable architecture and acceptance decisions belong in docs.
 
 P0 implementation defaults: npm workspaces, one Cargo workspace and one uv Python
 project; a draft-07 JSON Schema source with generated bindings and runtime
@@ -439,19 +458,24 @@ answers. Independent P1 work may proceed while pilot details are unresolved.
 
 ### P1 — Prove the packaged native teaching foundation
 
+Implementation detail: [code architecture](architecture/README.md).
+Planning is in progress; the acceptance boxes below remain unproven. Implement
+P1-A observation/presentation, P1-B agent/visual gestures/learner checks and P1-C packaging as
+complete milestones, each followed by its applicable verification batch.
+
 - [ ] Tauri/React shell, Python SDK worker and in-process CUA integration ship in
   platform-specific installers with no development-tool prerequisites.
 - [ ] Observe an external application, map targets across displays/scales and
   show a persistent, readable, transparent click-through teaching cursor.
 - [ ] Implement typed worker communication, basic authenticated model access,
-  account-scoped session storage, crash detection and a single action journal.
+  account-scoped session/evidence storage, crash detection and enforced read-only CUA.
 - [ ] Implement stop/cancellation, worker cleanup and actionable native permission
   onboarding. Resolve the overlay/distribution issue in D06.
 
 Dependencies: P0 technical decisions. Covers F01/F03/F04/F07/F09.
-Exit: packaged Windows and macOS evidence demonstrates observation → cue → one
-allowed action/result → stop; no real mouse movement from a visual-only cue,
-no orphan worker, no replay after an unknown result. This is the go/no-go for
+Exit: packaged Windows and macOS evidence demonstrates observation → click/drag
+cue → learner-performed action → fresh check → stop; native mutation calls stay
+at zero, visual replay leaves the real pointer/input unchanged, and no worker is orphaned. This is the go/no-go for
 Tauri's overlay path, before extensive UI reconstruction.
 
 ### P2 — Complete one adaptive student teaching journey
@@ -460,9 +484,9 @@ Tauri's overlay path, before extensive UI reconstruction.
   produce steps with actor, explanation, target and verification criteria.
 - [ ] Implement overview, point/explain, repeat, next/check, learner question,
   recovery, pause/stop/resume, and local persistence in one teaching session.
-- [ ] Allow bounded setup/demonstration through the same SDK/dispatcher while
-  preserving guidance constraints. Do not route teaching intent by mutation
-  keywords alone (e.g. “show me how to open this”).
+- [ ] Teach click/drag/type/scroll gestures with grounded visual cues and clear
+  explanation; the student performs them. “Show me how” means visual guidance,
+  never permission to control the student's app.
 - [ ] Implement text/buttons fully, localized readable cues, and clear behavior
   for moved windows, wrong apps, missing permissions, unavailable tools and budgets.
 
@@ -490,21 +514,20 @@ Exit: one teacher and two student accounts use the same backend and pinned
 material. Teacher sees different student states; unauthorized direct requests
 fail. Editing material creates a new version without changing an active attempt.
 
-### P4 — Distribute resources and remove repetitive setup
+### P4 — Distribute resources and guide learner setup
 
-- [ ] Teacher selects recipients and sends a resource/URL under assignment policy.
-- [ ] Route each device's action through its existing SDK session/dispatcher,
-  with current authority, expiry, device ownership and duplicate delivery handling.
-- [ ] Show per-device queued/received/running/succeeded/failed/declined/expired/
-  unknown receipts; allow targeted follow-up only when outcome is known.
-- [ ] Pause/end invalidates pending directives; reconnect reconciles current work
-  and never blindly runs expired setup commands.
+- [ ] Teacher selects recipients and sends a resource/URL with instructions.
+- [ ] Show resources inside Tro; students open/navigate external apps themselves.
+- [ ] Separate queued/received/declined/expired delivery from learner-reported
+  or freshly observed follow-through. Delivery is not proof of opening.
+- [ ] Pause/end invalidates pending guidance; reconnect deduplicates delivery
+  and does not revive stale cues or automatically open resources.
 
-Dependencies: P3 and P1 mutation journal; D03/D05 authority decisions.
-Covers C03/C07/C08.
-Exit: one distribution opens the intended resource once on eligible devices;
-an offline device and an uncertain native result never appear successful or
-cause blind replay. The teacher can identify and address only the failed devices.
+Dependencies: P3 and P1 guidance/session evidence; D03 sharing policy.
+Covers C03 partially, C07/C08. F10 rules out automated URL opening; preserve
+that unmet portion of the original customer request instead of calling it solved.
+Exit: one teacher distributes a resource to two students, sees delivery state
+and separately labeled learner follow-through, with zero external-app automation.
 
 ### P5 — Contextual teacher intervention and stuck assistance
 
@@ -600,7 +623,7 @@ mandatory blockers for the first replacement release.
 | D02 | Real material formats, representative lessons and submitted artifacts | PDF, text/Markdown and links; explicit format errors; file/answer artifacts as selected | P3 ingestion scope and P6 submission implementation |
 | D03 | What observations/context may be collected, shown to teachers, retained and exported; when | Explicit help context by default; bounded active-lesson observation only when agreed; no continuous unrelated monitoring | Automatic observation and sharing in P5; reporting in P7 |
 | D04 | Does “tự submit” mean independent student submission or automatic submission? | Explicit student submission after preview | Any automatic submission; confirm P6 acceptance with teacher |
-| D05 | Setup vs demonstration vs answer reveal; teacher initiation and student interruption | Teacher defines allowed help; student can stop; setup may act, learning defaults to guidance | P3 policy lock and P4 classroom actions |
+| D05 | Explanation/answer-reveal policy and interruption | F10 settles external-app control: learner acts; teachers cannot enable automation. Explanation depth/answer reveal still needs agreement | P3 instructional policy; never an exception to F10 |
 | D06 | Distribution channel and acceptable overlay implementation | Direct desktop distribution candidate; validate packaged Tauri overlay | P1 native choice and P8 release packaging |
 | D07 | Buyer, budget authority, pilot dates, baseline, capacity, latency/cost targets and success thresholds | One teacher/two devices for engineering acceptance; class pilot size and thresholds remain unset | P7 load targets and P8 pilot claims |
 | D08 | Exact purpose/meaning of cursor customization, leaderboard, Scratch-like features and games | Defer until core workflow is useful | Each P9 feature |
@@ -625,7 +648,7 @@ prove that a real model correctly understands a student's screen.
 | Malicious instructions inside an uploaded resource | Content cannot change teacher authority, tool grants or submission policy | P3 |
 | Two roles plus a cross-account access attempt | Backend denies improper publish/broadcast/read/review, independent of hidden UI | P3/P6 |
 | Duplicate directive and disconnected student | Durable per-device outcome; no stale backlog execution or false success | P4 |
-| Crash after native dispatch but before response | Unknown action preserved; no automatic repeated mutation after restart | P1/P4/P8 |
+| Crash while showing a gesture or checking work | Cue hidden; no completion inferred; explicit resume obtains fresh observation; native mutation count remains zero | P1/P2/P8 |
 | Explicit Help and quiet unresolved student | Allowed contextual evidence reaches teacher; hypotheses and unknown state remain labeled | P5 |
 | Finished-but-unsubmitted, return, resubmit | Separate facts and artifact versions; no duplicate upload or accidental final grade | P6 |
 | Mic disabled, quiet speech, noise and interrupted narration | Full silent path, recoverable transcription failure, no unintended dispatch | P2/P7 |
@@ -648,7 +671,7 @@ Maintain a scoped old-to-new inventory for authentication, classroom roles,
 materials, assignments, submissions, task history, settings, native permissions,
 SDK state and updater identity. Do not copy opaque SDK checkpoints across
 incompatible runtimes; preserve readable history and explicitly handle sessions
-that cannot resume. Unknown actions remain unresolved across migration.
+that cannot resume. Preserve any legacy unknown-action records as read-only history; the replacement must never replay them.
 
 Published SQL migrations remain immutable. Use append-only upgrades and
 upgrade-path tests; do not assume a fresh database test proves a safe upgrade.
@@ -667,7 +690,7 @@ release. The current task authorizes the spec, not production cutover.
 Windows and macOS are the proposed first supported release targets. Qualify
 Linux by desktop/window system afterward; CUA support varies by compositor.
 The observed classroom included iPads. This stack does not establish iPad
-screen-control support; confirm the pilot device mix before promising coverage.
+desktop observation/overlay support; confirm the pilot device mix before promising coverage.
 
 Before broad feature implementation, prove a packaged vertical slice on Windows
 and macOS: launch the bundled Python/CUA worker, observe a real external app,
@@ -727,10 +750,12 @@ Pin and validate concrete dependency versions during implementation.
 
 ## P0 implementation notes (2026-09-13)
 
-The source foundation is implemented on local branch `codex/rebuild-foundation`;
-verification results are tracked in
-[the implementation report](../.claude/PRPs/reports/source-foundation-report.md).
-CI execution, Windows interactive acceptance and P1 packaging remain separate gates.
+The source foundation was merged through PR #1 at `675df3e`.
+Final PR revision `1917680` passed Linux source/integration and Windows/macOS
+native build/worker CI. Pre-merge fixes moved MinIO images to pinned Quay
+manifests and made interrupted workflows fail, adding two regression tests
+(64 local automated cases total). Windows interactive acceptance and P1
+packaging remain separate gates. The PR records the CI evidence.
 
 Implementation refinements: MinIO replaces the LocalStack fixture candidate to
 exercise signed S3 reads and anonymous-access denial. The P0 Python diagnostic
@@ -745,3 +770,103 @@ invoke it rather than exposing another local control listener. Account switching
 invalidates the previous generation before resolving credentials; superseded
 identity responses cannot select an older account. Python persists no learner
 content in P0. These decisions preserve F07/F08 and C08 groundwork.
+
+
+## P1 planning refinements (2026-09-13)
+
+The subordinate execution plan preserves F01/F03/F04/F07/F09 and F08. Its
+implementation baseline is one in-process CUA instance inside the existing
+private Python worker, one Agents SDK session and one Python-owned SQLite
+session/evidence store per account. Rust owns permissions, native presentation,
+credential handling and stop supervision. No CUA daemon, native mutation dispatcher or input-control tool is introduced.
+
+The published CUA 0.28.1 package exposes typed window observation and action
+methods; its native library must ship with the matching Python bindings.
+OpenAI Agents SDK 0.22.2 and PyInstaller 6.22.3 onedir are the planning pins.
+Prove installed loading, not just a development import. Preserve P0's fast
+preview and independent dev commands; release launch uses fixed bundled paths.
+
+P1 uses explicit window selection, a separate click-through overlay and
+visual click/drag/type/scroll guidance on an offline fixture in an external
+browser. The learner performs every action. Session evidence separates rendered
+cues, learner reports and fresh observations; no mutation journal is built. Full adaptive teaching stays in P2. Model access uses
+short-lived account/session grants through a bounded Rust Responses gateway;
+provider keys stay server-side. Controlled proof accounts are separate from
+P0's three fixtures and from production classroom authentication.
+
+Initial packaged evidence targets macOS arm64 and Windows x64. Other
+architectures require separate evidence before claiming support. Direct
+distribution with a Tauri overlay remains the D06 candidate, not a resolved
+App Store or signing decision. PyInstaller onedir assets are staged as Tauri
+resources and spawned by the existing private Rust worker actor. Signing,
+permission responsibility and clean-machine acceptance remain required.
+
+A real model backend/account, authorized signing inputs and interactive devices
+are execution dependencies; their availability has not been established.
+Deterministic tests and source/package implementation can proceed independently,
+but fake models and hosted builds cannot satisfy the corresponding live gates.
+No new deployment, provider spend, credential change or native action is
+performed by the planning task.
+
+
+## Interaction correction record (2026-09-13)
+
+The founder clarified that Tro only shows where/how the learner can act. The
+previous P1 draft proposed one automated demonstration and a durable mutation
+journal. Those proposals are superseded, not deferred switches to enable later.
+F10 applies to P1 and later phases, including classroom setup. The current P1
+execution plan is rewritten around visual gestures, read-only observation and
+learner-performed action checks. Archived P0 reports/plans are historical and
+must not override this correction. No product code for automated actions had
+been implemented when the correction was made.
+
+### P1 implementation checkpoint — 2026-09-13
+
+P1 source implementation is in progress on `codex/plan-native-teaching-foundation`.
+The runtime exposes observation and grounded visual proposals; the learner performs all
+external-app input (F10). The model uses structured output with no callable native tools.
+An isolated proof gateway issues bounded model-only grants. Local SQLite stores evidence
+facts separately from visual presentation and learner reports.
+
+Implementation refinements: teaching commands return complete revisioned projections
+instead of separate partial cue/check events; host generation and presentation epochs
+reject stale results. CUA uses a bounded manifest intersecting inherited native policies,
+with one selected-window resource. Overlay expiry is one second, with read-only refresh every 250 ms; secondary macOS displays
+are withheld pending calibration. These choices do not establish full geometry acceptance.
+
+P1 remains **in progress**. Native acceptance criteria remain open until measured
+on both Windows x64 and macOS arm64. See
+`docs/native-teaching-runbook.md` and `tests/acceptance/native-foundation.md`.
+
+
+### Planned guidance refinement — 2026-09-13
+
+Founder requested a seamless sequence: agent plans ahead, learner performs input,
+and local observation checks progress without a model round trip per action.
+The first bounded P2 slice prepares up to three semantic steps in the existing local
+TeachingSession. Two fresh matching observations after a nonmatching baseline can
+advance a step; uncertain outcomes require explicit learner confirmation. Pause,
+resume, one bounded automatic missing-target replan and explicit replanning preserve
+learner control. F10 remains unchanged.
+
+This bounded source slice is implemented; it does not complete P1/P2 acceptance.
+Verification scope and remaining acceptance are described in
+[development and acceptance](architecture/development.md); PR checks record CI results.
+Plans are in memory; durable plan resume, longer lessons, materials and adaptive
+model-assisted replanning remain open. See [code architecture](architecture/README.md)
+for module ownership, request routing, exact checking rules and limitations.
+
+
+### Screenshot targeting refinement — 2026-09-13
+
+Founder approved visual coordinate targeting alongside accessibility selectors.
+Planned targets may identify a rectangle normalized to the selected-window screenshot,
+allowing guidance on canvases and unlabelled controls. The runtime binds these regions
+to the planning image and window geometry, maps them to native coordinates, and
+invalidates them when the image or bounds change. The existing bounded replan allowance
+applies; no native input capabilities are added (F10).
+
+Screenshot-only observations may guide without complete accessibility data, but cannot
+establish automatic completion from missing/partial AX evidence. Visual-only outcomes
+use learner confirmation. See [visual targeting](architecture/visual-targeting.md) for
+coordinate mapping, permission requirements and conservative image-comparison limits.

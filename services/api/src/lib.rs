@@ -2,6 +2,7 @@ pub mod auth;
 pub mod config;
 pub mod db;
 pub mod error;
+pub mod model_gateway;
 pub mod storage;
 use axum::{
     Extension, Json, Router,

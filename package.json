@@ -34,7 +34,9 @@
     "typecheck": "tsc --noEmit -p apps/desktop/tsconfig.json",
     "test:typescript": "vitest run",
     "test:scripts": "node --test scripts/rebuild/*.test.mjs",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "package:runtime": "node scripts/rebuild/package-runtime.mjs",
+    "package:check": "node scripts/rebuild/package-check.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

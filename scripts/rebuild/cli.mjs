@@ -1,6 +1,12 @@
 import { resolve } from 'node:path';
 import { access } from 'node:fs/promises';
-import { run, start, stopOwned, stopChild, interruptOwned } from './processes.mjs';
+import {
+  run,
+  start,
+  stopOwned,
+  stopChild,
+  interruptOwned,
+} from './processes.mjs';
 import { root, fixtureEnvironment } from './environment.mjs';
 import { verify } from './verify.mjs';
 const action = process.argv[2];
@@ -10,7 +16,10 @@ const node = process.execPath;
 const npmCli = process.env.npm_execpath;
 const npm = (args) => run(node, [npmCli, ...args], { cwd: root });
 const compose = ['compose', '-f', resolve(root, 'infra/compose.test.yml')];
-for (const [signal, exitCode] of [['SIGINT', 130], ['SIGTERM', 143]]) {
+for (const [signal, exitCode] of [
+  ['SIGINT', 130],
+  ['SIGTERM', 143],
+]) {
   process.on(signal, () => {
     process.exitCode = exitCode;
     interruptOwned(signal);
@@ -140,6 +149,20 @@ try {
         ],
         { cwd: root, env },
       );
+      await run(
+        'cargo',
+        [
+          'test',
+          '--locked',
+          '-p',
+          'tro-api',
+          '--lib',
+          '--',
+          '--ignored',
+          '--test-threads=1',
+        ],
+        { cwd: root, env },
+      );
       break;
     }
     case 'build':
@@ -150,9 +173,22 @@ try {
       await verify(process.argv.slice(3));
       break;
     case 'package':
-      throw new Error(
-        'P1 prerequisite: signed bundled Python/CUA runtime and target-specific native assets. No installer produced.',
+      await npm(['run', 'package:runtime']);
+      await npm(['run', 'package:check']);
+      await npm(['run', 'build', '-w', '@tro/desktop']);
+      await run(
+        node,
+        [
+          resolve(root, 'node_modules/@tauri-apps/cli/tauri.js'),
+          'build',
+          '--config',
+          'src-tauri/tauri.package.conf.json',
+          '--bundles',
+          process.platform === 'win32' ? 'nsis' : 'app,dmg',
+        ],
+        { cwd: resolve(root, 'apps/desktop') },
       );
+      break;
     default:
       throw new Error(`Unknown development command: ${action}`);
   }

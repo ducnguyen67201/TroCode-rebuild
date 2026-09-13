@@ -7,11 +7,12 @@ publish = false
 name = "tro_desktop"
 [features]
 default = ["desktop"]
-desktop = ["dep:tauri", "dep:tauri-build"]
+desktop = ["dep:tauri", "dep:tauri-build", "dep:tauri-plugin-global-shortcut"]
+tauri-plugin-global-shortcut = ["dep:tauri-plugin-global-shortcut"]
 [build-dependencies]
 tauri-build = { version = "=2.6.3", optional = true , features = [] }
 [dependencies]
-tauri = { version = "=2.11.3", optional = true , features = [] }
+tauri = { version = "=2.11.3", optional = true , features = ["macos-private-api"] }
 tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -20,6 +21,7 @@ tracing.workspace = true
 uuid.workspace = true
 reqwest.workspace = true
 tro-contracts = { path = "../../../packages/contracts" }
+tauri-plugin-global-shortcut = { version = "=2.3.2", optional = true }
 [dev-dependencies]
 tempfile = "=3.23.0"
 [[bin]]

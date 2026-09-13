@@ -10,6 +10,9 @@ mode = sys.argv[1]
 for line in sys.stdin.buffer:
     request = json.loads(line)
     kind = request['kind']
+    if kind == 'runtime.initialize' and mode == 'boot-hang':
+        time.sleep(30)
+        continue
     if kind == 'runtime.health' and mode == 'crash':
         sys.exit(5)
     if kind == 'runtime.health' and mode == 'oversize':

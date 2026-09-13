@@ -1,4 +1,4 @@
-"""Pure diagnostic lifecycle. P0 performs no model or native side effects."""
+"""Pure lifecycle transitions. Teaching I/O is owned by the asynchronous controller."""
 
 from typing import Any
 
@@ -50,7 +50,7 @@ class Runtime:
             return {**reply, "kind": "runtime.healthResult", "state": self.state}
         if kind == "runtime.start":
             if self.session_id is not None and self.session_id != request["sessionId"]:
-                return error("BUSY", "A diagnostic session is already running.")
+                return error("BUSY", "A teaching session is already running.")
             self.session_id = request["sessionId"]
             self.state = "running"
             return {**reply, "kind": "runtime.started", "sessionId": self.session_id}

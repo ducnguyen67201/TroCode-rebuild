@@ -171,3 +171,105 @@ footer {
     flex-direction: column;
   }
 }
+
+.teaching-panel {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border: 1px solid #506757;
+  border-radius: 16px;
+}
+.teaching-panel label {
+  display: block;
+  margin: 1rem 0;
+}
+.teaching-panel input,
+.teaching-panel select {
+  display: block;
+  font: inherit;
+  padding: 0.5rem;
+  max-width: 100%;
+  width: 100%;
+}
+.teaching-panel fieldset {
+  margin-top: 1rem;
+  border: 1px solid #506757;
+}
+.teaching-panel button {
+  margin: 0.25rem;
+}
+.teaching-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.cue-target {
+  stroke: #147f68;
+  stroke-width: 4px;
+  fill: #baffdd33;
+}
+.cue-destination {
+  stroke: #147f68;
+  stroke-width: 4px;
+  fill: none;
+  stroke-dasharray: 8 6;
+}
+.cue-path {
+  stroke: #147f68;
+  stroke-width: 5px;
+  stroke-dasharray: 10 6;
+  fill: none;
+}
+.cue-pointer {
+  fill: #fcdb66;
+  stroke: #163b2e;
+  stroke-width: 3px;
+}
+.cue-symbol {
+  font: bold 32px system-ui;
+  fill: #147f68;
+  stroke: white;
+  stroke-width: 0.5px;
+}
+.cue-pulse {
+  animation: cue-pulse 0.6s ease-in-out infinite alternate;
+}
+.cue-preview {
+  height: 320px;
+  position: relative;
+  background: #fff;
+  overflow: hidden;
+}
+body.overlay-page,
+body.overlay-page #root {
+  background: transparent;
+  margin: 0;
+  overflow: hidden;
+}
+@keyframes cue-pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue-pulse {
+    animation: none;
+  }
+}
+
+.cue-drag {
+  animation: cue-drag 1.2s ease-in-out infinite;
+}
+@keyframes cue-drag {
+  70%,
+  100% {
+    transform: translate(var(--drag-x), var(--drag-y));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cue-drag {
+    animation: none;
+  }
+}

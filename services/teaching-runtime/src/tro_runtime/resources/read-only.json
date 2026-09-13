@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "mode": "bounded",
+  "expires_after": "1h",
+  "idle_timeout": "15m",
+  "resources": {},
+  "allow": {"tools": ["list_apps", "list_windows", "get_window_state"]}
+}

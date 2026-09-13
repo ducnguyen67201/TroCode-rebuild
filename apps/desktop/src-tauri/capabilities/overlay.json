@@ -1,0 +1,10 @@
+{
+  "identifier": "teaching-overlay",
+  "description": "Presentation only; no runtime, account or native control authority.",
+  "windows": ["teaching-overlay-*"],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-overlay-current"
+  ]
+}

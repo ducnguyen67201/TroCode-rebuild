@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-overlay-current"
+description = "Enables the overlay_current command without any pre-configured scope."
+commands.allow = ["overlay_current"]
+
+[[permission]]
+identifier = "deny-overlay-current"
+description = "Denies the overlay_current command without any pre-configured scope."
+commands.deny = ["overlay_current"]

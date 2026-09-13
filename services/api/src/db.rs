@@ -23,20 +23,23 @@ pub async fn migrate(pool: &PgPool) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 pub async fn ready(pool: &PgPool) -> bool {
+    use sqlx::Row;
     let result = tokio::time::timeout(
         Duration::from_secs(2),
-        sqlx::query_scalar::<_, Vec<u8>>(
-            "SELECT checksum FROM _sqlx_migrations WHERE version=1 AND success",
+        sqlx::query(
+            "SELECT version, checksum FROM _sqlx_migrations WHERE success ORDER BY version",
         )
-        .fetch_one(pool),
+        .fetch_all(pool),
     )
     .await;
     result.is_ok_and(|result| {
-        result.is_ok_and(|checksum| {
-            MIGRATOR
-                .iter()
-                .next()
-                .is_some_and(|migration| migration.checksum.as_ref() == checksum)
+        result.is_ok_and(|rows| {
+            let migrations: Vec<_> = MIGRATOR.iter().collect();
+            rows.len() == migrations.len()
+                && rows.iter().zip(migrations).all(|(row, migration)| {
+                    row.get::<i64, _>("version") == migration.version
+                        && row.get::<Vec<u8>, _>("checksum") == migration.checksum.as_ref()
+                })
         })
     })
 }

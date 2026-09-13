@@ -1,7 +1,7 @@
 use serde_json::Value;
 use std::sync::LazyLock;
 pub const MAX_FRAME_BYTES: usize = 256 * 1024;
-pub const PROTOCOL_VERSION: u64 = 1;
+pub const PROTOCOL_VERSION: u64 = 2;
 pub const SCHEMA_DIGEST: &str = include_str!("../schema/digest.txt");
 #[allow(clippy::all)]
 #[rustfmt::skip]

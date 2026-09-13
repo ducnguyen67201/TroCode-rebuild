@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NativeProofEvidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["commit", "os", "arch", "installerSha256", "signing", "tester", "observedAt", "checks"],
+  "properties": {
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "os": {"type": "string", "minLength": 1},
+    "arch": {"enum": ["arm64", "x64"]},
+    "installerSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signing": {"enum": ["unsigned", "ad-hoc", "signed", "notarized"]},
+    "tester": {"type": "string", "minLength": 1},
+    "observedAt": {"type": "string", "format": "date-time"},
+    "checks": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cleanInstall", "permissionAttribution", "clickThrough", "allGesturesManual", "zeroInjectedInput", "freshChecks", "stopDuringWork", "accountIsolation", "mixedDpi", "realModel"],
+      "properties": {
+        "cleanInstall": {"type": "boolean"}, "permissionAttribution": {"type": "boolean"},
+        "clickThrough": {"type": "boolean"}, "allGesturesManual": {"type": "boolean"},
+        "zeroInjectedInput": {"type": "boolean"}, "freshChecks": {"type": "boolean"},
+        "stopDuringWork": {"type": "boolean"}, "accountIsolation": {"type": "boolean"},
+        "mixedDpi": {"type": "boolean"}, "realModel": {"type": "boolean"}
+      }
+    }
+  }
+}

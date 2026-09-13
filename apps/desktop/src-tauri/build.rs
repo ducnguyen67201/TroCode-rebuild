@@ -8,6 +8,10 @@ fn main() {
             "runtime_status",
             "runtime_restart",
             "account_select",
+            "teaching_request",
+            "proof_connect",
+            "overlay_current",
+            "observation_permissions",
         ]),
     ))
     .expect("Tauri build configuration");
