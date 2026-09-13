@@ -8,6 +8,8 @@ export interface GuidanceRequest {
   direction: TeachingCue['direction'];
 }
 export interface TeachingClient {
+  subscribe?(listener: (state: TeachingState) => void): Promise<() => void>;
+  planControl?(action: 'pause' | 'resume' | 'confirm'): Promise<TeachingState>;
   permissions(): Promise<string>;
   ask(question: string, locale: 'en' | 'vi'): Promise<TeachingState>;
   connectProof(): Promise<void>;

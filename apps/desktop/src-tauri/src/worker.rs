@@ -228,6 +228,7 @@ fn expected_response(kind: &str) -> Option<&'static str> {
         "runtime.presentationAck" => Some("runtime.presentationAckResult"),
         "runtime.configure" => Some("runtime.configured"),
         "runtime.ask" => Some("runtime.askResult"),
+        "runtime.planControl" => Some("runtime.planControlResult"),
         "runtime.refreshCue" => Some("runtime.cueRefreshResult"),
         _ => None,
     }

@@ -21,6 +21,7 @@ TEACHING_REQUESTS = frozenset(
         "runtime.ask",
         "runtime.configure",
         "runtime.refreshCue",
+        "runtime.planControl",
     }
 )
 

@@ -101,7 +101,7 @@ pub async fn teaching_request(
     let epoch = crate::overlay::epoch(&app);
     let state = manager.teaching(&kind, payload).await?;
     crate::overlay::present(&app, &state, epoch).await?;
-    if !state["cue"].is_null() {
+    if crate::overlay::should_track(&state) {
         crate::overlay::track(app.clone(), manager.inner().clone(), epoch);
     }
     Ok(state)

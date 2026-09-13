@@ -85,7 +85,18 @@ fn present_on_main(
         return Ok(());
     }
     let cue = &state["cue"];
+    if let Some(main) = app.get_webview_window("main") {
+        let _ = main.emit("teaching-state", state);
+    }
     if cue.is_null() || !crate::geometry::grounded(state) {
+        if let Ok(mut values) = overlay.values.lock() {
+            values.clear();
+        }
+        for (label, window) in app.webview_windows() {
+            if label.starts_with("teaching-overlay-") {
+                let _ = window.hide();
+            }
+        }
         return Ok(());
     }
     let now = SystemTime::now()
@@ -201,6 +212,14 @@ pub fn overlay_current(
     state.values.lock().ok()?.get(window.label()).cloned()
 }
 
+pub fn should_track(state: &Value) -> bool {
+    !state["cue"].is_null()
+        || matches!(
+            state["journey"]["status"].as_str(),
+            Some("running" | "awaiting_confirmation")
+        )
+}
+
 /// Read-only geometry/content refresh. A newer request or Stop invalidates this loop.
 pub fn track(
     app: tauri::AppHandle,
@@ -218,9 +237,12 @@ pub fn track(
                 break;
             }
             match result {
-                Ok(state) if !state["cue"].is_null() => {
+                Ok(state) => {
                     if present(&app, &state, expected_epoch).await.is_err() {
                         hide(&app);
+                        break;
+                    }
+                    if !should_track(&state) {
                         break;
                     }
                 }

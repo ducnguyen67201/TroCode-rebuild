@@ -286,7 +286,7 @@ screens, transcripts, material text or provider secrets by default.
 | --- | --- | --- | --- |
 | P0 | Scope, ownership/migration inventory and shared test environment | None | Source complete; merged PR #1, local and final-revision CI passed |
 | P1 | Packaged native SDK/CUA + teaching cursor proof | P0 technical decisions | In progress: source and local macOS packaging implemented; native acceptance open. See [implementation report](../.claude/PRPs/reports/native-teaching-foundation-report.md) |
-| P2 | Adaptive student teaching journey | P1 | Planned |
+| P2 | Adaptive student teaching journey | P1 | In progress: bounded planned guidance/local progression slice; full journey acceptance open |
 | P3 | Materials, assignments, roles and teacher class overview | P2 integration; P0 backend | Planned |
 | P4 | Resource distribution and learner follow-through receipts | P3 | Planned |
 | P5 | Contextual teacher intervention and stuck assistance | P2/P3; observation policy | Planned |
@@ -841,3 +841,20 @@ P1 remains **in progress**. Source verification and packaged/manual evidence are
 in `.claude/PRPs/reports/native-teaching-foundation-report.md`; native acceptance criteria
 remain open until measured on both Windows x64 and macOS arm64. See
 `docs/native-teaching-runbook.md` and `tests/acceptance/native-foundation.md`.
+
+
+### Planned guidance refinement — 2026-09-13
+
+Founder requested a seamless sequence: agent plans ahead, learner performs input,
+and local observation checks progress without a model round trip per action.
+The first bounded P2 slice prepares up to three semantic steps in the existing local
+TeachingSession. Two fresh matching observations after a nonmatching baseline can
+advance a step; uncertain outcomes require explicit learner confirmation. Pause,
+resume, one bounded automatic missing-target replan and explicit replanning preserve
+learner control. F10 remains unchanged.
+
+This bounded source slice is implemented; it does not complete P1/P2 acceptance.
+Verification is recorded in [the planned guidance report](../.claude/PRPs/reports/planned-guidance-report.md).
+Plans are in memory; durable plan resume, longer lessons, materials and adaptive
+model-assisted replanning remain open. See [code architecture](architecture/README.md)
+for module ownership, request routing, exact checking rules and limitations.

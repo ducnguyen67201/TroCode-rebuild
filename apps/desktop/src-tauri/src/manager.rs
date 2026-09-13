@@ -161,6 +161,7 @@ impl RuntimeManager {
                 | "presentationAck"
                 | "ask"
                 | "refreshCue"
+                | "planControl"
         ) {
             return Err(WorkerError::new(
                 "FORBIDDEN",
@@ -178,7 +179,11 @@ impl RuntimeManager {
             .request(
                 kind,
                 payload,
-                Duration::from_secs(if kind == "ask" { 50 } else { 15 }),
+                Duration::from_secs(if matches!(kind, "ask" | "refreshCue") {
+                    50
+                } else {
+                    15
+                }),
             )
             .await?;
         if self.status().generation_id.as_deref() != Some(&generation)

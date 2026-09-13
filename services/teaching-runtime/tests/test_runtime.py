@@ -153,3 +153,20 @@ def test_stop_cancels_pending_teaching_and_never_publishes_a_late_result(
                 await asyncio.gather(server, return_exceptions=True)
 
     asyncio.run(scenario())
+
+
+def test_worker_bootstrap_does_not_import_model_sdk():
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; import tro_runtime.__main__; "
+            "assert 'agents' not in sys.modules; assert 'openai' not in sys.modules",
+        ],
+        capture_output=True,
+        timeout=5,
+    )
+    assert result.returncode == 0, result.stderr.decode()

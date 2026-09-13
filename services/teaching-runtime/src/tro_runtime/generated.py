@@ -386,24 +386,6 @@ class CheckResult(BaseModel):
     message: constr(max_length=256)
 
 
-class TeachingState(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    revision: conint(ge=0)
-    session_id: (
-        constr(
-            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-        )
-        | None
-    )
-    targets: list[Target] = Field(..., max_length=100)
-    target: Target | None
-    observation: Observation | None
-    cue: TeachingCue | None
-    check: CheckResult | None
-
-
 class Kind11(Enum):
     runtime_listTargets = 'runtime.listTargets'
 
@@ -427,24 +409,6 @@ class RuntimeListTargets(BaseModel):
 
 class Kind12(Enum):
     runtime_targetsResult = 'runtime.targetsResult'
-
-
-class RuntimeListTargetsResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind12
-    state: TeachingState
 
 
 class Kind13(Enum):
@@ -474,24 +438,6 @@ class Kind14(Enum):
     runtime_targetSelected = 'runtime.targetSelected'
 
 
-class RuntimeSelectTargetResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind14
-    state: TeachingState
-
-
 class Kind15(Enum):
     runtime_observe = 'runtime.observe'
 
@@ -515,24 +461,6 @@ class RuntimeObserve(BaseModel):
 
 class Kind16(Enum):
     runtime_observationResult = 'runtime.observationResult'
-
-
-class RuntimeObserveResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind16
-    state: TeachingState
 
 
 class Kind17(Enum):
@@ -566,24 +494,6 @@ class Kind18(Enum):
     runtime_explanationResult = 'runtime.explanationResult'
 
 
-class RuntimeExplainResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind18
-    state: TeachingState
-
-
 class Kind19(Enum):
     runtime_check = 'runtime.check'
 
@@ -614,24 +524,6 @@ class Kind20(Enum):
     runtime_checkResult = 'runtime.checkResult'
 
 
-class RuntimeCheckResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind20
-    state: TeachingState
-
-
 class Kind21(Enum):
     runtime_presentationAck = 'runtime.presentationAck'
 
@@ -658,24 +550,6 @@ class RuntimePresentationAck(BaseModel):
 
 class Kind22(Enum):
     runtime_presentationAckResult = 'runtime.presentationAckResult'
-
-
-class RuntimePresentationAckResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind22
-    state: TeachingState
 
 
 class Kind23(Enum):
@@ -758,24 +632,6 @@ class Kind26(Enum):
     runtime_askResult = 'runtime.askResult'
 
 
-class RuntimeAskResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind26
-    state: TeachingState
-
-
 class Kind27(Enum):
     runtime_refreshCue = 'runtime.refreshCue'
 
@@ -801,6 +657,207 @@ class Kind28(Enum):
     runtime_cueRefreshResult = 'runtime.cueRefreshResult'
 
 
+class Status(Enum):
+    running = 'running'
+    awaiting_confirmation = 'awaiting_confirmation'
+    paused = 'paused'
+    completed = 'completed'
+
+
+class Step(RootModel[constr(min_length=1, max_length=400)]):
+    root: constr(min_length=1, max_length=400)
+
+
+class Journey(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    index: conint(ge=0, le=3)
+    status: Status
+    message: constr(max_length=400)
+    steps: list[Step] = Field(..., max_length=3, min_length=1)
+
+
+class Kind29(Enum):
+    runtime_planControl = 'runtime.planControl'
+
+
+class Action(Enum):
+    pause = 'pause'
+    resume = 'resume'
+    confirm = 'confirm'
+
+
+class RuntimePlanControl(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind29
+    action: Action
+
+
+class Kind30(Enum):
+    runtime_planControlResult = 'runtime.planControlResult'
+
+
+class TeachingState(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    revision: conint(ge=0)
+    session_id: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    )
+    targets: list[Target] = Field(..., max_length=100)
+    target: Target | None
+    observation: Observation | None
+    cue: TeachingCue | None
+    check: CheckResult | None
+    journey: Journey | None = None
+
+
+class RuntimeListTargetsResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind12
+    state: TeachingState
+
+
+class RuntimeSelectTargetResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind14
+    state: TeachingState
+
+
+class RuntimeObserveResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind16
+    state: TeachingState
+
+
+class RuntimeExplainResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind18
+    state: TeachingState
+
+
+class RuntimeCheckResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind20
+    state: TeachingState
+
+
+class RuntimePresentationAckResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind22
+    state: TeachingState
+
+
+class RuntimeAskResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind26
+    state: TeachingState
+
+
 class RuntimeRefreshCueResult(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -816,6 +873,24 @@ class RuntimeRefreshCueResult(BaseModel):
         pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
     )
     kind: Kind28
+    state: TeachingState
+
+
+class RuntimePlanControlResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind30
     state: TeachingState
 
 
@@ -850,6 +925,8 @@ class RuntimeMessage(
         | RuntimeAskResult
         | RuntimeRefreshCue
         | RuntimeRefreshCueResult
+        | RuntimePlanControl
+        | RuntimePlanControlResult
     ]
 ):
     root: (
@@ -882,4 +959,6 @@ class RuntimeMessage(
         | RuntimeAskResult
         | RuntimeRefreshCue
         | RuntimeRefreshCueResult
+        | RuntimePlanControl
+        | RuntimePlanControlResult
     ) = Field(..., title='RuntimeMessage')

@@ -31,3 +31,5 @@ Use meaningful names, bounded functions, early error returns and public errors t
 Do not import legacy orchestration or share active state with it. Do not export arbitrary process spawning, raw CUA, account tokens or model keys to React. P1 adds read-only CUA and session/guidance evidence inside Python. F10 requires the learner to perform every external-app action: click/drag/type/scroll animations are visual only. No native mutation dispatcher, automated demonstration or do-it-for-me tool should be built.
 
 Use a single npm lockfile, Cargo lockfile and Python project lockfile. Scope changed packages in CI. Generated files are committed and never hand-edited. Native worker tests also run without the desktop feature, avoiding WebView dependencies in Linux source gates.
+
+See the [code architecture guide](architecture/README.md) for the local planner, observation loop, contracts and module responsibilities.

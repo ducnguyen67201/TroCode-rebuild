@@ -8,6 +8,11 @@ async function call(command: string, args?: Record<string, unknown>) {
 export const tauriClient: DesktopClient = {
   preview: false,
   teaching: {
+    subscribe: (listener) =>
+      listen('teaching-state', (event) =>
+        listener(parseTeaching(event.payload)),
+      ),
+    planControl: (action) => teaching('planControl', { action }),
     permissions: async () => {
       const value = await invoke<{
         screenCapture: boolean;

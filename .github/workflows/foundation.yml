@@ -96,6 +96,7 @@ jobs:
     needs: [plan, source]
     if: contains(fromJSON(needs.plan.outputs.scopes), 'native') || contains(fromJSON(needs.plan.outputs.scopes), 'contracts')
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest

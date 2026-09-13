@@ -71,6 +71,28 @@ export function createPreviewTeaching(): TeachingClient {
     };
   }
   return {
+    planControl: async (action) => {
+      const journey = state.journey;
+      if (!journey) throw new Error('No preview plan');
+      if (action === 'pause') {
+        journey.status = 'paused';
+        state.cue = null;
+      } else if (action === 'resume') journey.status = 'awaiting_confirmation';
+      else if (
+        action === 'confirm' &&
+        journey.status === 'awaiting_confirmation'
+      ) {
+        journey.index++;
+        journey.status =
+          journey.index === journey.steps.length
+            ? 'completed'
+            : 'awaiting_confirmation';
+        state.cue = null;
+      } else throw new Error('Unavailable preview control');
+      journey.message =
+        'Simulation only: preview cannot observe external actions.';
+      return publish();
+    },
     permissions: async () =>
       'Preview uses simulated observations and makes no native permission requests.',
     connectProof: async () => {
@@ -83,10 +105,12 @@ export function createPreviewTeaching(): TeachingClient {
       };
     },
     listTargets: async () => {
+      state.journey = null;
       state.targets = [target];
       return publish();
     },
     selectTarget: async () => {
+      state.journey = null;
       state.target = target;
       state.observation = null;
       return publish();
@@ -96,6 +120,13 @@ export function createPreviewTeaching(): TeachingClient {
       return publish();
     },
     ask: async (_question, locale) => {
+      state.journey = {
+        id: crypto.randomUUID(),
+        index: 0,
+        status: 'awaiting_confirmation',
+        message: 'Simulation only: preview cannot observe external actions.',
+        steps: ['Locate the practice control.', 'Try the control yourself.'],
+      };
       cue(
         'point',
         'Use your own mouse on this practice control.',
@@ -106,6 +137,7 @@ export function createPreviewTeaching(): TeachingClient {
       return publish();
     },
     explain: async (request) => {
+      state.journey = null;
       cue(
         request.gesture,
         request.caption,

@@ -35,3 +35,5 @@ P1 implementation is in progress: selected-window observation, visual gesture gu
 account evidence, a bounded model gateway, and native runtime packaging. Tro never operates
 the learner's external application. Follow [the native runbook](docs/native-teaching-runbook.md).
 Windows/macOS manual acceptance and signed distribution remain pending.
+
+See the [code architecture guide](docs/architecture/README.md) for the local planner, observation loop, contracts and module responsibilities.

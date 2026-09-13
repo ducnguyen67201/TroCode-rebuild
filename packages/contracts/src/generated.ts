@@ -29,7 +29,9 @@ export type RuntimeMessage =
   | RuntimeAsk
   | RuntimeAskResult
   | RuntimeRefreshCue
-  | RuntimeRefreshCueResult;
+  | RuntimeRefreshCueResult
+  | RuntimePlanControl
+  | RuntimePlanControlResult;
 
 export interface RuntimeInitialize {
   protocolVersion: 2;
@@ -156,6 +158,7 @@ export interface TeachingState {
   observation: Observation | null;
   cue: TeachingCue | null;
   check: CheckResult | null;
+  journey?: Journey | null;
 }
 export interface Target {
   pid: number;
@@ -204,6 +207,17 @@ export interface CheckResult {
   observation_id: string;
   checked_at: number;
   message: string;
+}
+export interface Journey {
+  id: string;
+  index: number;
+  status: 'running' | 'awaiting_confirmation' | 'paused' | 'completed';
+  message: string;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  steps: [string] | [string, string] | [string, string, string];
 }
 export interface RuntimeSelectTarget {
   protocolVersion: 2;
@@ -342,5 +356,21 @@ export interface RuntimeRefreshCueResult {
   correlationId: string;
   generationId: string;
   kind: 'runtime.cueRefreshResult';
+  state: TeachingState;
+}
+export interface RuntimePlanControl {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.planControl';
+  action: 'pause' | 'resume' | 'confirm';
+}
+export interface RuntimePlanControlResult {
+  protocolVersion: 2;
+  requestId: string;
+  correlationId: string;
+  generationId: string;
+  kind: 'runtime.planControlResult';
   state: TeachingState;
 }

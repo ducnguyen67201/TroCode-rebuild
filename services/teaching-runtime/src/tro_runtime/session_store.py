@@ -9,6 +9,8 @@ from typing import Any, Literal
 from uuid import UUID, uuid4
 
 EvidenceKind = Literal[
+    "step_observed",
+    "step_reported",
     "presented",
     "acknowledged",
     "reported",
@@ -21,6 +23,8 @@ EvidenceKind = Literal[
 ]
 KINDS = frozenset(
     {
+        "step_observed",
+        "step_reported",
         "presented",
         "acknowledged",
         "reported",
@@ -99,7 +103,9 @@ class SessionStore:
         if kind not in KINDS:
             raise ValueError("Unknown evidence source.")
         # Persist identifiers/outcomes only; never screenshots, raw AX trees, or credentials.
-        if not set(metadata).issubset({"cue_id", "observation_id", "check_id", "outcome"}):
+        if not set(metadata).issubset(
+            {"cue_id", "observation_id", "check_id", "outcome", "plan_id", "step_index"}
+        ):
             raise ValueError("Evidence metadata contains unsupported fields.")
         body = json.dumps(metadata, allow_nan=False, sort_keys=True)
         if len(body.encode()) > 2048:

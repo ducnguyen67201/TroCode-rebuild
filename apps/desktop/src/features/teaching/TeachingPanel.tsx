@@ -20,6 +20,27 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
   const [expected, setExpected] = useState('');
   const [question, setQuestion] = useState('');
   const epoch = useRef(0);
+  const activeSession = useRef<string | null>(null);
+  useEffect(() => {
+    let disposed = false;
+    let cleanup: (() => void) | undefined;
+    void client.teaching
+      ?.subscribe?.((next) => {
+        if (next.session_id !== activeSession.current) return;
+        setState((previous) =>
+          previous && next.revision > previous.revision ? next : previous,
+        );
+      })
+      .then((unsubscribe) => {
+        if (disposed) unsubscribe();
+        else cleanup = unsubscribe;
+      })
+      .catch(() => setError('Live guidance updates are unavailable.'));
+    return () => {
+      disposed = true;
+      cleanup?.();
+    };
+  }, [client]);
   useEffect(() => {
     let disposed = false;
     let unsubscribe: (() => void) | undefined;
@@ -27,6 +48,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
       .subscribe((status) => {
         if (status.state !== 'running') {
           epoch.current++;
+          activeSession.current = null;
           setState(null);
           setBusy(false);
         }
@@ -47,7 +69,15 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
     setError('');
     try {
       const next = await action();
-      if (ticket === epoch.current) setState(next);
+      if (ticket === epoch.current) {
+        activeSession.current = next.session_id;
+        setState((previous) =>
+          previous?.session_id === next.session_id &&
+          previous.revision > next.revision
+            ? previous
+            : next,
+        );
+      }
     } catch {
       if (ticket === epoch.current)
         setError(
@@ -102,7 +132,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
         disabled={busy || !state?.target || !question.trim()}
         onClick={() => void run(() => teaching.ask(question, locale))}
       >
-        Explain where and how
+        Plan guidance / replan
       </button>
       <button
         disabled={busy}
@@ -113,6 +143,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
       <button
         onClick={() => {
           epoch.current++;
+          activeSession.current = null;
           setState(null);
           setBusy(false);
           void client.stop();
@@ -152,46 +183,62 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
       >
         Observe
       </button>
-      {state?.observation && (
-        <fieldset disabled={busy}>
-          <legend>Visual guidance</legend>
-          <label>
-            Control
-            <select
-              value={elementId}
-              onChange={(event) => setElementId(event.target.value)}
-            >
-              <option value="">Choose an observed control</option>
-              {state.observation.elements.map((element) => (
-                <option key={element.id} value={element.id}>
-                  {element.label || element.role}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Gesture
-            <select
-              value={gesture}
-              onChange={(event) =>
-                setGesture(event.target.value as TeachingCue['gesture'])
+      {state?.journey && (
+        <section aria-label="Teaching plan">
+          <h3>Your steps</h3>
+          <ol>
+            {state.journey.steps.map((step, index) => (
+              <li
+                key={index}
+                aria-current={
+                  index === state.journey!.index ? 'step' : undefined
+                }
+              >
+                {index < state.journey!.index ? '✓ ' : ''}
+                {step}
+              </li>
+            ))}
+          </ol>
+          <p role="status">{state.journey.message}</p>
+          {teaching.planControl && state.journey.status !== 'completed' && (
+            <button
+              disabled={busy}
+              onClick={() =>
+                void run(() =>
+                  teaching.planControl!(
+                    state.journey!.status === 'paused' ? 'resume' : 'pause',
+                  ),
+                )
               }
             >
-              {(['point', 'click', 'drag', 'type', 'scroll'] as const).map(
-                (item) => (
-                  <option key={item}>{item}</option>
-                ),
-              )}
-            </select>
-          </label>
-          {gesture === 'drag' && (
-            <label>
-              Destination
-              <select
-                value={destinationId}
-                onChange={(event) => setDestinationId(event.target.value)}
+              {state.journey.status === 'paused'
+                ? 'Resume guidance'
+                : 'Pause guidance'}
+            </button>
+          )}
+          {teaching.planControl &&
+            state.journey.status === 'awaiting_confirmation' && (
+              <button
+                disabled={busy}
+                onClick={() => void run(() => teaching.planControl!('confirm'))}
               >
-                <option value="">Choose destination</option>
+                Continue — I’m ready
+              </button>
+            )}
+        </section>
+      )}
+      <details>
+        <summary>Manual guidance tools</summary>
+        {state?.observation && (
+          <fieldset disabled={busy}>
+            <legend>Visual guidance</legend>
+            <label>
+              Control
+              <select
+                value={elementId}
+                onChange={(event) => setElementId(event.target.value)}
+              >
+                <option value="">Choose an observed control</option>
                 {state.observation.elements.map((element) => (
                   <option key={element.id} value={element.id}>
                     {element.label || element.role}
@@ -199,66 +246,97 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
                 ))}
               </select>
             </label>
-          )}
-          {gesture === 'scroll' && (
             <label>
-              Direction
+              Gesture
               <select
-                value={direction}
+                value={gesture}
                 onChange={(event) =>
-                  setDirection(event.target.value as typeof direction)
+                  setGesture(event.target.value as TeachingCue['gesture'])
                 }
               >
-                {['up', 'down', 'left', 'right'].map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
+                {(['point', 'click', 'drag', 'type', 'scroll'] as const).map(
+                  (item) => (
+                    <option key={item}>{item}</option>
+                  ),
+                )}
               </select>
             </label>
-          )}
-          <label>
-            Caption
-            <input
-              maxLength={400}
-              value={caption}
-              onChange={(event) => setCaption(event.target.value)}
-            />
-          </label>
-          <label>
-            Language
-            <select
-              value={locale}
-              onChange={(event) =>
-                setLocale(event.target.value as typeof locale)
+            {gesture === 'drag' && (
+              <label>
+                Destination
+                <select
+                  value={destinationId}
+                  onChange={(event) => setDestinationId(event.target.value)}
+                >
+                  <option value="">Choose destination</option>
+                  {state.observation.elements.map((element) => (
+                    <option key={element.id} value={element.id}>
+                      {element.label || element.role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {gesture === 'scroll' && (
+              <label>
+                Direction
+                <select
+                  value={direction}
+                  onChange={(event) =>
+                    setDirection(event.target.value as typeof direction)
+                  }
+                >
+                  {['up', 'down', 'left', 'right'].map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label>
+              Caption
+              <input
+                maxLength={400}
+                value={caption}
+                onChange={(event) => setCaption(event.target.value)}
+              />
+            </label>
+            <label>
+              Language
+              <select
+                value={locale}
+                onChange={(event) =>
+                  setLocale(event.target.value as typeof locale)
+                }
+              >
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+              </select>
+            </label>
+            <button
+              disabled={
+                !elementId ||
+                !caption.trim() ||
+                (gesture === 'drag' && !destinationId)
+              }
+              onClick={() =>
+                void run(() =>
+                  teaching.explain({
+                    elementId,
+                    gesture,
+                    caption,
+                    locale,
+                    destinationId: gesture === 'drag' ? destinationId : null,
+                    direction: gesture === 'scroll' ? direction : null,
+                  }),
+                )
               }
             >
-              <option value="en">English</option>
-              <option value="vi">Tiếng Việt</option>
-            </select>
-          </label>
-          <button
-            disabled={
-              !elementId ||
-              !caption.trim() ||
-              (gesture === 'drag' && !destinationId)
-            }
-            onClick={() =>
-              void run(() =>
-                teaching.explain({
-                  elementId,
-                  gesture,
-                  caption,
-                  locale,
-                  destinationId: gesture === 'drag' ? destinationId : null,
-                  direction: gesture === 'scroll' ? direction : null,
-                }),
-              )
-            }
-          >
-            Show / repeat guidance
-          </button>
-        </fieldset>
-      )}
-      {state?.cue && (
+              Show / repeat guidance
+            </button>
+          </fieldset>
+        )}
+      </details>
+      {state?.cue && !state.journey && (
         <>
           <p lang={state.cue.locale}>{state.cue.caption}</p>
           {client.preview && (
