@@ -1,0 +1,23 @@
+[package]
+name = "tro-api"
+version.workspace = true
+edition.workspace = true
+publish = false
+[dependencies]
+axum = "=0.8.6"
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+reqwest.workspace = true
+sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "uuid"] }
+sha2 = "=0.10.9"
+object_store = { version = "=0.12.4", features = ["aws"] }
+url = "=2.5.7"
+tro-contracts = { path = "../../packages/contracts" }
+[dev-dependencies]
+tower = { version = "=0.5.2", features = ["util"] }
+http-body-util = "=0.1.3"

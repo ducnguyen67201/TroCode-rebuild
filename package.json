@@ -1,0 +1,58 @@
+{
+  "name": "tro-rebuild",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/desktop",
+    "packages/contracts"
+  ],
+  "engines": {
+    "node": "24.14.1"
+  },
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "setup": "node scripts/rebuild/cli.mjs setup",
+    "dev": "node scripts/rebuild/cli.mjs dev",
+    "dev:ui": "node scripts/rebuild/cli.mjs dev:ui",
+    "dev:api": "node scripts/rebuild/cli.mjs dev:api",
+    "dev:full": "node scripts/rebuild/cli.mjs dev:full",
+    "dev:runtime:restart": "node scripts/rebuild/cli.mjs dev:runtime:restart",
+    "build": "node scripts/rebuild/cli.mjs build",
+    "verify": "node scripts/rebuild/cli.mjs verify",
+    "package": "node scripts/rebuild/cli.mjs package",
+    "db:up": "node scripts/rebuild/cli.mjs db:up",
+    "db:migrate": "node scripts/rebuild/cli.mjs db:migrate",
+    "db:seed": "node scripts/rebuild/cli.mjs db:seed",
+    "env:check": "node scripts/rebuild/cli.mjs env:check",
+    "test:integration": "node scripts/rebuild/cli.mjs test:integration",
+    "contracts:generate": "node scripts/rebuild/contracts.mjs",
+    "contracts:check": "node scripts/rebuild/contracts.mjs --check",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p apps/desktop/tsconfig.json",
+    "test:typescript": "vitest run",
+    "test:scripts": "node --test scripts/rebuild/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.58.2",
+    "@tauri-apps/cli": "2.11.4",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "22.20.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "eslint": "9.39.5",
+    "jsdom": "29.1.1",
+    "json-schema-to-typescript": "16.0.0",
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.70.0",
+    "vite": "8.3.0",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,8 @@
+Cargo.lock
+package-lock.json
+**/uv.lock
+**/generated*
+**/gen/
+**/target/
+**/.venv/
+.local/

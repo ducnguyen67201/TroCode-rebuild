@@ -1,0 +1,122 @@
+[
+  {
+    "name": "health",
+    "valid": true,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.health"
+    }
+  },
+  {
+    "name": "empty",
+    "valid": false,
+    "value": {}
+  },
+  {
+    "name": "extra-field",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.health",
+      "role": "teacher"
+    }
+  },
+  {
+    "name": "boolean-version",
+    "valid": false,
+    "value": {
+      "protocolVersion": true,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.health"
+    }
+  },
+  {
+    "name": "null-kind",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": null
+    }
+  },
+  {
+    "name": "bad-uuid",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "../account",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.health"
+    }
+  },
+  {
+    "name": "unknown-kind",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "computer.click"
+    }
+  },
+  {
+    "name": "unknown-version",
+    "valid": false,
+    "value": {
+      "protocolVersion": 2,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.health"
+    }
+  },
+  {
+    "name": "missing-session",
+    "valid": false,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.start"
+    }
+  },
+  {
+    "name": "start",
+    "valid": true,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.start",
+      "sessionId": "11111111-1111-4111-8111-111111111111"
+    }
+  },
+  {
+    "name": "unicode-error",
+    "valid": true,
+    "value": {
+      "protocolVersion": 1,
+      "requestId": "11111111-1111-4111-8111-111111111111",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "generationId": "33333333-3333-4333-8333-333333333333",
+      "kind": "runtime.error",
+      "code": "INTERNAL",
+      "message": "Kh\u00f4ng th\u1ec3 ti\u1ebfp t\u1ee5c",
+      "retryable": false
+    }
+  }
+]

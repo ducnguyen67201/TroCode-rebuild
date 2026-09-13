@@ -1,0 +1,113 @@
+name: Foundation
+on:
+  pull_request:
+  push:
+    branches: [main, 'codex/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: foundation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      scopes: ${{ steps.route.outputs.scopes }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+      - id: route
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          node --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          import { appendFileSync } from 'node:fs';
+          import { scopesFor } from './scripts/rebuild/ci-plan.mjs';
+          let paths = ['unknown'];
+          if (process.env.BASE_SHA && !/^0+$/.test(process.env.BASE_SHA)) {
+            paths = execFileSync('git', ['diff', '--name-only', process.env.BASE_SHA, 'HEAD'], { encoding: 'utf8' }).trim().split('\n');
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, `scopes=${JSON.stringify(scopesFor(paths))}\n`);
+          JS
+      - run: node --test scripts/rebuild/*.test.mjs
+  source:
+    needs: plan
+    if: needs.plan.outputs.scopes != '["docs"]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit
+      - run: pipx install uv==0.12.1
+      - run: uv sync --project services/teaching-runtime --locked
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: target
+          key: rust-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+      - run: rustup show
+      - name: Applicable source checks
+        env:
+          SCOPES: ${{ needs.plan.outputs.scopes }}
+        run: |
+          node --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          const scopes = JSON.parse(process.env.SCOPES);
+          const run = (...args) => execFileSync(args[0], args.slice(1), { stdio: 'inherit' });
+          if (scopes.includes('contracts')) run('npm', 'run', 'contracts:check');
+          if (scopes.some(s => ['contracts', 'ui', 'native'].includes(s))) {
+            for (const script of ['lint', 'typecheck', 'test:typescript']) run('npm', 'run', script);
+            run('npm', 'run', 'build', '-w', '@tro/desktop');
+            run('npx', 'playwright', 'install', '--with-deps', 'chromium');
+            run('npm', 'run', 'test:browser');
+          }
+          if (scopes.some(s => ['contracts', 'runtime', 'native'].includes(s))) run('npm', 'run', 'verify', '--', '--scope', 'runtime');
+          else if (scopes.includes('api')) run('npm', 'run', 'verify', '--', '--scope', 'api');
+          run('npm', 'audit');
+          run('uv', 'run', '--project', 'services/teaching-runtime', '--locked', 'pip-audit');
+          JS
+  integration:
+    needs: [plan, source]
+    if: contains(fromJSON(needs.plan.outputs.scopes), 'api') || contains(fromJSON(needs.plan.outputs.scopes), 'contracts')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit
+      - run: npm run test:integration
+      - if: always()
+        run: docker compose -f infra/compose.test.yml down
+        env:
+          TRO_DB_PASSWORD: unused-cleanup
+          TRO_S3_KEY: unused-cleanup
+          TRO_S3_SECRET: unused-cleanup
+  native:
+    needs: [plan, source]
+    if: contains(fromJSON(needs.plan.outputs.scopes), 'native') || contains(fromJSON(needs.plan.outputs.scopes), 'contracts')
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit
+      - run: pip install uv==0.12.1
+      - run: uv sync --project services/teaching-runtime --locked
+      - run: npm run build -w @tro/desktop
+      - run: cargo build --locked -p tro-desktop
+      - run: cargo test --locked -p tro-desktop --test worker_lifecycle
