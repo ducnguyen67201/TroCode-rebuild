@@ -16,3 +16,7 @@ coverage/
 apps/desktop/src-tauri/gen/
 
 /apps/desktop/src-tauri/resources/runtime/
+
+# Local planning and implementation working files
+/.claude/PRPs/plans/
+/.claude/PRPs/reports/

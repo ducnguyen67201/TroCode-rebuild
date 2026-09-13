@@ -37,7 +37,8 @@ Do not defer all verification until the entire replacement application is built.
 ## Workspace state and external actions
 
 This workspace contains the P0 implementation. Consult the master spec and
-implementation report for verification status; native P1 acceptance is separate.
+PR checks for verification status; native P1 acceptance is separate.
+Keep `.claude/PRPs/plans/` and `.claude/PRPs/reports/` local and untracked.
 Use the `codex/` branch prefix. Preserve other contributors' edits.
 Do not push, publish, deploy, create remote resources or send messages without
 the user's authorization for that action. Local planning and implementation

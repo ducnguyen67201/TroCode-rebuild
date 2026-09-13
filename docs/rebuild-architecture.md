@@ -285,7 +285,7 @@ screens, transcripts, material text or provider secrets by default.
 | Phase | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
 | P0 | Scope, ownership/migration inventory and shared test environment | None | Source complete; merged PR #1, local and final-revision CI passed |
-| P1 | Packaged native SDK/CUA + teaching cursor proof | P0 technical decisions | In progress: source and local macOS packaging implemented; native acceptance open. See [implementation report](../.claude/PRPs/reports/native-teaching-foundation-report.md) |
+| P1 | Packaged native SDK/CUA + teaching cursor proof | P0 technical decisions | In progress: source and local macOS packaging implemented; native acceptance open. See [architecture and acceptance](architecture/development.md) |
 | P2 | Adaptive student teaching journey | P1 | In progress: bounded planned guidance/local progression slice; full journey acceptance open |
 | P3 | Materials, assignments, roles and teacher class overview | P2 integration; P0 backend | Planned |
 | P4 | Resource distribution and learner follow-through receipts | P3 | Planned |
@@ -404,10 +404,10 @@ errors or claiming an unbuilt app runs.
 ### Immediate next milestone
 
 P0 planning update, 2026-09-13: the founder requested fast development and room
-for growth through appropriate abstractions. The detailed
-[P0 source-foundation execution packet](../.claude/PRPs/plans/completed/source-foundation.plan.md)
-is subordinate to this specification. Implementation and local verification are complete; see the implementation report
-for pending remote CI, Windows and later native packaging evidence.
+for growth through appropriate abstractions. P0 implementation and verification
+are complete; see the P0 implementation notes below. Native packaged acceptance
+remains a separate gate. Planning packets and working reports stay local and are
+not committed; durable architecture and acceptance decisions belong in docs.
 
 P0 implementation defaults: npm workspaces, one Cargo workspace and one uv Python
 project; a draft-07 JSON Schema source with generated bindings and runtime
@@ -458,7 +458,7 @@ answers. Independent P1 work may proceed while pilot details are unresolved.
 
 ### P1 — Prove the packaged native teaching foundation
 
-Execution detail: [P1 native teaching foundation plan](../.claude/PRPs/plans/native-teaching-foundation.plan.md).
+Implementation detail: [code architecture](architecture/README.md).
 Planning is in progress; the acceptance boxes below remain unproven. Implement
 P1-A observation/presentation, P1-B agent/visual gestures/learner checks and P1-C packaging as
 complete milestones, each followed by its applicable verification batch.
@@ -750,15 +750,12 @@ Pin and validate concrete dependency versions during implementation.
 
 ## P0 implementation notes (2026-09-13)
 
-The source foundation was merged through PR #1 at `675df3e`;
-original local verification results are tracked in
-[the implementation report](../.claude/PRPs/reports/source-foundation-report.md).
+The source foundation was merged through PR #1 at `675df3e`.
 Final PR revision `1917680` passed Linux source/integration and Windows/macOS
 native build/worker CI. Pre-merge fixes moved MinIO images to pinned Quay
 manifests and made interrupted workflows fail, adding two regression tests
 (64 local automated cases total). Windows interactive acceptance and P1
-packaging remain separate gates. The original implementation report records
-the earlier local-only snapshot; the PR records the subsequent CI evidence.
+packaging remain separate gates. The PR records the CI evidence.
 
 Implementation refinements: MinIO replaces the LocalStack fixture candidate to
 exercise signed S3 reads and anonymous-access denial. The P0 Python diagnostic
@@ -837,9 +834,8 @@ reject stale results. CUA uses a bounded manifest intersecting inherited native 
 with one selected-window resource. Overlay expiry is one second, with read-only refresh every 250 ms; secondary macOS displays
 are withheld pending calibration. These choices do not establish full geometry acceptance.
 
-P1 remains **in progress**. Source verification and packaged/manual evidence are recorded
-in `.claude/PRPs/reports/native-teaching-foundation-report.md`; native acceptance criteria
-remain open until measured on both Windows x64 and macOS arm64. See
+P1 remains **in progress**. Native acceptance criteria remain open until measured
+on both Windows x64 and macOS arm64. See
 `docs/native-teaching-runbook.md` and `tests/acceptance/native-foundation.md`.
 
 
@@ -854,7 +850,8 @@ resume, one bounded automatic missing-target replan and explicit replanning pres
 learner control. F10 remains unchanged.
 
 This bounded source slice is implemented; it does not complete P1/P2 acceptance.
-Verification is recorded in [the planned guidance report](../.claude/PRPs/reports/planned-guidance-report.md).
+Verification scope and remaining acceptance are described in
+[development and acceptance](architecture/development.md); PR checks record CI results.
 Plans are in memory; durable plan resume, longer lessons, materials and adaptive
 model-assisted replanning remain open. See [code architecture](architecture/README.md)
 for module ownership, request routing, exact checking rules and limitations.
