@@ -1,0 +1,16 @@
+{
+  "identifier": "main",
+  "description": "Diagnostic commands in the main local window only.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "allow-runtime-start",
+    "allow-runtime-health",
+    "allow-runtime-stop",
+    "allow-runtime-status",
+    "allow-runtime-restart",
+    "allow-account-select"
+  ]
+}

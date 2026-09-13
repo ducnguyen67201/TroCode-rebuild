@@ -1,0 +1,16 @@
+node_modules/
+target/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.env
+.env.*
+!.env.example
+.local/
+.DS_Store
+coverage/
+apps/desktop/src-tauri/gen/

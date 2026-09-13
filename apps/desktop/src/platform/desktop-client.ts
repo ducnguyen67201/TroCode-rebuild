@@ -1,0 +1,12 @@
+import type { RuntimeStatus } from '@tro/contracts';
+export type Profile = 'teacher' | 'student-a' | 'student-b';
+export interface DesktopClient {
+  readonly preview: boolean;
+  status(): Promise<RuntimeStatus>;
+  start(): Promise<RuntimeStatus>;
+  stop(): Promise<RuntimeStatus>;
+  health(): Promise<RuntimeStatus>;
+  restart(): Promise<RuntimeStatus>;
+  selectAccount(profile: Profile): Promise<RuntimeStatus>;
+  subscribe(listener: (status: RuntimeStatus) => void): Promise<() => void>;
+}

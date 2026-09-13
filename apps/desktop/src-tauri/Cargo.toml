@@ -1,0 +1,28 @@
+[package]
+name = "tro-desktop"
+version.workspace = true
+edition.workspace = true
+publish = false
+[lib]
+name = "tro_desktop"
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:tauri-build"]
+[build-dependencies]
+tauri-build = { version = "=2.6.3", optional = true , features = [] }
+[dependencies]
+tauri = { version = "=2.11.3", optional = true , features = [] }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+reqwest.workspace = true
+tro-contracts = { path = "../../../packages/contracts" }
+[dev-dependencies]
+tempfile = "=3.23.0"
+[[bin]]
+name = "tro-desktop"
+path = "src/main.rs"
+required-features = ["desktop"]

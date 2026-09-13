@@ -1,0 +1,40 @@
+name: tro-rebuild-foundation
+services:
+  postgres:
+    image: postgres@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    environment:
+      POSTGRES_DB: tro_rebuild_test
+      POSTGRES_USER: fixture
+      POSTGRES_PASSWORD: ${TRO_DB_PASSWORD:?Run npm run setup}
+    ports: ["127.0.0.1:55439:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fixture -d tro_rebuild_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  storage:
+    image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    command: ["server", "/data"]
+    environment:
+      MINIO_ROOT_USER: ${TRO_S3_KEY:?Run npm run setup}
+      MINIO_ROOT_PASSWORD: ${TRO_S3_SECRET:?Run npm run setup}
+    ports: ["127.0.0.1:19000:9000"]
+    volumes: ["object-data:/data"]
+  bucket:
+    image: quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+    depends_on: [storage]
+    environment:
+      TRO_S3_KEY: ${TRO_S3_KEY}
+      TRO_S3_SECRET: ${TRO_S3_SECRET}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        attempts=0;
+        until mc alias set fixture http://storage:9000 "$$TRO_S3_KEY" "$$TRO_S3_SECRET" >/dev/null 2>&1; do
+        attempts=$$((attempts+1)); test "$$attempts" -lt 30 || exit 1; sleep 1; done;
+        mc mb --ignore-existing fixture/tro-rebuild-fixtures;
+        mc anonymous set none fixture/tro-rebuild-fixtures
+volumes:
+  postgres-data:
+  object-data:
