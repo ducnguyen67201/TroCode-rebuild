@@ -1,27 +1,39 @@
 //! Isolated proof identity and bounded nonstreaming model access. No native authority.
-use crate::{auth::digest, db, error::ApiError};
+use crate::{
+    auth::digest,
+    db,
+    entities::{proof_session, runtime_grant},
+    error::ApiError,
+};
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, State},
     http::{HeaderMap, StatusCode},
     routing::{get, post},
 };
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect, Set, TransactionTrait,
+    entity::prelude::ChronoDateTimeUtc, sea_query::Expr,
+};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use sqlx::{PgPool, Row};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 use uuid::Uuid;
+
+fn utc_now() -> ChronoDateTimeUtc {
+    SystemTime::now().into()
+}
 
 #[derive(Clone)]
 pub struct Gateway {
-    pub pool: PgPool,
+    pub pool: DatabaseConnection,
     client: reqwest::Client,
     key: String,
     model: String,
     upstream: String,
 }
 impl Gateway {
-    pub fn new(pool: PgPool, key: String, model: String) -> Result<Self, &'static str> {
+    pub fn new(pool: DatabaseConnection, key: String, model: String) -> Result<Self, &'static str> {
         if key.is_empty() || model.is_empty() || model.len() > 128 {
             return Err("Proof model configuration is incomplete.");
         }
@@ -61,8 +73,13 @@ fn bearer(headers: &HeaderMap, id: Uuid) -> Result<&str, ApiError> {
         .ok_or(ApiError::unauthorized(id))
 }
 async fn identity(state: &Gateway, token: &str, id: Uuid) -> Result<Uuid, ApiError> {
-    sqlx::query_scalar("SELECT account_id FROM proof_sessions WHERE token_digest=$1 AND expires_at>NOW() AND NOT revoked")
-        .bind(digest(token)).fetch_optional(&state.pool).await.map_err(|_| ApiError::internal(id))?
+    proof_session::Entity::find_by_id(digest(token))
+        .filter(Expr::col(proof_session::Column::ExpiresAt).gt(Expr::current_timestamp()))
+        .filter(proof_session::Column::Revoked.eq(false))
+        .one(&state.pool)
+        .await
+        .map_err(|_| ApiError::internal(id))?
+        .map(|session| session.account_id)
         .ok_or(ApiError::unauthorized(id))
 }
 async fn me(
@@ -97,31 +114,46 @@ async fn grant(
 ) -> Result<Json<Value>, ApiError> {
     let token = bearer(&headers, id)?;
     let account = identity(&state, token, id).await?;
+    let session_digest = digest(token);
     let grant = format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple());
     // One grant per live account session/teaching session prevents budget-reset retries.
-    let mut tx = state
+    // Issuance always locks the proof session before checking/inserting grants.
+    // Reservation below locks an existing grant before its parent proof session;
+    // reassess this order if a future path ever locks both while issuing a grant.
+    let tx = state
         .pool
         .begin()
         .await
         .map_err(|_| ApiError::internal(id))?;
-    sqlx::query("SELECT token_digest FROM proof_sessions WHERE token_digest=$1 FOR UPDATE")
-        .bind(digest(token))
-        .fetch_one(&mut *tx)
+    let locked_session = proof_session::Entity::find_by_id(session_digest.clone())
+        .filter(Expr::col(proof_session::Column::ExpiresAt).gt(Expr::current_timestamp()))
+        .filter(proof_session::Column::Revoked.eq(false))
+        .lock_exclusive()
+        .one(&tx)
         .await
-        .map_err(|_| ApiError::internal(id))?;
-    let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM runtime_grants WHERE session_digest=$1 AND teaching_session_id=$2)")
-        .bind(digest(token)).bind(body.teaching_session_id).fetch_one(&mut *tx).await.map_err(|_| ApiError::internal(id))?;
+        .map_err(|_| ApiError::internal(id))?
+        .filter(|session| session.account_id == account)
+        .ok_or(ApiError::unauthorized(id))?;
+    let exists = runtime_grant::Entity::find()
+        .filter(runtime_grant::Column::SessionDigest.eq(locked_session.token_digest))
+        .filter(runtime_grant::Column::TeachingSessionId.eq(body.teaching_session_id))
+        .one(&tx)
+        .await
+        .map_err(|_| ApiError::internal(id))?
+        .is_some();
     if exists {
         return Err(ApiError::unauthorized(id));
     }
-    sqlx::query(
-        "INSERT INTO runtime_grants VALUES ($1,$2,$3,$4,NOW()+INTERVAL '5 minutes',4,FALSE)",
-    )
-    .bind(digest(&grant))
-    .bind(digest(token))
-    .bind(account)
-    .bind(body.teaching_session_id)
-    .execute(&mut *tx)
+    runtime_grant::Entity::insert(runtime_grant::ActiveModel {
+        token_digest: Set(digest(&grant)),
+        session_digest: Set(session_digest),
+        account_id: Set(account),
+        teaching_session_id: Set(body.teaching_session_id),
+        expires_at: Set(utc_now() + Duration::from_secs(300)),
+        remaining_calls: Set(4),
+        revoked: Set(false),
+    })
+    .exec(&tx)
     .await
     .map_err(|_| ApiError::internal(id))?;
     tx.commit().await.map_err(|_| ApiError::internal(id))?;
@@ -176,12 +208,48 @@ async fn responses(
     if !validate_request(&body, &state.model) {
         return Err(ApiError::unauthorized(id));
     }
-    let token = bearer(&headers, id)?;
-    let reserved = sqlx::query("UPDATE runtime_grants g SET remaining_calls=remaining_calls-1 FROM proof_sessions s WHERE g.token_digest=$1 AND g.session_digest=s.token_digest AND g.account_id=s.account_id AND NOT g.revoked AND NOT s.revoked AND g.expires_at>NOW() AND s.expires_at>NOW() AND g.remaining_calls>0 RETURNING g.account_id")
-        .bind(digest(token)).fetch_optional(&state.pool).await.map_err(|_| ApiError::internal(id))?;
-    if reserved.is_none() {
+    let grant_digest = digest(bearer(&headers, id)?);
+    // Keep the grant lock and parent-session validation in one transaction, and
+    // consume budget before dispatch so provider failures still spend a call.
+    let tx = state
+        .pool
+        .begin()
+        .await
+        .map_err(|_| ApiError::internal(id))?;
+    let grant = runtime_grant::Entity::find_by_id(grant_digest.clone())
+        .filter(runtime_grant::Column::Revoked.eq(false))
+        .filter(Expr::col(runtime_grant::Column::ExpiresAt).gt(Expr::current_timestamp()))
+        .filter(runtime_grant::Column::RemainingCalls.gt(0))
+        .lock_exclusive()
+        .one(&tx)
+        .await
+        .map_err(|_| ApiError::internal(id))?
+        .ok_or(ApiError::unauthorized(id))?;
+    proof_session::Entity::find_by_id(grant.session_digest)
+        .filter(proof_session::Column::AccountId.eq(grant.account_id))
+        .filter(proof_session::Column::Revoked.eq(false))
+        .filter(Expr::col(proof_session::Column::ExpiresAt).gt(Expr::current_timestamp()))
+        .lock_exclusive()
+        .one(&tx)
+        .await
+        .map_err(|_| ApiError::internal(id))?
+        .ok_or(ApiError::unauthorized(id))?;
+    let reserved = runtime_grant::Entity::update_many()
+        .col_expr(
+            runtime_grant::Column::RemainingCalls,
+            Expr::col(runtime_grant::Column::RemainingCalls).sub(1),
+        )
+        .filter(runtime_grant::Column::TokenDigest.eq(grant_digest))
+        .filter(runtime_grant::Column::Revoked.eq(false))
+        .filter(Expr::col(runtime_grant::Column::ExpiresAt).gt(Expr::current_timestamp()))
+        .filter(runtime_grant::Column::RemainingCalls.gt(0))
+        .exec(&tx)
+        .await
+        .map_err(|_| ApiError::internal(id))?;
+    if reserved.rows_affected != 1 {
         return Err(ApiError::unauthorized(id));
     }
+    tx.commit().await.map_err(|_| ApiError::internal(id))?;
     body["store"] = json!(false);
     body["stream"] = json!(false);
     // A fixed provider origin; caller supplied URLs and redirects are never accepted.
@@ -221,25 +289,15 @@ pub async fn run() -> Result<(), &'static str> {
     if !bind.ip().is_loopback() {
         return Err("Bind behind a trusted HTTPS reverse proxy on loopback.");
     }
-    let pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
-        .connect(&database)
+    let pool = db::connect_url(&database)
         .await
         .map_err(|_| "Proof database unavailable.")?;
-    let legacy: bool = sqlx::query(
-        "SELECT current_database() AS name, to_regclass('public.users') IS NOT NULL AS legacy",
-    )
-    .fetch_one(&pool)
-    .await
-    .map_err(|_| "Proof database unavailable.")?
-    .get("legacy");
-    if legacy {
-        return Err("Refusing legacy database state.");
-    }
+    db::validate_target(&pool, "tro_rebuild_proof")
+        .await
+        .map_err(|_| "Refusing legacy database state.")?;
     match std::env::args().nth(1).as_deref().unwrap_or("serve") {
         "migrate" => db::MIGRATOR
-            .run(&pool)
+            .run(pool.get_postgres_connection_pool())
             .await
             .map_err(|_| "Proof migration failed."),
         "serve" => {
@@ -290,6 +348,7 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
+    use crate::entities::proof_account;
     use axum::{body::Body, http::Request};
     use http_body_util::BodyExt;
     use std::sync::{
@@ -362,17 +421,22 @@ mod integration_tests {
         let app = router(gateway);
         let account = Uuid::new_v4();
         let token = format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple());
-        sqlx::query("INSERT INTO proof_accounts VALUES ($1,'student')")
-            .bind(account)
-            .execute(&pool)
-            .await
-            .unwrap();
-        sqlx::query("INSERT INTO proof_sessions VALUES ($1,$2,NOW()+INTERVAL '1 hour',FALSE)")
-            .bind(digest(&token))
-            .bind(account)
-            .execute(&pool)
-            .await
-            .unwrap();
+        proof_account::Entity::insert(proof_account::ActiveModel {
+            id: Set(account),
+            role: Set("student".to_owned()),
+        })
+        .exec(&pool)
+        .await
+        .unwrap();
+        proof_session::Entity::insert(proof_session::ActiveModel {
+            token_digest: Set(digest(&token)),
+            account_id: Set(account),
+            expires_at: Set(utc_now() + Duration::from_secs(3600)),
+            revoked: Set(false),
+        })
+        .exec(&pool)
+        .await
+        .unwrap();
         let session = Uuid::new_v4();
         let grant_request = json!({"teachingSessionId":session});
         assert_eq!(
@@ -401,6 +465,42 @@ mod integration_tests {
                 .0,
             StatusCode::UNAUTHORIZED
         );
+        let concurrent_request = json!({"teachingSessionId":Uuid::new_v4()});
+        let (first, second) = tokio::join!(
+            call(
+                app.clone(),
+                "/v1/runtime-grants",
+                &token,
+                concurrent_request.clone()
+            ),
+            call(
+                app.clone(),
+                "/v1/runtime-grants",
+                &token,
+                concurrent_request
+            )
+        );
+        let issuance = [first, second];
+        assert_eq!(
+            issuance
+                .iter()
+                .filter(|(status, _)| *status == StatusCode::OK)
+                .count(),
+            1
+        );
+        assert_eq!(
+            issuance
+                .iter()
+                .filter(|(status, _)| *status == StatusCode::UNAUTHORIZED)
+                .count(),
+            1
+        );
+        let concurrent_grant = issuance
+            .iter()
+            .find(|(status, _)| *status == StatusCode::OK)
+            .and_then(|(_, body)| body["grant"].as_str())
+            .unwrap()
+            .to_owned();
         let grant = issued["grant"].as_str().unwrap();
         let body = json!({"model":"proof-model","input":"Help","max_output_tokens":1024});
         let mut tasks = Vec::new();
@@ -423,38 +523,81 @@ mod integration_tests {
         }
         assert_eq!(accepted, 4);
         assert_eq!(count.load(Ordering::SeqCst), 4);
-        sqlx::query("UPDATE runtime_grants SET remaining_calls=1,expires_at=NOW()-INTERVAL '1 second' WHERE token_digest=$1")
-            .bind(digest(grant)).execute(&pool).await.unwrap();
+        runtime_grant::Entity::update_many()
+            .col_expr(runtime_grant::Column::RemainingCalls, Expr::value(1))
+            .col_expr(
+                runtime_grant::Column::ExpiresAt,
+                Expr::value(utc_now() - Duration::from_secs(1)),
+            )
+            .filter(runtime_grant::Column::TokenDigest.eq(digest(grant)))
+            .exec(&pool)
+            .await
+            .unwrap();
         assert_eq!(
             call(app.clone(), "/v1/responses", grant, body.clone())
                 .await
                 .0,
             StatusCode::UNAUTHORIZED
         );
-        sqlx::query(
-            "UPDATE runtime_grants SET expires_at=NOW()+INTERVAL '1 hour' WHERE token_digest=$1",
-        )
-        .bind(digest(grant))
-        .execute(&pool)
+        runtime_grant::Entity::update_many()
+            .col_expr(
+                runtime_grant::Column::ExpiresAt,
+                Expr::value(utc_now() + Duration::from_secs(3600)),
+            )
+            .filter(runtime_grant::Column::TokenDigest.eq(digest(grant)))
+            .exec(&pool)
+            .await
+            .unwrap();
+        let mismatched_account = Uuid::new_v4();
+        proof_account::Entity::insert(proof_account::ActiveModel {
+            id: Set(mismatched_account),
+            role: Set("student".to_owned()),
+        })
+        .exec(&pool)
         .await
         .unwrap();
-        sqlx::query("UPDATE proof_sessions SET revoked=TRUE WHERE token_digest=$1")
-            .bind(digest(&token))
-            .execute(&pool)
+        runtime_grant::Entity::update_many()
+            .col_expr(
+                runtime_grant::Column::AccountId,
+                Expr::value(mismatched_account),
+            )
+            .filter(runtime_grant::Column::TokenDigest.eq(digest(grant)))
+            .exec(&pool)
+            .await
+            .unwrap();
+        assert_eq!(
+            call(app.clone(), "/v1/responses", grant, body.clone())
+                .await
+                .0,
+            StatusCode::UNAUTHORIZED
+        );
+        assert_eq!(count.load(Ordering::SeqCst), 4);
+        runtime_grant::Entity::update_many()
+            .col_expr(runtime_grant::Column::AccountId, Expr::value(account))
+            .filter(runtime_grant::Column::TokenDigest.eq(digest(grant)))
+            .exec(&pool)
+            .await
+            .unwrap();
+        proof_session::Entity::update_many()
+            .col_expr(proof_session::Column::Revoked, Expr::value(true))
+            .filter(proof_session::Column::TokenDigest.eq(digest(&token)))
+            .exec(&pool)
             .await
             .unwrap();
         let (status, error) = call(app.clone(), "/v1/responses", grant, body).await;
         assert_eq!(status, StatusCode::UNAUTHORIZED);
         assert!(!error.to_string().contains("fake-provider-key"));
         assert_eq!(count.load(Ordering::SeqCst), 4);
-        sqlx::query("UPDATE proof_sessions SET revoked=FALSE WHERE token_digest=$1")
-            .bind(digest(&token))
-            .execute(&pool)
+        proof_session::Entity::update_many()
+            .col_expr(proof_session::Column::Revoked, Expr::value(false))
+            .filter(proof_session::Column::TokenDigest.eq(digest(&token)))
+            .exec(&pool)
             .await
             .unwrap();
-        sqlx::query("UPDATE runtime_grants SET remaining_calls=2 WHERE token_digest=$1")
-            .bind(digest(grant))
-            .execute(&pool)
+        runtime_grant::Entity::update_many()
+            .col_expr(runtime_grant::Column::RemainingCalls, Expr::value(2))
+            .filter(runtime_grant::Column::TokenDigest.eq(digest(grant)))
+            .exec(&pool)
             .await
             .unwrap();
         for input in ["slow", "oversize"] {
@@ -474,19 +617,24 @@ mod integration_tests {
             .body(Body::from(json!({"model":"proof-model","input":"x".repeat(8*1024*1024),"max_output_tokens":1024}).to_string())).unwrap()).await.unwrap();
         assert_eq!(oversized.status(), StatusCode::PAYLOAD_TOO_LARGE);
         assert_eq!(count.load(Ordering::SeqCst), 6);
-        sqlx::query("DELETE FROM runtime_grants WHERE token_digest=$1")
-            .bind(digest(grant))
-            .execute(&pool)
+        runtime_grant::Entity::delete_by_id(digest(&concurrent_grant))
+            .exec(&pool)
             .await
             .unwrap();
-        sqlx::query("DELETE FROM proof_sessions WHERE token_digest=$1")
-            .bind(digest(&token))
-            .execute(&pool)
+        runtime_grant::Entity::delete_by_id(digest(grant))
+            .exec(&pool)
             .await
             .unwrap();
-        sqlx::query("DELETE FROM proof_accounts WHERE id=$1")
-            .bind(account)
-            .execute(&pool)
+        proof_session::Entity::delete_by_id(digest(&token))
+            .exec(&pool)
+            .await
+            .unwrap();
+        proof_account::Entity::delete_by_id(account)
+            .exec(&pool)
+            .await
+            .unwrap();
+        proof_account::Entity::delete_by_id(mismatched_account)
+            .exec(&pool)
             .await
             .unwrap();
         server.abort();

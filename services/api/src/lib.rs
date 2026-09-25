@@ -1,6 +1,7 @@
 pub mod auth;
 pub mod config;
 pub mod db;
+pub mod entities;
 pub mod error;
 pub mod model_gateway;
 pub mod storage;
@@ -18,7 +19,7 @@ use std::{sync::Arc, time::Instant};
 use uuid::Uuid;
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: sqlx::PgPool,
+    pub pool: sea_orm::DatabaseConnection,
     pub store: Arc<dyn ObjectStore>,
 }
 pub fn router(state: AppState) -> Router {

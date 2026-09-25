@@ -3,18 +3,29 @@ use axum::{
     http::{Request, StatusCode},
 };
 use http_body_util::BodyExt;
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, Set,
+    entity::prelude::ChronoDateTimeUtc, sea_query::Expr,
+};
 use serde_json::{Value, json};
 use std::sync::Arc;
 use tower::ServiceExt;
-use tro_api::{AppState, auth, config::Config, db, router, storage};
+use tro_api::{
+    AppState, auth,
+    config::Config,
+    db,
+    entities::{fixture_account, fixture_session},
+    router, storage,
+};
+fn utc_now() -> ChronoDateTimeUtc {
+    std::time::SystemTime::now().into()
+}
 async fn body(response: axum::response::Response) -> Value {
     serde_json::from_slice(&response.into_body().collect().await.unwrap().to_bytes()).unwrap()
 }
 #[tokio::test]
 async fn liveness_and_missing_credential_need_no_database() {
-    let pool = sqlx::postgres::PgPoolOptions::new()
-        .connect_lazy("postgres://unused@127.0.0.1/tro_rebuild_test")
-        .unwrap();
+    let pool = DatabaseConnection::default();
     let app = router(AppState {
         pool,
         store: Arc::new(object_store::memory::InMemory::new()),
@@ -56,10 +67,36 @@ async fn database_accounts_and_private_objects() {
     .unwrap();
     auth::seed(&pool, &profiles).await.unwrap();
     auth::seed(&pool, &profiles).await.unwrap();
-    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM fixture_accounts")
-        .fetch_one(&pool)
+    let protected_digest = auth::digest(profiles["teacher"].as_str().unwrap());
+    fixture_session::Entity::update_many()
+        .col_expr(
+            fixture_session::Column::ExpiresAt,
+            Expr::value(utc_now() - std::time::Duration::from_secs(24 * 60 * 60)),
+        )
+        .col_expr(fixture_session::Column::Revoked, Expr::value(true))
+        .filter(fixture_session::Column::TokenDigest.eq(protected_digest.clone()))
+        .exec(&pool)
         .await
         .unwrap();
+    auth::seed(&pool, &profiles).await.unwrap();
+    let protected_session = fixture_session::Entity::find_by_id(protected_digest.clone())
+        .one(&pool)
+        .await
+        .unwrap()
+        .unwrap();
+    assert!(protected_session.revoked);
+    assert!(protected_session.expires_at < utc_now());
+    fixture_session::Entity::update_many()
+        .col_expr(
+            fixture_session::Column::ExpiresAt,
+            Expr::value(utc_now() + std::time::Duration::from_secs(30 * 24 * 60 * 60)),
+        )
+        .col_expr(fixture_session::Column::Revoked, Expr::value(false))
+        .filter(fixture_session::Column::TokenDigest.eq(protected_digest))
+        .exec(&pool)
+        .await
+        .unwrap();
+    let count = fixture_account::Entity::find().count(&pool).await.unwrap();
     assert_eq!(count, 3);
     let store = storage::connect(&config).unwrap();
     storage::seed(store.as_ref()).await.unwrap();
@@ -126,8 +163,20 @@ async fn database_accounts_and_private_objects() {
             uuid::Uuid::new_v4().simple()
         );
         let digest = auth::digest(&token);
-        sqlx::query("INSERT INTO fixture_sessions (token_digest,account_id,expires_at,revoked) VALUES ($1,$2,NOW()+CASE WHEN $3 THEN INTERVAL '-1 day' ELSE INTERVAL '1 day' END,$4)")
-            .bind(&digest).bind(uuid::Uuid::from_u128(1)).bind(expired).bind(!expired).execute(&pool).await.unwrap();
+        let expires_at = if expired {
+            utc_now() - std::time::Duration::from_secs(24 * 60 * 60)
+        } else {
+            utc_now() + std::time::Duration::from_secs(24 * 60 * 60)
+        };
+        fixture_session::Entity::insert(fixture_session::ActiveModel {
+            token_digest: Set(digest.clone()),
+            account_id: Set(uuid::Uuid::from_u128(1)),
+            expires_at: Set(expires_at),
+            revoked: Set(!expired),
+        })
+        .exec(&pool)
+        .await
+        .unwrap();
         let response = app
             .clone()
             .oneshot(
@@ -140,9 +189,8 @@ async fn database_accounts_and_private_objects() {
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-        sqlx::query("DELETE FROM fixture_sessions WHERE token_digest=$1")
-            .bind(digest)
-            .execute(&pool)
+        fixture_session::Entity::delete_by_id(digest)
+            .exec(&pool)
             .await
             .unwrap();
     }
