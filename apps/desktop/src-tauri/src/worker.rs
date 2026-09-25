@@ -79,6 +79,8 @@ impl Worker {
             }
         }
         command.env("PYTHONUTF8", "1").env("PYTHONUNBUFFERED", "1");
+        #[cfg(debug_assertions)]
+        command.env("TRO_RUNTIME_ALLOW_LOOPBACK_HTTP", "1");
         command
             .args(&program.args)
             .current_dir(&program.directory)
