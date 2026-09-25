@@ -948,6 +948,81 @@
               "type": "null"
             }
           ]
+        },
+        "readiness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "observation",
+            "model",
+            "reason",
+            "screen",
+            "accessibility"
+          ],
+          "properties": {
+            "observation": {
+              "enum": [
+                "unknown",
+                "available",
+                "unavailable"
+              ]
+            },
+            "model": {
+              "enum": [
+                "unconfigured",
+                "ready",
+                "unavailable"
+              ]
+            },
+            "reason": {
+              "enum": [
+                "none",
+                "connect_model",
+                "observe_again",
+                "retry_plan"
+              ]
+            },
+            "screen": {
+              "enum": [
+                "unknown",
+                "available",
+                "unavailable"
+              ]
+            },
+            "accessibility": {
+              "enum": [
+                "unknown",
+                "available",
+                "unavailable"
+              ]
+            }
+          }
+        },
+        "timings": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "phase",
+              "elapsed_ms"
+            ],
+            "properties": {
+              "phase": {
+                "enum": [
+                  "observation",
+                  "model",
+                  "grounding"
+                ]
+              },
+              "elapsed_ms": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 3600000
+              }
+            }
+          }
         }
       },
       "required": [

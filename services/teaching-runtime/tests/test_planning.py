@@ -161,3 +161,59 @@ def test_missing_target_replans_once_then_pauses_without_model_storm():
         await session.close()
 
     asyncio.run(scenario())
+
+
+def test_failed_replan_preserves_progress_and_hides_cue():
+    class FailingPlanner:
+        async def plan(self, *args):
+            raise RuntimeError("private provider payload must not escape")
+
+    async def scenario():
+        session = TeachingSession(Source())
+        session.target = fresh().target
+        prior = PlanProgress(TeachingPlan(steps=[step(), step("2")]), "en", fresh())
+        session.progress = prior
+        session.agent = FailingPlanner()
+        session.objective = "Original objective"
+        session.replans_remaining = 0
+        result = await session.handle(
+            {"kind": "runtime.ask", "question": "Replacement", "locale": "en"}
+        )
+        assert result == "askResult"
+        assert session.progress is prior and prior.status == "paused"
+        assert session.cue is None and session.objective == "Original objective"
+        assert session.replans_remaining == 0
+        projection = session.projection(None)
+        assert projection["readiness"]["reason"] == "retry_plan"
+        assert "private provider" not in str(projection)
+        assert [sample["phase"] for sample in projection["timings"]] == ["observation", "model"]
+
+    asyncio.run(scenario())
+
+
+def test_cancelled_planning_propagates_and_timings_are_bounded():
+    class CancelledPlanner:
+        async def plan(self, *args):
+            raise asyncio.CancelledError()
+
+    async def scenario():
+        session = TeachingSession(Source())
+        session.target = fresh().target
+        session.agent = CancelledPlanner()
+        with pytest.raises(asyncio.CancelledError):
+            await session.handle({"kind": "runtime.ask", "question": "Go", "locale": "en"})
+        for _ in range(205):
+            session.measure("observation", time.monotonic())
+        assert len(session.timings) == 200
+        await session.close()
+        assert not session.timings
+        assert session.readiness["observation"] == "unknown"
+
+    asyncio.run(scenario())
+
+
+def test_recovery_errors_have_only_closed_messages():
+    from tro_runtime.errors import MESSAGES, GuidanceError
+
+    for reason, message in MESSAGES.items():
+        assert str(GuidanceError(reason)) == message

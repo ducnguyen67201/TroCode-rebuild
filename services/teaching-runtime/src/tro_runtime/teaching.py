@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import time
+from collections import deque
 from dataclasses import asdict, replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
+from tro_runtime.errors import GuidanceError
 from tro_runtime.guidance import Cue, check_expected_value, make_cue
 from tro_runtime.observation_source import CuaObservationSource, ObservationSource
 from tro_runtime.observations import Observation, Target
-from tro_runtime.planning import PlanProgress
+from tro_runtime.planning import PlanProgress, TeachingPlan
 from tro_runtime.session_store import SessionStore
 
 if TYPE_CHECKING:
@@ -35,6 +37,64 @@ class TeachingSession:
         self.progress: PlanProgress | None = None
         self.objective = ""
         self.replans_remaining = 0
+        self.readiness = {
+            "observation": "unknown",
+            "screen": "unknown",
+            "accessibility": "unknown",
+            "model": "unconfigured",
+            "reason": "none",
+        }
+        self.timings: deque[dict[str, Any]] = deque(maxlen=200)
+
+    def measure(self, phase: str, started: float) -> None:
+        self.timings.append(
+            {
+                "phase": phase,
+                "elapsed_ms": min(3600000, max(0, (time.monotonic() - started) * 1000)),
+            }
+        )
+
+    async def observe(self, target: Target, include_image: bool = True) -> Observation:
+        assert self.source is not None
+        started = time.monotonic()
+        try:
+            observation = await self.source.observe(target, include_image=include_image)
+            self.readiness["observation"] = "available"
+            self.readiness["accessibility"] = "available" if observation.complete else "unavailable"
+            if include_image:
+                self.readiness["screen"] = "available" if observation.image else "unavailable"
+            if self.readiness["reason"] == "observe_again":
+                self.readiness["reason"] = "none"
+            return observation
+        except Exception:
+            self.readiness.update(
+                observation="unavailable",
+                screen="unknown",
+                accessibility="unknown",
+                reason="observe_again",
+            )
+            raise
+        finally:
+            self.measure("observation", started)
+
+    async def plan(
+        self,
+        observation: Observation,
+        question: str,
+        locale: Literal["en", "vi"],
+        completed: tuple[str, ...] = (),
+    ) -> TeachingPlan:
+        assert self.agent is not None
+        started = time.monotonic()
+        try:
+            result = await self.agent.plan(observation, question, locale, completed)
+            self.readiness.update(model="ready", reason="none")
+            return result
+        except Exception:
+            self.readiness.update(model="unavailable", reason="retry_plan")
+            raise
+        finally:
+            self.measure("model", started)
 
     def configure(self, account: str | None, session: str | None, request: dict[str, Any]) -> None:
         if account is None or session is None or self.store is not None:
@@ -57,6 +117,8 @@ class TeachingSession:
             observation.pop("image", None)  # Image bytes remain inside the Python/model boundary.
         return {
             "revision": self.revision,
+            "readiness": dict(self.readiness),
+            "timings": list(self.timings),
             "journey": self.progress.projection() if self.progress else None,
             "session_id": session_id,
             "targets": [asdict(target) for target in self.targets],
@@ -74,7 +136,6 @@ class TeachingSession:
             "runtime.listTargets",
             "runtime.selectTarget",
             "runtime.explain",
-            "runtime.ask",
         ):
             self.progress = None
         if kind == "runtime.listTargets":
@@ -103,7 +164,7 @@ class TeachingSession:
                 return "cueRefreshResult"
             if self.cue is None or self.observation is None:
                 return "cueRefreshResult"
-            fresh = await self.source.observe(self.target, include_image=False)
+            fresh = await self.observe(self.target, include_image=False)
             try:
                 old = self.observation.element(self.cue.element_id)
                 new = fresh.element(self.cue.element_id)
@@ -153,11 +214,23 @@ class TeachingSession:
                 self.agent = GuidanceAgent(
                     create_model(config["origin"], config["grant"], config["model"])
                 )
-            if self.agent is None:
-                raise ValueError("Connect a proof account with model access first.")
             self.cue = None
-            observation = await self.source.observe(self.target)
-            plan = await self.agent.plan(observation, request["question"], request["locale"])
+            if self.progress is not None:
+                self.progress.pause("Preparing replacement guidance.")
+            if self.agent is None:
+                self.readiness.update(model="unconfigured", reason="connect_model")
+                return "askResult"
+            try:
+                observation = await self.observe(self.target)
+                plan = await self.plan(observation, request["question"], request["locale"])
+            except Exception as error:
+                if self.progress is not None:
+                    self.progress.pause(
+                        str(error)
+                        if isinstance(error, GuidanceError)
+                        else "Planning failed. Your progress is preserved. Retry explicitly."
+                    )
+                return "askResult"
             self.objective = request["question"]
             self.replans_remaining = 1
             self.progress = PlanProgress(plan, request["locale"], observation)
@@ -174,7 +247,7 @@ class TeachingSession:
                 self.record("reported", cue_id=previous_cue.id)
                 self.record("check_started", check_id=request["requestId"], cue_id=previous_cue.id)
             # Every guidance/check request obtains fresh selected-window evidence.
-            observation = await self.source.observe(self.target)
+            observation = await self.observe(self.target)
             self.record("observed", observation_id=observation.id)
             if kind == "runtime.explain":
                 if previous is None:
@@ -233,16 +306,18 @@ class TeachingSession:
         before = self.progress.index
         was_shown = self.progress.shown
         try:
-            fresh = await self.source.observe(self.target, include_image=self.progress.needs_image)
+            fresh = await self.observe(self.target, include_image=self.progress.needs_image)
+            started = time.monotonic()
             cue = self.progress.observe(fresh)
+            self.measure("grounding", started)
         except Exception:
             self.progress.pause("Observation is unavailable. Check access and resume explicitly.")
             return
         if self.progress.needs_replan and self.replans_remaining and self.agent is not None:
             self.replans_remaining -= 1
             try:
-                context = await self.source.observe(self.target)
-                plan = await self.agent.plan(
+                context = await self.observe(self.target)
+                plan = await self.plan(
                     context,
                     self.objective,
                     self.progress.locale,
@@ -280,6 +355,14 @@ class TeachingSession:
         self.check = None
         self.agent = None
         self.model_config = None
+        self.readiness.update(
+            observation="unknown",
+            screen="unknown",
+            accessibility="unknown",
+            model="unconfigured",
+            reason="none",
+        )
+        self.timings.clear()
         if self.store is not None:
             self.store.close()
             self.store = None

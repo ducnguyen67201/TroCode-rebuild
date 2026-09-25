@@ -73,3 +73,22 @@ it('shows prepared steps, applies only fresh session updates, and clears on stop
   await act(async () => publish!({ ...current, revision: 102 }));
   expect(screen.queryByText('Your steps')).toBeNull();
 });
+
+it('shows bounded recovery guidance from runtime readiness', async () => {
+  const client = createPreviewClient();
+  const find = client.teaching!.listTargets;
+  client.teaching!.listTargets = async () => ({
+    ...(await find()),
+    readiness: {
+      observation: 'unknown',
+      screen: 'unknown',
+      accessibility: 'unknown',
+      model: 'unconfigured',
+      reason: 'connect_model',
+    },
+  });
+  render(<TeachingPanel client={client} />);
+  expect(screen.getByDisplayValue(/Increase the counter once/)).toBeTruthy();
+  fireEvent.click(screen.getByText('Find windows'));
+  await screen.findByText(/Connect your proof account first/);
+});

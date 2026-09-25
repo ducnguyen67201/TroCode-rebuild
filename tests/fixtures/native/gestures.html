@@ -2,18 +2,21 @@
 <html lang="en"><meta charset="utf-8"><title>Tro manual gesture fixture</title>
 <style>body{font:20px system-ui;max-width:760px;margin:40px auto;padding:24px}section{border:2px solid #526;padding:24px;margin:24px 0}button,input{font:inherit;padding:12px}#destination{min-height:100px;border:3px dashed #397;padding:20px}#item{padding:16px;background:#ffdc91;display:inline-block}#scroll{height:180px;overflow:auto;border:2px solid #526;padding:12px}</style>
 <h1>Tro manual gesture fixture</h1><p>Open this page yourself. Tro only shows guidance. Perform each gesture with your own mouse or keyboard.</p>
+<p>Lesson: increase the counter once, type hello in Practice answer, then scroll Practice scroll area to the end. Reset before each trial.</p>
 <section><h2>Click</h2><button id="count">Increase counter</button><output id="counter" aria-label="Counter" aria-live="polite">Counter: 0</output></section>
 <section><h2>Drag</h2><div id="source"><div id="item" draggable="true" role="button" tabindex="0" aria-label="Practice block">Practice block</div></div><div id="destination" aria-label="Drop destination">Drop destination</div><output id="dropped" aria-label="Block location" aria-live="polite">Block: at source</output></section>
 <section><h2>Type</h2><label for="answer">Practice answer</label><input id="answer" autocomplete="off"><output id="typed" aria-label="Practice answer result" aria-live="polite">Answer: empty</output></section>
 <section><h2>Scroll</h2><div id="scroll" tabindex="0" role="region" aria-label="Practice scroll area"><p>Start of practice area</p><div style="height:450px"></div><p>End of practice area</p></div><output id="scrolled" aria-label="Scroll progress" aria-live="polite">Scroll: start</output></section>
+<section><h2>Visual probe</h2><p>Point to the blue circle using visual guidance. Confirm yourself; this canvas has no semantic target.</p><canvas id="probe" width="400" height="120"></canvas></section>
 <button id="reset">Reset all exercises</button>
 <script>
+const ctx = document.getElementById('probe').getContext('2d'); ctx.fillStyle='#2467db'; ctx.beginPath(); ctx.arc(260,60,28,0,Math.PI*2); ctx.fill();
 const el = id => document.getElementById(id); let count = 0;
 el('count').onclick = () => { el('counter').textContent = `Counter: ${++count}`; };
 el('item').ondragstart = e => e.dataTransfer.setData('text/plain', 'practice-block');
 el('destination').ondragover = e => e.preventDefault();
 el('destination').ondrop = e => { e.preventDefault(); if(e.dataTransfer.getData('text/plain') === 'practice-block') {el('destination').append(el('item'));el('dropped').textContent='Block: at destination';} };
 el('answer').oninput = () => {el('typed').textContent = `Answer: ${el('answer').value || 'empty'}`;};
-el('scroll').onscroll = () => {el('scrolled').textContent = el('scroll').scrollTop > 200 ? 'Scroll: end reached' : 'Scroll: start';};
+el('scroll').onscroll = () => {el('scrolled').textContent = el('scroll').scrollTop + el('scroll').clientHeight >= el('scroll').scrollHeight - 2 ? 'Scroll: end reached' : 'Scroll: start';};
 el('reset').onclick = () => {count=0;el('counter').textContent='Counter: 0';el('source').append(el('item'));el('dropped').textContent='Block: at source';el('answer').value='';el('typed').textContent='Answer: empty';el('scroll').scrollTop=0;el('scrolled').textContent='Scroll: start';};
 </script></html>

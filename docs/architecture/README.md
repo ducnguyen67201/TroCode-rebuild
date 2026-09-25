@@ -46,3 +46,6 @@ flowchart TB
 
 The agent loop runs locally. Model inference is remote. Guidance is visual: no
 real pointer motion, input injection, app launch or focus control is exposed.
+
+See [Reliable native lesson](reliable-lesson.md) for recovery, proof provisioning,
+readiness and the manual acceptance evidence workflow.

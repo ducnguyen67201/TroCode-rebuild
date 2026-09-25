@@ -18,7 +18,9 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
     useState<NonNullable<TeachingCue['direction']>>('down');
   const [label, setLabel] = useState('');
   const [expected, setExpected] = useState('');
-  const [question, setQuestion] = useState('');
+  const [question, setQuestion] = useState(
+    'Increase the counter once, type hello in Practice answer, then scroll Practice scroll area to the end.',
+  );
   const epoch = useRef(0);
   const activeSession = useRef<string | null>(null);
   useEffect(() => {
@@ -183,6 +185,19 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
       >
         Observe
       </button>
+      {state?.readiness && (
+        <p role="status">
+          Observation: {state.readiness.observation}. Screenshot:{' '}
+          {state.readiness.screen}. Accessibility:{' '}
+          {state.readiness.accessibility}. Model: {state.readiness.model}.
+          {state.readiness.reason === 'connect_model' &&
+            ' Connect your proof account first.'}
+          {state.readiness.reason === 'observe_again' &&
+            ' Check observation access, then Observe again.'}
+          {state.readiness.reason === 'retry_plan' &&
+            ' Model access or planning failed. Reconnect if your grant expired, then explicitly replan. Previous progress is preserved.'}
+        </p>
+      )}
       {state?.journey && (
         <section aria-label="Teaching plan">
           <h3>Your steps</h3>

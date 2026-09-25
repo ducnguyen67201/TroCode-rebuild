@@ -300,6 +300,15 @@ pub async fn run() -> Result<(), &'static str> {
             .run(pool.get_postgres_connection_pool())
             .await
             .map_err(|_| "Proof migration failed."),
+        "proof-issue" | "proof-revoke" => {
+            if !db::ready(&pool).await {
+                return Err("Apply proof migrations first.");
+            }
+            let command = crate::proof_admin::parse(&std::env::args().skip(1).collect::<Vec<_>>())?;
+            let account = crate::proof_admin::execute(&pool, command).await?;
+            println!("Proof operation completed for account {account}.");
+            Ok(())
+        }
         "serve" => {
             if !db::ready(&pool).await {
                 return Err("Apply proof migrations first.");

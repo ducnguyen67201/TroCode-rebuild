@@ -159,6 +159,20 @@ export interface TeachingState {
   cue: TeachingCue | null;
   check: CheckResult | null;
   journey?: Journey | null;
+  readiness?: {
+    observation: 'unknown' | 'available' | 'unavailable';
+    model: 'unconfigured' | 'ready' | 'unavailable';
+    reason: 'none' | 'connect_model' | 'observe_again' | 'retry_plan';
+    screen: 'unknown' | 'available' | 'unavailable';
+    accessibility: 'unknown' | 'available' | 'unavailable';
+  };
+  /**
+   * @maxItems 200
+   */
+  timings?: {
+    phase: 'observation' | 'model' | 'grounding';
+    elapsed_ms: number;
+  }[];
 }
 export interface Target {
   pid: number;

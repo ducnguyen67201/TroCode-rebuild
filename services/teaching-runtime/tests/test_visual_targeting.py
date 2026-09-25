@@ -8,6 +8,7 @@ import pytest
 from test_guidance import observation
 
 from tro_runtime.agent import GuidanceAgent
+from tro_runtime.errors import GuidanceError
 from tro_runtime.planning import PlannedStep, PlanProgress, TeachingPlan, VisualTarget
 from tro_runtime.teaching import TeachingSession
 
@@ -110,7 +111,7 @@ def test_sdk_can_propose_visual_guidance_for_an_unlabelled_canvas(monkeypatch):
     monkeypatch.setattr("tro_runtime.agent.Runner.run", run)
     result = asyncio.run(GuidanceAgent("unused").plan(screenshot(), "Select a shape", "en"))
     assert isinstance(result.steps[0].target, VisualTarget)
-    with pytest.raises(ValueError):
+    with pytest.raises(GuidanceError, match="could not be grounded"):
         asyncio.run(GuidanceAgent("unused").plan(screenshot(None), "Select a shape", "en"))
 
 
