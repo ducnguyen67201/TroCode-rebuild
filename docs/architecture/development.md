@@ -32,3 +32,9 @@ revocation and model errors. Record real evidence; source checks are not platfor
 P1's existing limits remain: secondary macOS overlays are disabled pending calibration,
 Windows/clean-machine validation and signing remain open, and no real provider run is
 claimed. Packaged artifacts must be rebuilt after this source/protocol change.
+
+F11 packaged validation is separate: use
+[`push-to-talk-computer-control.md`](../../tests/acceptance/push-to-talk-computer-control.md)
+on macOS arm64 and Windows x64. Source and preview tests cannot prove passive
+global hooks, microphone/privacy behavior, AltGr handling, native input delivery,
+provider latency, perceived responsiveness, signing or clean-machine cleanup.

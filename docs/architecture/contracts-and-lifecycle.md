@@ -2,7 +2,7 @@
 
 `packages/contracts/schema/protocol.schema.json` is the wire authority. The generator
 produces TypeScript, Rust and Python bindings plus a schema digest. Both sides must
-match the digest before teaching begins. The current development protocol is v2;
+match the digest before teaching begins. The current development protocol is v3;
 this unreleased extension changes the digest, so incompatible workers fail handshake.
 
 `packages/contracts/schema/auth.schema.json` separately defines the closed native
@@ -46,6 +46,12 @@ payload attempts to override the envelope. Python bounds frames and queue sizes.
 OS permission grants. Teaching requests use a bounded ordinary queue; lifecycle
 Stop/shutdown use a separate reserved control queue that cancels active work.
 
+F11 adds quick `prepareInstruction`, `executeInstruction` and `actionDecision`
+requests plus reserved `cancelAction`. A background action task reports closed
+`runtime.actionStatus` events with generation, run, event and increasing revision
+identity. Events never satisfy a pending response. The host drops stale/duplicate
+events and treats any other unsolicited frame as a protocol violation.
+
 | Request                       | Owner and effect                                                                   |
 | ----------------------------- | ---------------------------------------------------------------------------------- |
 | `listTargets`, `selectTarget` | Discover/select an observation window; clear the prior plan                        |
@@ -73,5 +79,5 @@ within one second, and null/invalid cues hide previous pixels immediately. Nativ
 operations execute on the main thread; the observation loop remains asynchronous.
 
 Account changes, auth loss and Stop invalidate old work. Shutdown cancels pending
-work, closes local resources and reaps the worker. No interrupted native input can
-be replayed, because native input is not part of the product interface.
+work, closes local resources and reaps the worker. F11 input exists only inside
+the active in-memory run; interrupted native input is never serialized or replayed.

@@ -31,7 +31,10 @@ On the desktop create owner-only `~/.tro-rebuild/proof-account.json` on macOS, o
 `%LOCALAPPDATA%/.tro-rebuild/proof-account.json` on Windows:
 
 ```json
-{"origin":"https://your-proof-server.example","token":"64-hex-character-proof-account-token"}
+{
+  "origin": "https://your-proof-server.example",
+  "token": "64-hex-character-proof-account-token"
+}
 ```
 
 Use Connect proof account, then Start. Rust verifies identity and obtains a five-minute,
@@ -55,3 +58,25 @@ an unsigned/ad-hoc artifact does not establish distribution readiness.
 Live native capture, read-only policy, permissions, clean installation, model access and
 manual gestures must be measured separately. Do not publish an installer as P1 complete
 until those records exist for both target platforms.
+
+## F11 voice/control setup
+
+Hosted mode additionally requires backend-only `OPENAI_API_KEY`, fixed
+`TRO_TRANSCRIPTION_MODEL=gpt-transcribe`, and a fixed `TRO_ACTION_MODEL`. The
+desktop receives only short-lived subject-bound grants. Select Enable voice once
+in the main window to request microphone and keyboard-monitoring/accessibility
+permission; launching Tro or pressing a denied chord must not prompt.
+
+Daily use is exactly Command+Control on macOS or physical Left Control+Left Alt
+on Windows. Hold to record and release either key to finalize. Windows AltGr and
+extra modifiers do not activate. The frontmost eligible window at chord-down is
+the entire action scope. Use Command-or-Control+Shift+Escape if capture or action
+work must stop immediately.
+
+Transcription uses overlapping completed WAV files rather than a live session.
+Provider/network failure, an incomplete chunk sequence, silence, target change or
+queue pressure fails closed. Consequential actions pause in the main window;
+voice cannot approve itself. Diagnose with IDs, phases, durations and counts only—
+never record audio, transcripts, screenshots, accessibility labels or typed text.
+Complete `tests/acceptance/push-to-talk-computer-control.md` on both packaged
+platforms before claiming F11/P7-A/P8 acceptance.

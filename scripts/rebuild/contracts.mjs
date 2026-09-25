@@ -40,6 +40,7 @@ try {
     ['model-access', '-model-access'],
     ['auth', '-auth'],
     ['workspace', '-workspace'],
+    ['voice', '-voice'],
   ]) {
     const source = join(
       root,
@@ -53,6 +54,27 @@ try {
         style: { singleQuote: true },
       }),
     );
+    if (schemaName === 'voice') {
+      const rust = join(temporary, 'generated_voice.rs');
+      run('cargo', [
+        'run',
+        '--quiet',
+        '--locked',
+        '-p',
+        'tro-contracts',
+        '--features',
+        'codegen',
+        '--bin',
+        'contracts-gen',
+        '--',
+        source,
+        rust,
+      ]);
+      await output(
+        'packages/contracts/src/generated_voice.rs',
+        await readFile(rust, 'utf8'),
+      );
+    }
     if (schemaName !== 'protocol') continue;
     const digest = createHash('sha256')
       .update(JSON.stringify(canonical(schema)))

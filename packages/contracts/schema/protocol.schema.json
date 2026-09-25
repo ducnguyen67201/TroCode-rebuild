@@ -94,6 +94,33 @@
     },
     {
       "$ref": "#/definitions/RuntimePlanControlResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimePrepareInstruction"
+    },
+    {
+      "$ref": "#/definitions/RuntimeInstructionPrepared"
+    },
+    {
+      "$ref": "#/definitions/RuntimeExecuteInstruction"
+    },
+    {
+      "$ref": "#/definitions/RuntimeInstructionAccepted"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionDecision"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionDecisionResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeCancelAction"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionCancelResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionStatus"
     }
   ],
   "definitions": {
@@ -103,9 +130,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -121,19 +146,14 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.initialize"
-          ]
+          "enum": ["runtime.initialize"]
         },
         "schemaDigest": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
         "accountId": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "maxLength": 128
         }
       },
@@ -154,9 +174,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -172,9 +190,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.ready"
-          ]
+          "enum": ["runtime.ready"]
         },
         "schemaDigest": {
           "type": "string",
@@ -184,11 +200,9 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": [
-              "diagnostic"
-            ]
+            "enum": ["diagnostic", "selected_window_actions"]
           },
-          "maxItems": 1,
+          "maxItems": 2,
           "uniqueItems": true
         }
       },
@@ -209,9 +223,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -227,9 +239,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.health"
-          ]
+          "enum": ["runtime.health"]
         }
       },
       "required": [
@@ -247,9 +257,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -265,17 +273,11 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.healthResult"
-          ]
+          "enum": ["runtime.healthResult"]
         },
         "state": {
           "type": "string",
-          "enum": [
-            "ready",
-            "running",
-            "stopped"
-          ]
+          "enum": ["ready", "running", "stopped"]
         }
       },
       "required": [
@@ -294,9 +296,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -312,9 +312,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.start"
-          ]
+          "enum": ["runtime.start"]
         },
         "sessionId": {
           "type": "string",
@@ -337,9 +335,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -355,9 +351,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.started"
-          ]
+          "enum": ["runtime.started"]
         },
         "sessionId": {
           "type": "string",
@@ -380,9 +374,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -398,9 +390,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.stop"
-          ]
+          "enum": ["runtime.stop"]
         }
       },
       "required": [
@@ -418,9 +408,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -436,9 +424,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.stopped"
-          ]
+          "enum": ["runtime.stopped"]
         }
       },
       "required": [
@@ -456,9 +442,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -474,9 +458,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.shutdown"
-          ]
+          "enum": ["runtime.shutdown"]
         }
       },
       "required": [
@@ -494,9 +476,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -512,9 +492,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.shutdownComplete"
-          ]
+          "enum": ["runtime.shutdownComplete"]
         }
       },
       "required": [
@@ -532,9 +510,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -550,9 +526,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.error"
-          ]
+          "enum": ["runtime.error"]
         },
         "code": {
           "type": "string",
@@ -614,12 +588,7 @@
           "maximum": 100000
         }
       },
-      "required": [
-        "x",
-        "y",
-        "width",
-        "height"
-      ],
+      "required": ["x", "y", "width", "height"],
       "additionalProperties": false
     },
     "Target": {
@@ -642,12 +611,7 @@
           "$ref": "#/definitions/Rect"
         }
       },
-      "required": [
-        "pid",
-        "window_id",
-        "title",
-        "bounds"
-      ],
+      "required": ["pid", "window_id", "title", "bounds"],
       "additionalProperties": false
     },
     "Element": {
@@ -674,13 +638,7 @@
           "maxLength": 256
         }
       },
-      "required": [
-        "id",
-        "label",
-        "role",
-        "bounds",
-        "value"
-      ],
+      "required": ["id", "label", "role", "bounds", "value"],
       "additionalProperties": false
     },
     "Observation": {
@@ -720,13 +678,7 @@
           ]
         }
       },
-      "required": [
-        "id",
-        "target",
-        "captured_at",
-        "elements",
-        "complete"
-      ],
+      "required": ["id", "target", "captured_at", "elements", "complete"],
       "additionalProperties": false
     },
     "TeachingCue": {
@@ -747,13 +699,7 @@
         },
         "gesture": {
           "type": "string",
-          "enum": [
-            "point",
-            "click",
-            "drag",
-            "type",
-            "scroll"
-          ]
+          "enum": ["point", "click", "drag", "type", "scroll"]
         },
         "caption": {
           "type": "string",
@@ -762,10 +708,7 @@
         },
         "locale": {
           "type": "string",
-          "enum": [
-            "en",
-            "vi"
-          ]
+          "enum": ["en", "vi"]
         },
         "source": {
           "$ref": "#/definitions/Rect"
@@ -784,12 +727,7 @@
           "anyOf": [
             {
               "type": "string",
-              "enum": [
-                "up",
-                "down",
-                "left",
-                "right"
-              ]
+              "enum": ["up", "down", "left", "right"]
             },
             {
               "type": "null"
@@ -813,10 +751,7 @@
         },
         "grounding": {
           "type": "string",
-          "enum": [
-            "accessibility",
-            "visual"
-          ]
+          "enum": ["accessibility", "visual"]
         }
       },
       "required": [
@@ -839,17 +774,11 @@
       "properties": {
         "outcome": {
           "type": "string",
-          "enum": [
-            "confirmed",
-            "mismatch",
-            "unknown"
-          ]
+          "enum": ["confirmed", "mismatch", "unknown"]
         },
         "source": {
           "type": "string",
-          "enum": [
-            "fresh_observation"
-          ]
+          "enum": ["fresh_observation"]
         },
         "observation_id": {
           "type": "string",
@@ -1042,9 +971,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1060,9 +987,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.listTargets"
-          ]
+          "enum": ["runtime.listTargets"]
         }
       },
       "required": [
@@ -1080,9 +1005,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1098,9 +1021,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.targetsResult"
-          ]
+          "enum": ["runtime.targetsResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1122,9 +1043,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1140,9 +1059,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.selectTarget"
-          ]
+          "enum": ["runtime.selectTarget"]
         },
         "pid": {
           "type": "integer",
@@ -1170,9 +1087,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1188,9 +1103,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.targetSelected"
-          ]
+          "enum": ["runtime.targetSelected"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1212,9 +1125,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1230,9 +1141,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.observe"
-          ]
+          "enum": ["runtime.observe"]
         }
       },
       "required": [
@@ -1250,9 +1159,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1268,9 +1175,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.observationResult"
-          ]
+          "enum": ["runtime.observationResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1292,9 +1197,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1310,9 +1213,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.explain"
-          ]
+          "enum": ["runtime.explain"]
         },
         "elementId": {
           "type": "string",
@@ -1320,13 +1221,7 @@
         },
         "gesture": {
           "type": "string",
-          "enum": [
-            "point",
-            "click",
-            "drag",
-            "type",
-            "scroll"
-          ]
+          "enum": ["point", "click", "drag", "type", "scroll"]
         },
         "caption": {
           "type": "string",
@@ -1335,10 +1230,7 @@
         },
         "locale": {
           "type": "string",
-          "enum": [
-            "en",
-            "vi"
-          ]
+          "enum": ["en", "vi"]
         },
         "destinationId": {
           "anyOf": [
@@ -1355,12 +1247,7 @@
           "anyOf": [
             {
               "type": "string",
-              "enum": [
-                "up",
-                "down",
-                "left",
-                "right"
-              ]
+              "enum": ["up", "down", "left", "right"]
             },
             {
               "type": "null"
@@ -1389,9 +1276,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1407,9 +1292,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.explanationResult"
-          ]
+          "enum": ["runtime.explanationResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1431,9 +1314,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1449,9 +1330,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.check"
-          ]
+          "enum": ["runtime.check"]
         },
         "cueId": {
           "type": "string",
@@ -1484,9 +1363,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1502,9 +1379,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.checkResult"
-          ]
+          "enum": ["runtime.checkResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1526,9 +1401,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1544,9 +1417,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.presentationAck"
-          ]
+          "enum": ["runtime.presentationAck"]
         },
         "cueId": {
           "type": "string",
@@ -1569,9 +1440,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1587,9 +1456,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.presentationAckResult"
-          ]
+          "enum": ["runtime.presentationAckResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1611,9 +1478,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1629,9 +1494,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.configure"
-          ]
+          "enum": ["runtime.configure"]
         },
         "storageRoot": {
           "type": "string",
@@ -1661,11 +1524,7 @@
                   "maxLength": 128
                 }
               },
-              "required": [
-                "origin",
-                "grant",
-                "model"
-              ],
+              "required": ["origin", "grant", "model"],
               "additionalProperties": false
             }
           ]
@@ -1688,9 +1547,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1706,9 +1563,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.configured"
-          ]
+          "enum": ["runtime.configured"]
         }
       },
       "required": [
@@ -1726,9 +1581,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1744,9 +1597,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.ask"
-          ]
+          "enum": ["runtime.ask"]
         },
         "question": {
           "type": "string",
@@ -1755,10 +1606,7 @@
         },
         "locale": {
           "type": "string",
-          "enum": [
-            "en",
-            "vi"
-          ]
+          "enum": ["en", "vi"]
         }
       },
       "required": [
@@ -1778,9 +1626,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1796,9 +1642,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.askResult"
-          ]
+          "enum": ["runtime.askResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1820,9 +1664,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1838,9 +1680,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.refreshCue"
-          ]
+          "enum": ["runtime.refreshCue"]
         }
       },
       "required": [
@@ -1858,9 +1698,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1876,9 +1714,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.cueRefreshResult"
-          ]
+          "enum": ["runtime.cueRefreshResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -1898,13 +1734,7 @@
       "title": "Journey",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "index",
-        "status",
-        "message",
-        "steps"
-      ],
+      "required": ["id", "index", "status", "message", "steps"],
       "properties": {
         "id": {
           "type": "string",
@@ -1917,12 +1747,7 @@
         },
         "status": {
           "type": "string",
-          "enum": [
-            "running",
-            "awaiting_confirmation",
-            "paused",
-            "completed"
-          ]
+          "enum": ["running", "awaiting_confirmation", "paused", "completed"]
         },
         "message": {
           "type": "string",
@@ -1946,9 +1771,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -1964,17 +1787,11 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.planControl"
-          ]
+          "enum": ["runtime.planControl"]
         },
         "action": {
           "type": "string",
-          "enum": [
-            "pause",
-            "resume",
-            "confirm"
-          ]
+          "enum": ["pause", "resume", "confirm"]
         }
       },
       "required": [
@@ -1993,9 +1810,7 @@
       "properties": {
         "protocolVersion": {
           "type": "integer",
-          "enum": [
-            2
-          ]
+          "enum": [3]
         },
         "requestId": {
           "type": "string",
@@ -2011,9 +1826,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": [
-            "runtime.planControlResult"
-          ]
+          "enum": ["runtime.planControlResult"]
         },
         "state": {
           "$ref": "#/definitions/TeachingState"
@@ -2026,6 +1839,360 @@
         "generationId",
         "kind",
         "state"
+      ],
+      "additionalProperties": false
+    },
+    "PreparedInstruction": {
+      "title": "PreparedInstruction",
+      "type": "object",
+      "properties": {
+        "preparationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "utteranceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "target": { "$ref": "#/definitions/Target" },
+        "expiresAt": { "type": "string", "minLength": 20, "maxLength": 40 }
+      },
+      "required": ["preparationId", "utteranceId", "target", "expiresAt"],
+      "additionalProperties": false
+    },
+    "RuntimePrepareInstruction": {
+      "title": "RuntimePrepareInstruction",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.prepareInstruction"] },
+        "utteranceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "utteranceId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeInstructionPrepared": {
+      "title": "RuntimeInstructionPrepared",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.instructionPrepared"] },
+        "prepared": { "$ref": "#/definitions/PreparedInstruction" }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "prepared"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeExecuteInstruction": {
+      "title": "RuntimeExecuteInstruction",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.executeInstruction"] },
+        "utteranceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "preparationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "instruction": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "modelConfig": {
+          "type": "object",
+          "properties": {
+            "origin": { "type": "string", "maxLength": 2048 },
+            "grant": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "model": { "type": "string", "minLength": 1, "maxLength": 128 }
+          },
+          "required": ["origin", "grant", "model"],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "utteranceId",
+        "preparationId",
+        "instruction",
+        "modelConfig"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeInstructionAccepted": {
+      "title": "RuntimeInstructionAccepted",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.instructionAccepted"] },
+        "runId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "runId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionDecision": {
+      "title": "RuntimeActionDecision",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.actionDecision"] },
+        "runId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "confirmationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "decision": { "type": "string", "enum": ["approve", "reject"] }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "runId",
+        "confirmationId",
+        "decision"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionDecisionResult": {
+      "title": "RuntimeActionDecisionResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.actionDecisionResult"] },
+        "accepted": { "type": "boolean" }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "accepted"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeCancelAction": {
+      "title": "RuntimeCancelAction",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.cancelAction"] },
+        "runId": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "runId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionCancelResult": {
+      "title": "RuntimeActionCancelResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.actionCancelResult"] },
+        "cancelled": { "type": "boolean" }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "cancelled"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionStatus": {
+      "title": "RuntimeActionStatus",
+      "type": "object",
+      "properties": {
+        "protocolVersion": { "type": "integer", "enum": [3] },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": { "type": "string", "enum": ["runtime.actionStatus"] },
+        "eventId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "executing",
+            "confirmation",
+            "completed",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "summary": { "type": "string", "maxLength": 256 },
+        "actionsUsed": { "type": "integer", "minimum": 0, "maximum": 12 },
+        "confirmationId": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "confirmationReason": { "type": ["string", "null"], "maxLength": 256 }
+      },
+      "required": [
+        "protocolVersion",
+        "generationId",
+        "kind",
+        "eventId",
+        "runId",
+        "revision",
+        "phase",
+        "summary",
+        "actionsUsed",
+        "confirmationId",
+        "confirmationReason"
       ],
       "additionalProperties": false
     }

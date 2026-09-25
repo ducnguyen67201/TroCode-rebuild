@@ -15,6 +15,9 @@ imports, provider keys or arbitrary process API.
 `platform/teaching-client.ts` defines the feature interface. `tauri-client.ts`
 implements native requests and state subscriptions. `preview-teaching.ts` is an
 explicit simulation; it never silently replaces a failing native connection.
+`platform/voice-client.ts` is the only React voice/control surface. It carries a
+validated `VoiceStatus` projection and closed enable/text/cancel/decision commands;
+raw audio, key events, native actions and grants never enter React.
 
 ## Native host
 
@@ -23,6 +26,10 @@ owns runtime availability and account selection. `worker.rs` owns child process,
 private pipes, correlated requests and shutdown. `overlay.rs` owns nonactivating,
 click-through windows, coordinate mapping, cue expiry and the refresh loop.
 `geometry.rs` validates presentation bounds against observed elements.
+`modifier_chord/` reduces passive physical modifier events to one press/release
+edge. `voice/` owns microphone capture, completed WAV chunks, ordered transcript
+merging and the voice status authority. The emergency shortcut cancels voice and
+action work before stopping the worker.
 
 `account.rs` reads private proof configuration and obtains bounded model grants.
 `permissions.rs` handles OS observation consent. Tauri capability files restrict
@@ -48,7 +55,10 @@ refresh credential.
 | `planning.py`           | Accessibility/visual plan types, bounded target resolution and deterministic step progression |
 | `agent.py`              | Local Agents SDK calls producing structured proposals/plans, with no callable tools           |
 | `observations.py`       | Immutable window, element and geometry values                                                 |
-| `observation_source.py` | Read-only CUA adapter and bounded selected-window native policy                               |
+| `observation_source.py` | F10 observation plus construction of one F11 selected-window bounded driver                   |
+| `computer.py`           | Closed Agents SDK AsyncComputer adapter, fresh target checks and action budget                |
+| `action_agent.py`       | Four-turn, 30-second ComputerTool run for one final instruction                               |
+| `action_run.py`         | Cancellation and single-use consequential-action confirmation                                 |
 | `guidance.py`           | Pure cue construction and explicit expected-value checks                                      |
 | `session_store.py`      | Account-isolated, locked SQLite evidence journal                                              |
 | `model_client.py`       | HTTPS model client using a scoped backend grant                                               |
@@ -80,6 +90,13 @@ model grants and a fixed provider route. It enforces a four-request grant budget
 1024 output tokens, request/response size limits and timeouts. Provider keys stay
 here. Shared classroom functionality is later work; proof identity is not a
 production authentication system.
+
+`services/api/src/provider/` is the production F11 boundary. Authenticated users
+obtain subject-bound opaque voice or action grants; only digests are stored and
+request/audio budgets are decremented transactionally before provider dispatch.
+The transcription proxy accepts bounded completed PCM16 WAV chunks and the
+Responses proxy admits only the fixed action model and one computer tool shape.
+Provider keys, upstream origins and budget constants remain backend-owned.
 
 The Rust API maps its five current PostgreSQL tables with SeaORM entities, and
 the authentication and model-grant modules retain ownership of their policy and

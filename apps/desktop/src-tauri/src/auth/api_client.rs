@@ -45,6 +45,28 @@ struct AddWorkspaceMemberRequest<'a> {
     role: &'a str,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GrantRequest {
+    subject_id: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProviderGrant {
+    pub grant: String,
+    pub expires_at: String,
+    pub model: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ChunkTranscript {
+    pub sequence: u32,
+    pub text: String,
+    pub languages: Vec<String>,
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MeResponse {
@@ -181,6 +203,88 @@ impl AuthApiClient {
             return Ok(());
         }
         Err(error_response(response).await)
+    }
+
+    pub async fn provider_grant(
+        &self,
+        access_token: &str,
+        subject_id: uuid::Uuid,
+        voice: bool,
+    ) -> Result<ProviderGrant, ApiFailure> {
+        let response = self
+            .client
+            .post(self.url(if voice {
+                "v1/voice-grants"
+            } else {
+                "v1/runtime-grants"
+            }))
+            .bearer_auth(access_token)
+            .json(&GrantRequest {
+                subject_id: subject_id.to_string(),
+            })
+            .send()
+            .await
+            .map_err(|_| ApiFailure::unavailable())?;
+        let grant: ProviderGrant = response_json(response).await?;
+        if grant.grant.len() != 64
+            || !grant
+                .grant
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+            || grant.model.is_empty()
+            || grant.model.len() > 128
+        {
+            return Err(ApiFailure::unavailable());
+        }
+        Ok(grant)
+    }
+
+    pub async fn transcribe(
+        &self,
+        grant: &str,
+        sequence: u32,
+        duration_ms: u64,
+        final_chunk: bool,
+        prompt: &str,
+        wav: Vec<u8>,
+    ) -> Result<ChunkTranscript, ApiFailure> {
+        let form = reqwest::multipart::Form::new()
+            .part(
+                "file",
+                reqwest::multipart::Part::bytes(wav)
+                    .file_name(format!("chunk-{sequence}.wav"))
+                    .mime_str("audio/wav")
+                    .map_err(|_| ApiFailure::unavailable())?,
+            )
+            .text("sequence", sequence.to_string())
+            .text("durationMs", duration_ms.to_string())
+            .text("final", final_chunk.to_string())
+            .text(
+                "prompt",
+                prompt
+                    .chars()
+                    .rev()
+                    .take(500)
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .rev()
+                    .collect::<String>(),
+            )
+            .text("languages[]", "en")
+            .text("languages[]", "vi");
+        let response = self
+            .client
+            .post(self.url("v1/audio/transcriptions"))
+            .bearer_auth(grant)
+            .multipart(form)
+            .send()
+            .await
+            .map_err(|_| ApiFailure::unavailable())?;
+        response_json(response).await
+    }
+
+    pub fn provider_origin(&self) -> String {
+        self.origin.as_str().trim_end_matches('/').to_owned()
     }
 
     fn url(&self, path: &str) -> Url {

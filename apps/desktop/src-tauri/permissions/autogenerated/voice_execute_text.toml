@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-voice-execute-text"
+description = "Enables the voice_execute_text command without any pre-configured scope."
+commands.allow = ["voice_execute_text"]
+
+[[permission]]
+identifier = "deny-voice-execute-text"
+description = "Denies the voice_execute_text command without any pre-configured scope."
+commands.deny = ["voice_execute_text"]

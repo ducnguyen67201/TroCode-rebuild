@@ -19,3 +19,18 @@ fn bounds() {
     assert!(tro_contracts::parse_message(&[]).is_err());
     assert!(tro_contracts::parse_message(&vec![b' '; tro_contracts::MAX_FRAME_BYTES + 1]).is_err());
 }
+
+#[test]
+fn voice_projection_is_closed() {
+    let value = serde_json::json!({
+        "phase":"idle","revision":1,"utteranceId":null,"runId":null,
+        "partialTranscript":"","finalTranscript":"","targetTitle":null,
+        "message":"Ready.","shortcut":"Command+Control",
+        "permissions":{"microphone":"granted","keyboardMonitoring":"granted","ready":true,"recovery":""},
+        "confirmation":null,"actionsUsed":0
+    });
+    assert!(tro_contracts::parse_voice_status(&value).is_ok());
+    let mut private = value;
+    private["audio"] = serde_json::json!("bytes");
+    assert!(tro_contracts::parse_voice_status(&private).is_err());
+}

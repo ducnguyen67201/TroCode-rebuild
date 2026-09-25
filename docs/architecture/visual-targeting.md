@@ -4,10 +4,10 @@ A planned step can locate its target in two ways. Tauri capability files restric
 UI-to-host commands; they do not enumerate teachable controls or restrict the
 planner to particular applications. Both targeting paths use the same overlay.
 
-| Target | Location source | Suitable for |
-| --- | --- | --- |
-| Accessibility selector | Unique role and label resolved to current native bounds | Standard buttons, fields and labelled controls |
-| Visual region | Model-proposed rectangle normalized to the entire selected-window screenshot | Canvas shapes, custom controls and unlabelled UI |
+| Target                 | Location source                                                              | Suitable for                                     |
+| ---------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------ |
+| Accessibility selector | Unique role and label resolved to current native bounds                      | Standard buttons, fields and labelled controls   |
+| Visual region          | Model-proposed rectangle normalized to the entire selected-window screenshot | Canvas shapes, custom controls and unlabelled UI |
 
 ```mermaid
 flowchart LR
@@ -23,7 +23,9 @@ flowchart LR
 
 The visual target contains a description and x, y, width and height between zero
 and one. The rectangle must fit wholly inside the screenshot. A point is represented
-by a small rectangle. It is never a desktop coordinate or an executable click.
+by a small rectangle. It is not a desktop coordinate. In F10 it is presentation-
+only; in F11 the selected-window adapter may map a current screenshot coordinate
+only after revalidating the pinned PID, window ID, bounds and screenshot geometry.
 
 For window bounds `(left, top, width, height)`, the mapping is:
 
@@ -70,4 +72,6 @@ still requires OS permission. Partial AX data never confirms progress automatica
 Visual location alone does not prove completion. An available, complete accessibility
 postcondition can still drive automatic advancement. Otherwise the learner uses
 Continue, recorded separately as a learner report. Model-based visual outcome checks
-are future work. The learner always performs every click, drag, scroll and keystroke.
+are future work. In F10 guided teaching the learner performs every click, drag,
+scroll and keystroke. In F11, allowlisted selected-window actions may be performed
+by the bounded action run; consequential or ambiguous actions pause for confirmation.

@@ -29,6 +29,9 @@ fn config() -> HostedConfig {
         refresh_key: vec![8_u8; 32],
         access_ttl: Duration::from_secs(900),
         refresh_ttl: Duration::from_secs(30 * 24 * 60 * 60),
+        openai_api_key: "test-provider-key".to_owned(),
+        transcription_model: "gpt-transcribe".to_owned(),
+        action_model: "computer-use-preview".to_owned(),
     }
 }
 

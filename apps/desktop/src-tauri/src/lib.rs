@@ -6,10 +6,12 @@ pub mod config;
 pub mod geometry;
 pub mod lifecycle;
 pub mod manager;
+pub mod modifier_chord;
 #[cfg(feature = "desktop")]
 mod overlay;
 #[cfg(feature = "desktop")]
 mod permissions;
+pub mod voice;
 pub mod worker;
 #[cfg(feature = "desktop")]
 pub fn run() {
@@ -26,7 +28,8 @@ pub fn run() {
             if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
                 overlay::hide(app);
                 let manager=app.state::<Arc<manager::RuntimeManager>>().inner().clone();
-                tauri::async_runtime::spawn(async move { manager.stop().await; });
+                let voice=app.state::<Arc<voice::VoiceManager>>().inner().clone();
+                tauri::async_runtime::spawn(async move { voice.cancel(Some(&manager)).await; manager.stop().await; });
             }
         }).build())
         .manage(overlay::OverlayState::default())
@@ -46,6 +49,12 @@ pub fn run() {
             commands::account_select,
             commands::teaching_request,
             commands::proof_connect,
+            commands::voice_status,
+            commands::voice_enable,
+            commands::voice_disable,
+            commands::voice_execute_text,
+            commands::voice_cancel,
+            commands::voice_decide,
             overlay::overlay_current,
             permissions::observation_permissions
         ])
@@ -56,6 +65,12 @@ pub fn run() {
             app.manage(runtime.clone());
             let auth = Arc::new(auth::AuthManager::from_env(runtime.clone()));
             app.manage(auth.clone());
+            let voice = Arc::new(voice::VoiceManager::default());
+            app.manage(voice.clone());
+            let (chord_sender, chord_receiver) = std::sync::mpsc::sync_channel(8);
+            let listener = Arc::new(modifier_chord::ModifierListener::start(chord_sender)
+                .map_err(std::io::Error::other)?);
+            app.manage(listener.clone());
             overlay::prepare(app.handle())?;
             use tauri_plugin_global_shortcut::GlobalShortcutExt;
             app.global_shortcut().register("CommandOrControl+Shift+Escape")
@@ -69,6 +84,39 @@ pub fn run() {
                     let _ = handle.emit_to("main", "runtime-status", value);
                 }
             });
+            let mut action_events = runtime.subscribe_action_events();
+            let action_voice = voice.clone();
+            tauri::async_runtime::spawn(async move {
+                while let Ok(event) = action_events.recv().await {
+                    action_voice.apply_action_event(&event);
+                }
+            });
+            let handle = app.handle().clone();
+            let mut voice_status = voice.subscribe();
+            tauri::async_runtime::spawn(async move {
+                while voice_status.changed().await.is_ok() {
+                    let value = voice_status.borrow_and_update().clone();
+                    let _ = handle.emit_to("main", "voice-status", &value);
+                    overlay::show_voice(&handle, &value);
+                }
+            });
+            let chord_handle = app.handle().clone();
+            std::thread::Builder::new().name("tro-voice-chord-dispatch".into()).spawn(move || {
+                while let Ok(edge) = chord_receiver.recv() {
+                    let handle = chord_handle.clone();
+                    tauri::async_runtime::spawn(async move {
+                        let voice = handle.state::<Arc<voice::VoiceManager>>().inner().clone();
+                        match edge {
+                            modifier_chord::ChordEdge::Pressed(_) => {
+                                let runtime = handle.state::<Arc<manager::RuntimeManager>>().inner().clone();
+                                let auth = handle.state::<Arc<auth::AuthManager>>().inner().clone();
+                                let _ = voice.begin_capture(runtime, auth).await;
+                            }
+                            modifier_chord::ChordEdge::Released => voice.release_capture().await,
+                        }
+                    });
+                }
+            }).map_err(std::io::Error::other)?;
             let handle = app.handle().clone();
             let mut status = auth.subscribe();
             tauri::async_runtime::spawn(async move {
@@ -76,6 +124,10 @@ pub fn run() {
                     let value = status.borrow_and_update().clone();
                     if value.state != "authenticated" {
                         overlay::hide(&handle);
+                        let _ = handle.state::<Arc<modifier_chord::ModifierListener>>().set_enabled(false);
+                        let voice = handle.state::<Arc<voice::VoiceManager>>().inner().clone();
+                        let runtime = handle.state::<Arc<manager::RuntimeManager>>().inner().clone();
+                        tauri::async_runtime::spawn(async move { voice.cancel(Some(&runtime)).await; });
                     }
                     let _ = handle.emit_to("main", "auth-status", value);
                 }
@@ -104,7 +156,13 @@ pub fn run() {
             let handle = handle.clone();
             let complete = cleanup_complete.clone();
             tauri::async_runtime::spawn(async move {
-                handle.state::<Arc<manager::RuntimeManager>>().stop().await;
+                let manager = handle
+                    .state::<Arc<manager::RuntimeManager>>()
+                    .inner()
+                    .clone();
+                let voice = handle.state::<Arc<voice::VoiceManager>>().inner().clone();
+                voice.cancel(Some(&manager)).await;
+                manager.stop().await;
                 complete.store(true, Ordering::SeqCst);
                 handle.exit(0);
             });

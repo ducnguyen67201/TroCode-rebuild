@@ -13,7 +13,7 @@ from tro_runtime.runtime import Runtime
 
 def request(kind, **extra):
     return {
-        "protocolVersion": 2,
+        "protocolVersion": 3,
         "kind": "runtime." + kind,
         "requestId": str(uuid4()),
         "correlationId": str(uuid4()),

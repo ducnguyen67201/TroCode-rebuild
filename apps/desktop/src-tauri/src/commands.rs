@@ -2,6 +2,7 @@ use crate::{
     auth::{AuthManager, AuthStatus, WorkspaceMember, WorkspaceMemberList},
     lifecycle::Status,
     manager::RuntimeManager,
+    voice::{VoiceManager, VoiceStatus},
     worker::WorkerError,
 };
 use std::{sync::Arc, time::Duration};
@@ -9,6 +10,8 @@ use tauri::State;
 use uuid::Uuid;
 type Manager<'a> = State<'a, Arc<RuntimeManager>>;
 type Authentication<'a> = State<'a, Arc<AuthManager>>;
+type Voice<'a> = State<'a, Arc<VoiceManager>>;
+type ModifierListener<'a> = State<'a, Arc<crate::modifier_chord::ModifierListener>>;
 
 fn require_main(window: &tauri::WebviewWindow) -> Result<(), WorkerError> {
     if window.label() == "main" {
@@ -239,4 +242,97 @@ pub async fn proof_connect(
     require_main(&window)?;
     require_workspace(&auth).await?;
     manager.connect_proof().await
+}
+
+#[tauri::command]
+pub fn voice_status(
+    window: tauri::WebviewWindow,
+    voice: Voice<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    Ok(voice.status())
+}
+
+#[tauri::command]
+pub async fn voice_enable(
+    window: tauri::WebviewWindow,
+    voice: Voice<'_>,
+    listener: ModifierListener<'_>,
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    require_workspace(&auth).await?;
+    manager.start().await?;
+    let status = voice.enable(crate::permissions::voice_permissions(true));
+    listener
+        .set_enabled(status.permissions.ready)
+        .map_err(|_| WorkerError::new("NOT_READY", "Global push-to-talk listener unavailable."))?;
+    Ok(status)
+}
+
+#[tauri::command]
+pub async fn voice_disable(
+    window: tauri::WebviewWindow,
+    voice: Voice<'_>,
+    listener: ModifierListener<'_>,
+    manager: Manager<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    let _ = listener.set_enabled(false);
+    voice.cancel(Some(&manager)).await;
+    Ok(voice.disable())
+}
+
+#[tauri::command]
+pub async fn voice_execute_text(
+    window: tauri::WebviewWindow,
+    instruction: String,
+    voice: Voice<'_>,
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    require_workspace(&auth).await?;
+    voice
+        .execute_text(instruction, manager.inner().clone(), auth.inner().clone())
+        .await
+}
+
+#[tauri::command]
+pub async fn voice_cancel(
+    window: tauri::WebviewWindow,
+    voice: Voice<'_>,
+    manager: Manager<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    Ok(voice.cancel(Some(&manager)).await)
+}
+
+#[tauri::command]
+pub async fn voice_decide(
+    window: tauri::WebviewWindow,
+    run_id: String,
+    confirmation_id: String,
+    approve: bool,
+    voice: Voice<'_>,
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    require_workspace(&auth).await?;
+    let run_id = Uuid::parse_str(&run_id)
+        .map_err(|_| WorkerError::new("INVALID_MESSAGE", "Invalid action decision."))?;
+    let confirmation_id = Uuid::parse_str(&confirmation_id)
+        .map_err(|_| WorkerError::new("INVALID_MESSAGE", "Invalid action decision."))?;
+    if !manager
+        .decide_action(run_id, confirmation_id, approve)
+        .await?
+    {
+        return Err(WorkerError::new(
+            "NOT_READY",
+            "This confirmation is no longer active.",
+        ));
+    }
+    Ok(voice.status())
 }

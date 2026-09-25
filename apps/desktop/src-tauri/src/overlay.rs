@@ -34,6 +34,27 @@ pub fn prepare(app: &tauri::AppHandle) -> Result<(), WorkerError> {
             WorkerError::new("NOT_READY", "Click-through presentation unavailable.")
         })?;
     }
+    let hud = tauri::WebviewWindowBuilder::new(
+        app,
+        "voice-hud",
+        tauri::WebviewUrl::App("index.html?voiceHud=1".into()),
+    )
+    .title("Tro voice status")
+    .inner_size(360.0, 84.0)
+    .decorations(false)
+    .transparent(true)
+    .shadow(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .focusable(false)
+    .focused(false)
+    .visible(false)
+    .content_protected(true)
+    .build()
+    .map_err(|_| WorkerError::new("NOT_READY", "Voice status display unavailable."))?;
+    hud.set_ignore_cursor_events(true)
+        .map_err(|_| WorkerError::new("NOT_READY", "Voice status display unavailable."))?;
+    let _ = hud.center();
     Ok(())
 }
 
@@ -47,9 +68,24 @@ pub fn hide(app: &tauri::AppHandle) {
             values.clear();
         }
         for (label, window) in handle.webview_windows() {
-            if label.starts_with("teaching-overlay-") {
+            if label.starts_with("teaching-overlay-") || label == "voice-hud" {
                 let _ = window.hide();
             }
+        }
+    });
+}
+
+pub fn show_voice(app: &tauri::AppHandle, status: &crate::voice::VoiceStatus) {
+    let handle = app.clone();
+    let status = status.clone();
+    let _ = app.run_on_main_thread(move || {
+        let Some(window) = handle.get_webview_window("voice-hud") else { return; };
+        let visible = matches!(status.phase.as_str(), "listening" | "transcribing" | "dispatching" | "executing" | "confirmation" | "failed");
+        if visible {
+            let _ = window.emit("voice-hud-status", serde_json::json!({"phase":status.phase,"revision":status.revision,"message":status.message}));
+            let _ = window.show();
+        } else {
+            let _ = window.hide();
         }
     });
 }

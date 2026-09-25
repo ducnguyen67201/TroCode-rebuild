@@ -17,25 +17,25 @@ test('preview lifecycle is explicit, usable and responsive', async ({
     'Northstar Robotics',
   );
   await page.getByRole('button', { name: 'Start session' }).click();
-  await expect(page.getByRole('status')).toHaveText(
-    'Simulated runtime is running.',
-  );
+  await expect(
+    page.getByText('Simulated runtime is running.', { exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Check connection' }).click();
-  await expect(page.getByRole('status')).toHaveText(
-    'Simulated runtime is running.',
-  );
+  await expect(
+    page.getByText('Simulated runtime is running.', { exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Stop', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText(
-    'Simulated runtime stopped.',
-  );
+  await expect(
+    page.getByText('Simulated runtime stopped.', { exact: true }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Restart runtime' }).click();
-  await expect(page.getByRole('status')).toHaveText(
-    'Simulated runtime is running.',
-  );
+  await expect(
+    page.getByText('Simulated runtime is running.', { exact: true }),
+  ).toBeVisible();
   await page.getByLabel('Development profile').selectOption('student-a');
-  await expect(page.getByRole('status')).toHaveText(
-    'Simulated runtime stopped.',
-  );
+  await expect(
+    page.getByText('Simulated runtime stopped.', { exact: true }),
+  ).toBeVisible();
   await page.screenshot({ path: '.local/ui-preview.png', fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   expect(

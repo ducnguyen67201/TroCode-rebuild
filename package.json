@@ -37,7 +37,8 @@
     "test:scripts": "node --test scripts/rebuild/*.test.mjs",
     "test:browser": "playwright test",
     "package:runtime": "node scripts/rebuild/package-runtime.mjs",
-    "package:check": "node scripts/rebuild/package-check.mjs"
+    "package:check": "node scripts/rebuild/package-check.mjs",
+    "eval:voice": "node scripts/rebuild/voice-eval.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

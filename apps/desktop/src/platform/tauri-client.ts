@@ -6,6 +6,7 @@ import {
   parseTeaching,
   parseWorkspaceMember,
   parseWorkspaceMemberList,
+  parseVoiceStatus,
 } from '@tro/contracts';
 import type { DesktopClient } from './desktop-client';
 async function call(command: string, args?: Record<string, unknown>) {
@@ -39,6 +40,23 @@ export const tauriClient: DesktopClient = {
     removeMember: async (workspaceId, membershipId) => {
       await invoke('workspace_remove_member', { workspaceId, membershipId });
     },
+  },
+  voice: {
+    status: () => voice('voice_status'),
+    enable: () => voice('voice_enable'),
+    disable: () => voice('voice_disable'),
+    executeText: (instruction) => voice('voice_execute_text', { instruction }),
+    cancel: () => voice('voice_cancel'),
+    decide: (runId, confirmationId, approve) =>
+      voice('voice_decide', { runId, confirmationId, approve }),
+    subscribe: (listener, onBoundaryError) =>
+      listen('voice-status', (event) => {
+        try {
+          listener(parseVoiceStatus(event.payload));
+        } catch {
+          onBoundaryError?.();
+        }
+      }),
   },
   teaching: {
     subscribe: (listener) =>
@@ -84,4 +102,8 @@ async function teaching(kind: string, payload: Record<string, unknown>) {
 
 async function auth(command: string) {
   return parseAuthStatus(await invoke(command));
+}
+
+async function voice(command: string, args?: Record<string, unknown>) {
+  return parseVoiceStatus(await invoke(command, args));
 }

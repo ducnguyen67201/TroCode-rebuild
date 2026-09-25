@@ -2,6 +2,7 @@ use sea_orm_migration::prelude::*;
 
 mod m20260925_000001_google_auth;
 mod m20260925_000002_workspace_membership;
+mod m20260925_000003_provider_grants;
 
 pub struct Migrator;
 
@@ -11,6 +12,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20260925_000001_google_auth::Migration),
             Box::new(m20260925_000002_workspace_membership::Migration),
+            Box::new(m20260925_000003_provider_grants::Migration),
         ]
     }
 }

@@ -22,6 +22,9 @@ pub struct HostedConfig {
     pub refresh_key: Vec<u8>,
     pub access_ttl: Duration,
     pub refresh_ttl: Duration,
+    pub openai_api_key: String,
+    pub transcription_model: String,
+    pub action_model: String,
 }
 
 impl HostedConfig {
@@ -86,6 +89,21 @@ impl HostedConfig {
         let refresh_key = decode_key(&get("TRO_REFRESH_KEY_B64")?)?;
         let access_seconds = parse_seconds(values, "TRO_ACCESS_TTL_SECONDS", 900)?;
         let refresh_seconds = parse_seconds(values, "TRO_REFRESH_TTL_SECONDS", 30 * 24 * 60 * 60)?;
+        let openai_api_key = get("OPENAI_API_KEY")?;
+        if openai_api_key.is_empty() || openai_api_key.len() > 512 {
+            return Err("Invalid provider credential.");
+        }
+        let transcription_model = values
+            .get("TRO_TRANSCRIPTION_MODEL")
+            .cloned()
+            .unwrap_or_else(|| "gpt-transcribe".to_owned());
+        let action_model = get("TRO_ACTION_MODEL")?;
+        if transcription_model != "gpt-transcribe"
+            || action_model.is_empty()
+            || action_model.len() > 128
+        {
+            return Err("Invalid fixed provider model configuration.");
+        }
         if !(5 * 60..=60 * 60).contains(&access_seconds) {
             return Err("Access-token lifetime must be between 5 and 60 minutes.");
         }
@@ -103,6 +121,9 @@ impl HostedConfig {
             refresh_key,
             access_ttl: Duration::from_secs(access_seconds),
             refresh_ttl: Duration::from_secs(refresh_seconds),
+            openai_api_key,
+            transcription_model,
+            action_model,
         })
     }
 }
@@ -231,6 +252,9 @@ mod tests {
                 "TRO_REFRESH_KEY_B64",
                 "ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA=",
             ),
+            ("OPENAI_API_KEY", "test-provider-key"),
+            ("TRO_TRANSCRIPTION_MODEL", "gpt-transcribe"),
+            ("TRO_ACTION_MODEL", "computer-use-preview"),
         ]
         .into_iter()
         .map(|(key, value)| (key.to_owned(), value.to_owned()))

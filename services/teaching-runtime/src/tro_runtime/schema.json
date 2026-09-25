@@ -94,6 +94,33 @@
     },
     {
       "$ref": "#/definitions/RuntimePlanControlResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimePrepareInstruction"
+    },
+    {
+      "$ref": "#/definitions/RuntimeInstructionPrepared"
+    },
+    {
+      "$ref": "#/definitions/RuntimeExecuteInstruction"
+    },
+    {
+      "$ref": "#/definitions/RuntimeInstructionAccepted"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionDecision"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionDecisionResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeCancelAction"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionCancelResult"
+    },
+    {
+      "$ref": "#/definitions/RuntimeActionStatus"
     }
   ],
   "definitions": {
@@ -104,7 +131,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -155,7 +182,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -185,10 +212,11 @@
           "items": {
             "type": "string",
             "enum": [
-              "diagnostic"
+              "diagnostic",
+              "selected_window_actions"
             ]
           },
-          "maxItems": 1,
+          "maxItems": 2,
           "uniqueItems": true
         }
       },
@@ -210,7 +238,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -248,7 +276,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -295,7 +323,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -338,7 +366,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -381,7 +409,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -419,7 +447,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -457,7 +485,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -495,7 +523,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -533,7 +561,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1043,7 +1071,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1081,7 +1109,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1123,7 +1151,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1171,7 +1199,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1213,7 +1241,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1251,7 +1279,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1293,7 +1321,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1390,7 +1418,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1432,7 +1460,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1485,7 +1513,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1527,7 +1555,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1570,7 +1598,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1612,7 +1640,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1689,7 +1717,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1727,7 +1755,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1779,7 +1807,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1821,7 +1849,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1859,7 +1887,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1947,7 +1975,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -1994,7 +2022,7 @@
         "protocolVersion": {
           "type": "integer",
           "enum": [
-            2
+            3
           ]
         },
         "requestId": {
@@ -2026,6 +2054,510 @@
         "generationId",
         "kind",
         "state"
+      ],
+      "additionalProperties": false
+    },
+    "PreparedInstruction": {
+      "title": "PreparedInstruction",
+      "type": "object",
+      "properties": {
+        "preparationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "utteranceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "expiresAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40
+        }
+      },
+      "required": [
+        "preparationId",
+        "utteranceId",
+        "target",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimePrepareInstruction": {
+      "title": "RuntimePrepareInstruction",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.prepareInstruction"
+          ]
+        },
+        "utteranceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "utteranceId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeInstructionPrepared": {
+      "title": "RuntimeInstructionPrepared",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.instructionPrepared"
+          ]
+        },
+        "prepared": {
+          "$ref": "#/definitions/PreparedInstruction"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "prepared"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeExecuteInstruction": {
+      "title": "RuntimeExecuteInstruction",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.executeInstruction"
+          ]
+        },
+        "utteranceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "preparationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "instruction": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "modelConfig": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "type": "string",
+              "maxLength": 2048
+            },
+            "grant": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "model": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "required": [
+            "origin",
+            "grant",
+            "model"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "utteranceId",
+        "preparationId",
+        "instruction",
+        "modelConfig"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeInstructionAccepted": {
+      "title": "RuntimeInstructionAccepted",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.instructionAccepted"
+          ]
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "runId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionDecision": {
+      "title": "RuntimeActionDecision",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.actionDecision"
+          ]
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "confirmationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "approve",
+            "reject"
+          ]
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "runId",
+        "confirmationId",
+        "decision"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionDecisionResult": {
+      "title": "RuntimeActionDecisionResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.actionDecisionResult"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "accepted"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeCancelAction": {
+      "title": "RuntimeCancelAction",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.cancelAction"
+          ]
+        },
+        "runId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "runId"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionCancelResult": {
+      "title": "RuntimeActionCancelResult",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "correlationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.actionCancelResult"
+          ]
+        },
+        "cancelled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "requestId",
+        "correlationId",
+        "generationId",
+        "kind",
+        "cancelled"
+      ],
+      "additionalProperties": false
+    },
+    "RuntimeActionStatus": {
+      "title": "RuntimeActionStatus",
+      "type": "object",
+      "properties": {
+        "protocolVersion": {
+          "type": "integer",
+          "enum": [
+            3
+          ]
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "runtime.actionStatus"
+          ]
+        },
+        "eventId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "executing",
+            "confirmation",
+            "completed",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "actionsUsed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "confirmationId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "confirmationReason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "protocolVersion",
+        "generationId",
+        "kind",
+        "eventId",
+        "runId",
+        "revision",
+        "phase",
+        "summary",
+        "actionsUsed",
+        "confirmationId",
+        "confirmationReason"
       ],
       "additionalProperties": false
     }

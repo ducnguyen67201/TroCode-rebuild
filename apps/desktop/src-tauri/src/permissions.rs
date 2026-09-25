@@ -1,4 +1,4 @@
-//! Native observation consent only; no event posting or input-injection permission.
+//! Native permission projection. Prompts are initiated only by explicit setup commands.
 use serde::Serialize;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -40,4 +40,26 @@ pub async fn observation_permissions(
     receiver
         .await
         .map_err(|_| crate::worker::WorkerError::new("NOT_READY", "Permission check interrupted."))
+}
+
+pub fn voice_permissions(request: bool) -> crate::voice::VoicePermissions {
+    #[cfg(target_os = "macos")]
+    let keyboard = unsafe { AXIsProcessTrusted() };
+    #[cfg(not(target_os = "macos"))]
+    let keyboard = true;
+    let microphone = if request {
+        crate::voice::audio::MicrophoneCapture::start().is_ok()
+    } else {
+        false
+    };
+    crate::voice::VoicePermissions {
+        microphone: if microphone { "granted" } else if request { "denied" } else { "prompt" }.into(),
+        keyboard_monitoring: if keyboard { "granted" } else { "denied" }.into(),
+        ready: microphone && keyboard,
+        recovery: if cfg!(target_os = "macos") {
+            "Enable Tro in Privacy & Security → Microphone and Accessibility/Input Monitoring, then relaunch."
+        } else {
+            "Enable microphone privacy access. Protected or elevated windows are unavailable."
+        }.into(),
+    }
 }

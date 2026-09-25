@@ -5,6 +5,10 @@ use crate::{
     },
     config::HostedConfig,
     persistence,
+    provider::{
+        ProviderService, grants as provider_grants, responses as provider_responses,
+        transcription as provider_transcription,
+    },
     workspace::{WorkspaceService, handlers as workspace_handlers},
 };
 use axum::{
@@ -23,6 +27,7 @@ pub struct HostedState {
     pub google: Arc<GoogleVerifier>,
     pub sessions: Arc<SessionService>,
     pub workspaces: Arc<WorkspaceService>,
+    pub providers: Arc<ProviderService>,
 }
 
 impl HostedState {
@@ -58,11 +63,18 @@ impl HostedState {
             config.refresh_ttl,
             memberships,
         )?);
+        let providers = Arc::new(ProviderService::new(
+            database.clone(),
+            config.openai_api_key.clone(),
+            config.transcription_model.clone(),
+            config.action_model.clone(),
+        )?);
         Ok(Self {
             database,
             google,
             sessions,
             workspaces,
+            providers,
         })
     }
 }
@@ -78,6 +90,16 @@ pub fn router(state: HostedState) -> Router {
         .route("/v1/auth/session/refresh", post(handlers::refresh_session))
         .route("/v1/auth/session", delete(handlers::logout))
         .route("/v1/me", get(handlers::me))
+        .route("/v1/voice-grants", post(provider_grants::voice_grant))
+        .route("/v1/runtime-grants", post(provider_grants::runtime_grant))
+        .route(
+            "/v1/audio/transcriptions",
+            post(provider_transcription::transcribe).layer(DefaultBodyLimit::max(1024 * 1024)),
+        )
+        .route(
+            "/v1/responses",
+            post(provider_responses::responses).layer(DefaultBodyLimit::max(2 * 1024 * 1024)),
+        )
         .route(
             "/v1/workspaces/{workspace_id}/members",
             get(workspace_handlers::list_members).post(workspace_handlers::add_member),

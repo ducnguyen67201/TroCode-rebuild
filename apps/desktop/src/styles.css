@@ -1145,6 +1145,82 @@ select {
   }
 }
 
+.voice-panel {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid #506757;
+  border-radius: 18px;
+  background: #f8fff9;
+}
+.voice-heading-row,
+.voice-actions,
+.voice-text-fallback > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.voice-heading-row h2 {
+  margin: 0;
+}
+.voice-phase {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  text-transform: capitalize;
+}
+.voice-shortcut kbd {
+  display: inline-block;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #163b2e;
+  border-bottom-width: 3px;
+  border-radius: 8px;
+  background: white;
+  font: 600 1rem system-ui;
+}
+.voice-text-fallback {
+  margin-top: 1rem;
+}
+.voice-text-fallback label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+.voice-text-fallback input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem;
+  font: inherit;
+}
+.voice-transcript,
+.voice-confirmation {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border-left: 4px solid #147f68;
+  background: white;
+}
+.voice-confirmation {
+  border-left-color: #b16900;
+}
+.voice-error {
+  color: #9b1c1c;
+}
+.voice-recovery {
+  color: #5b4824;
+}
+.link-button {
+  background: transparent;
+  color: #075f50;
+  text-decoration: underline;
+  padding: 0;
+}
+@media (max-width: 640px) {
+  .voice-heading-row,
+  .voice-text-fallback > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .teaching-panel {
   margin: 2rem 0;
   padding: 1.5rem;
@@ -1311,6 +1387,37 @@ body.overlay-page #root {
   background: transparent;
   margin: 0;
   overflow: hidden;
+}
+body.voice-hud-page,
+body.voice-hud-page #root {
+  background: transparent;
+  margin: 0;
+  overflow: hidden;
+}
+.voice-hud {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 64px;
+  padding: 0.85rem 1rem;
+  border: 1px solid #ffffff55;
+  border-radius: 18px;
+  background: #112d25eb;
+  color: white;
+  font: 600 0.95rem system-ui;
+  box-shadow: 0 10px 30px #0005;
+}
+.voice-hud > span {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: #67e8b5;
+}
+.voice-hud-confirmation > span,
+.voice-hud-failed > span {
+  background: #ffc35c;
 }
 @keyframes cue-pulse {
   to {

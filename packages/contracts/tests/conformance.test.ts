@@ -6,6 +6,7 @@ import {
   parseStatus,
   parseWorkspaceMember,
   parseWorkspaceMemberList,
+  parseVoiceStatus,
 } from '../src/index';
 describe('wire conformance', () => {
   for (const entry of corpus)
@@ -100,5 +101,30 @@ describe('wire conformance', () => {
         refreshToken: 'must-never-cross-the-bridge',
       }),
     ).toThrow('Invalid workspace member');
+  });
+  it('accepts a closed voice projection and rejects private fields', () => {
+    const value = {
+      phase: 'idle',
+      revision: 2,
+      utteranceId: null,
+      runId: null,
+      partialTranscript: '',
+      finalTranscript: '',
+      targetTitle: null,
+      message: 'Ready.',
+      shortcut: 'Command+Control',
+      permissions: {
+        microphone: 'granted',
+        keyboardMonitoring: 'granted',
+        ready: true,
+        recovery: '',
+      },
+      confirmation: null,
+      actionsUsed: 0,
+    };
+    expect(parseVoiceStatus(value)).toEqual(value);
+    expect(() => parseVoiceStatus({ ...value, audio: 'bytes' })).toThrow(
+      'Invalid voice status',
+    );
   });
 });
