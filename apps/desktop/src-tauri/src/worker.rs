@@ -39,15 +39,20 @@ struct Pending {
 }
 
 fn runtime_error(value: &Value) -> WorkerError {
-    match value["code"].as_str() {
-        Some("OBSERVATION_UNAVAILABLE") => WorkerError::new(
+    match (value["code"].as_str(), value["message"].as_str()) {
+        (
+            Some("NOT_READY"),
+            Some("Selected-window observation is unavailable. Check observation permissions."),
+        ) => WorkerError::new(
             "OBSERVATION_UNAVAILABLE",
             "Selected-window observation is unavailable. Check observation permissions.",
         ),
-        Some("ACTION_SETUP_UNAVAILABLE") => WorkerError::new(
-            "ACTION_SETUP_UNAVAILABLE",
-            "The selected-window action could not start.",
-        ),
+        (Some("NOT_READY"), Some("The selected-window action could not start.")) => {
+            WorkerError::new(
+                "ACTION_SETUP_UNAVAILABLE",
+                "The selected-window action could not start.",
+            )
+        }
         _ => WorkerError::new("NOT_READY", "Runtime refused the request."),
     }
 }
@@ -396,7 +401,10 @@ mod tests {
 
     #[test]
     fn runtime_errors_expose_only_known_safe_diagnostic_categories() {
-        let observation = runtime_error(&json!({"code":"OBSERVATION_UNAVAILABLE"}));
+        let observation = runtime_error(&json!({
+            "code":"NOT_READY",
+            "message":"Selected-window observation is unavailable. Check observation permissions."
+        }));
         assert_eq!(observation.code, "OBSERVATION_UNAVAILABLE");
         let unknown = runtime_error(&json!({
             "code":"UPSTREAM_SECRET",

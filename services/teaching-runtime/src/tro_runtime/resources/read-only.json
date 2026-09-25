@@ -3,6 +3,6 @@
   "mode": "bounded",
   "expires_after": "1h",
   "idle_timeout": "15m",
-  "resources": {},
+  "resources": {"desktop": {"display": true}},
   "allow": {"tools": ["list_apps", "list_windows", "get_window_state"]}
 }

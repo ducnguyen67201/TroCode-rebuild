@@ -52,9 +52,15 @@ def test_mismatch_and_generation():
     assert runtime.handle(request("stopped"))["code"] == "INVALID_MESSAGE"
 
 
-def test_failure_diagnostics_identify_safe_runtime_stage():
-    assert safe_failure_details("runtime.prepareInstruction")[0] == ("OBSERVATION_UNAVAILABLE")
-    assert safe_failure_details("runtime.executeInstruction")[0] == ("ACTION_SETUP_UNAVAILABLE")
+def test_failure_diagnostics_use_protocol_code_and_identify_safe_runtime_stage():
+    assert safe_failure_details("runtime.prepareInstruction") == (
+        "NOT_READY",
+        "Selected-window observation is unavailable. Check observation permissions.",
+    )
+    assert safe_failure_details("runtime.executeInstruction") == (
+        "NOT_READY",
+        "The selected-window action could not start.",
+    )
     assert safe_failure_details("runtime.ask")[0] == "NOT_READY"
 
 

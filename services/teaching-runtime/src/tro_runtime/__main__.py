@@ -33,12 +33,12 @@ def safe_failure_details(kind: str) -> tuple[str, str]:
     """Return a diagnostic category that never includes native/provider details."""
     if kind == "runtime.prepareInstruction":
         return (
-            "OBSERVATION_UNAVAILABLE",
+            "NOT_READY",
             "Selected-window observation is unavailable. Check observation permissions.",
         )
     if kind == "runtime.executeInstruction":
         return (
-            "ACTION_SETUP_UNAVAILABLE",
+            "NOT_READY",
             "The selected-window action could not start.",
         )
     return (
