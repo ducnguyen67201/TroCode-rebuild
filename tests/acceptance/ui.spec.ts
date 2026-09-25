@@ -13,7 +13,9 @@ test('preview lifecycle is explicit, usable and responsive', async ({
   );
   await page.getByRole('button', { name: 'Continue with Google' }).click();
   await expect(page.getByText('Preview — simulated runtime')).toBeVisible();
-  await expect(page.getByText('Northstar Robotics')).toBeVisible();
+  await expect(page.locator('.app-header-kicker')).toHaveText(
+    'Northstar Robotics',
+  );
   await page.getByRole('button', { name: 'Start session' }).click();
   await expect(page.getByRole('status')).toHaveText(
     'Simulated runtime is running.',
@@ -54,7 +56,9 @@ test('workspace holding state reveals no product and can be retried', async ({
     0,
   );
   await page.getByRole('button', { name: 'Check for access' }).click();
-  await expect(page.getByText('Northstar Robotics')).toBeVisible();
+  await expect(page.locator('.app-header-kicker')).toHaveText(
+    'Northstar Robotics',
+  );
 });
 
 test('sign out removes the protected product without a reload', async ({
@@ -65,6 +69,7 @@ test('sign out removes the protected product without a reload', async ({
   await expect(
     page.getByRole('button', { name: 'Start session' }),
   ).toBeVisible();
+  await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(
     page.getByRole('button', { name: 'Continue with Google' }),
@@ -78,6 +83,7 @@ test('workspace owner can pre-add exact Google email access', async ({
   page,
 }) => {
   await page.goto('/?auth=authenticated&workspaceRole=owner');
+  await page.getByRole('button', { name: 'Team' }).click();
 
   await expect(
     page.getByRole('heading', { name: 'People with access' }),
@@ -142,7 +148,11 @@ test('auth layouts remain within narrow and desktop viewports', async ({
 
     for (const authCase of authLayoutCases) {
       await page.goto(`/?auth=${authCase.scenario}`);
-      await expect(page.getByText(authCase.marker).first()).toBeVisible();
+      const marker =
+        authCase.scenario === 'authenticated'
+          ? page.locator('.app-header-kicker')
+          : page.getByText(authCase.marker).first();
+      await expect(marker).toBeVisible();
       const primaryAction = page.getByRole('button', {
         name: authCase.primaryAction,
       });

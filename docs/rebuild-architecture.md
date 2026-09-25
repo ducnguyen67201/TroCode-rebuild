@@ -151,6 +151,12 @@ must not apply provider-specific dot or plus-address rewriting. Backend membersh
 is authoritative for every workspace operation; roles are not trusted merely
 because they appear in a client or token.
 
+The authenticated desktop keeps the active workspace and role visible in a
+persistent left navigation. Learning stays the primary surface; owner-only Team
+access and device-session Settings are separate destinations near the bottom.
+Navigation visibility is presentation only and never replaces backend role
+enforcement.
+
 The remembered-device target is a renewable 30-day session, not one bearer JWT
 valid for 30 days. The backend issues a short-lived, audience-restricted app JWT
 and an opaque rotating refresh token. Rust keeps the access token in memory and
@@ -917,3 +923,13 @@ Screenshot-only observations may guide without complete accessibility data, but 
 establish automatic completion from missing/partial AX evidence. Visual-only outcomes
 use learner confirmation. See [visual targeting](architecture/visual-targeting.md) for
 coordinate mapping, permission requirements and conservative image-comparison limits.
+
+### Reliable lesson implementation follow-up (F10, P1/P2)
+
+The local runtime preserves paused progress on failed explicit replanning, projects
+observation/model readiness and bounded phase timings, and supports an operator-only
+proof credential issue/revoke workflow. The manual fixture and versioned evidence
+validator make the next acceptance run reproducible. See
+[reliable lesson architecture](architecture/reliable-lesson.md).
+These source changes do not close P1/P2: real-model lesson trials, installed worker
+permission attribution, Windows and display/latency acceptance remain pending.
