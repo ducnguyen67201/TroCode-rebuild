@@ -14,7 +14,9 @@ services:
       timeout: 2s
       retries: 30
   storage:
-    image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    image: bitnamilegacy/minio@sha256:6dabb4a2088c9a79908de3bc05f4586c23ad2182c8908e7e3acbf61c1467fb20
+    # Retain compatibility with fixture volumes created by the former root image.
+    user: "0"
     command: ["server", "/data"]
     environment:
       MINIO_ROOT_USER: ${TRO_S3_KEY:?Run npm run setup}
@@ -22,7 +24,7 @@ services:
     ports: ["127.0.0.1:19000:9000"]
     volumes: ["object-data:/data"]
   bucket:
-    image: quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+    image: bitnamilegacy/minio-client@sha256:73bd39f7899a0cef12b8dd5df13aa93a3ed1aaa44236542442e9ac76819ac158
     depends_on: [storage]
     environment:
       TRO_S3_KEY: ${TRO_S3_KEY}
