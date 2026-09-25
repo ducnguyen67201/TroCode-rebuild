@@ -41,7 +41,18 @@ export function stopChild(child) {
     try {
       process.kill(-child.pid, 'SIGTERM');
     } catch (error) {
-      if (error.code !== 'ESRCH') throw error;
+      if (error.code === 'ESRCH') return;
+      if (error.code === 'EPERM') {
+        // The process group may already be changing after a forwarded Ctrl-C.
+        // Fall back to the exact child instead of aborting cleanup for siblings.
+        try {
+          child.kill('SIGTERM');
+        } catch (fallbackError) {
+          if (fallbackError.code !== 'ESRCH') throw fallbackError;
+        }
+        return;
+      }
+      throw error;
     }
   }
 }

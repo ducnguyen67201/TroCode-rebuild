@@ -2,7 +2,7 @@
 
 `npm run setup` installs locked development dependencies and creates ignored `.local/environment.json` / `.local/profiles.json` with random credentials (owner-only POSIX modes). It does not modify global config, inspect provider secrets or provision hosted resources.
 
-`npm run dev:api` starts Compose project `tro-rebuild-foundation`, PostgreSQL at `127.0.0.1:55439`, private S3-compatible RustFS at `127.0.0.1:19000`, creates the private bucket, applies the isolated migration and seeds three identities. The API listens on `127.0.0.1:4318`. RustFS exercises actual signed requests and anonymous-access denial without relying on MinIO's retired public image distribution. Images are pinned by digest in `infra/compose.test.yml`.
+`npm run dev:api` starts Compose project `tro-rebuild-foundation`, PostgreSQL at `127.0.0.1:55439`, private S3-compatible MinIO at `127.0.0.1:19000`, creates the private bucket, applies the isolated migration and seeds three identities. The API listens on `127.0.0.1:4318`. MinIO is used instead of the plan's LocalStack candidate to exercise actual signed requests and anonymous-access denial. Images are pinned by digest in `infra/compose.test.yml`.
 
 Database: `tro_rebuild_test`; migration: `0001_foundation.sql`; tables: fixture_accounts/fixture_sessions. Migration refuses a database containing legacy `users`. This is not a legacy upgrade. Re-seeding preserves account IDs and does not revive expired/revoked sessions. No command deletes volumes or resets user data. Credentials expire after 30 days; removing a local credential file is not a supported renewal workflow. Deliberate session renewal is future operator work.
 

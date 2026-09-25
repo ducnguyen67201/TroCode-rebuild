@@ -760,8 +760,8 @@ manifests and made interrupted workflows fail, adding two regression tests
 (64 local automated cases total). Windows interactive acceptance and P1
 packaging remain separate gates. The PR records the CI evidence.
 
-Implementation refinements: RustFS provides the private S3-compatible fixture
-to exercise signed reads and anonymous-access denial. The P0 Python diagnostic
+Implementation refinements: MinIO replaces the LocalStack fixture candidate to
+exercise signed S3 reads and anonymous-access denial. The P0 Python diagnostic
 loop uses bounded synchronous stdio because every diagnostic operation completes
 immediately; P1 must introduce cancellable asynchronous work before native/model
 operations. The Rust actor already has separate bounded control and ordinary
