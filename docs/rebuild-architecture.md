@@ -159,7 +159,7 @@ migrations, changing production services, or publishing a replacement build.
 | Computer interaction | CUA Driver Python SDK | Read-only window/semantic/screen observation; native input capabilities are disabled |
 | Teaching cursor | Transparent overlay with SVG/CSS presentation | Highlighting, pointing, explanations, local animation |
 | Shared backend | Rust API | Accounts, classroom authority, assignments, submissions, model access/accounting |
-| Shared persistence | PostgreSQL + private object storage | Classroom records and uploaded material bytes |
+| Shared persistence | PostgreSQL via SeaORM + private object storage | Typed application access to classroom records and uploaded material bytes; SQLx retains immutable migration execution |
 
 Use Rust where native and backend responsibilities benefit from it; do not
 rewrite the Python Agents SDK orchestration in Rust merely to have one language.
@@ -413,6 +413,9 @@ P0 implementation defaults: npm workspaces, one Cargo workspace and one uv Pytho
 project; a draft-07 JSON Schema source with generated bindings and runtime
 validation; a private inherited-pipe Rust/Python transport; and a modular Rust
 API. Provide independent UI-preview, native-worker and API development commands.
+SeaORM entities own PostgreSQL application queries in the Rust API. SQLx remains
+only as the engine for the existing immutable migrations and uses SeaORM's
+underlying PostgreSQL pool; this does not introduce a second schema history.
 Normal startup must not reinstall dependencies or run the full verification
 gate. Introduce interfaces at actual I/O boundaries and extract shared modules
 when real consumers require them; avoid speculative framework layers. Exact
