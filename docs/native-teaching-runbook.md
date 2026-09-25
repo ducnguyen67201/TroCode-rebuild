@@ -63,7 +63,7 @@ until those records exist for both target platforms.
 
 Hosted mode additionally requires backend-only `OPENAI_API_KEY` and fixed
 `TRO_TRANSCRIPTION_MODEL=gpt-transcribe`. The action model is compiled as
-`gpt-6-astra`; environment configuration cannot change it. The desktop receives
+`gpt-5.6-sol`; environment configuration cannot change it. The desktop receives
 only short-lived subject-bound grants. After authentication, voice auto-arms
 once per app session and reports any required microphone or
 keyboard-monitoring/accessibility recovery in the main window.

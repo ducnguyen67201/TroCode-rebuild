@@ -2,7 +2,7 @@ use base64::{Engine as _, engine::general_purpose::STANDARD};
 use std::{collections::HashMap, net::SocketAddr, time::Duration};
 use url::Url;
 
-pub const ACTION_MODEL: &str = "gpt-6-astra";
+pub const ACTION_MODEL: &str = "gpt-5.6-sol";
 
 #[derive(Clone)]
 pub struct Config {
