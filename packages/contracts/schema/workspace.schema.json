@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WorkspaceMemberList",
+  "type": "object",
+  "properties": {
+    "workspace": {
+      "$ref": "#/definitions/ManagedWorkspaceSummary"
+    },
+    "members": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "$ref": "#/definitions/WorkspaceMember"
+      }
+    }
+  },
+  "required": ["workspace", "members"],
+  "additionalProperties": false,
+  "definitions": {
+    "ManagedWorkspaceSummary": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "const": "owner"
+        }
+      },
+      "required": ["workspaceId", "name", "role"],
+      "additionalProperties": false
+    },
+    "WorkspaceMember": {
+      "type": "object",
+      "properties": {
+        "membershipId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "displayName": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "teacher", "student"]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["pending", "active"]
+        },
+        "joinedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "membershipId",
+        "email",
+        "displayName",
+        "role",
+        "state",
+        "joinedAt"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "pending"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "displayName": {
+                "type": "null"
+              },
+              "joinedAt": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "active"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "displayName": {
+                "type": "string"
+              },
+              "joinedAt": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

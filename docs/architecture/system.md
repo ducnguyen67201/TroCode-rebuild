@@ -68,9 +68,12 @@ migration contain no handwritten SQL.
 
 Workspace authority remains workspace-owned. Authentication calls the
 transaction-scoped `WorkspaceMembershipStore` boundary to claim pre-added email
-memberships and load current access. Until the workspace branch supplies that
-SeaORM adapter, `PendingWorkspaceMembershipStore` returns no memberships, so a
-verified account remains in `membershipRequired` and cannot enter the product.
+memberships and load current access. Production startup injects the canonical
+SeaORM `WorkspaceService`; `PendingWorkspaceMembershipStore` is limited to tests.
+The adapter claims exact normalized-email matches in the login/refresh transaction,
+and a verified account with no active membership remains in `membershipRequired`.
+Owner member management crosses the same native boundary: React receives bounded
+member projections while Rust retains the bearer credential in memory.
 
 `services/api/src/model_gateway.rs` provides isolated proof identity, expiring
 model grants and a fixed provider route. It enforces a four-request grant budget,

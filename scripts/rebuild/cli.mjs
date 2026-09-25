@@ -164,6 +164,21 @@ try {
           '-p',
           'tro-api',
           '--test',
+          'workspace',
+          '--',
+          '--ignored',
+          '--test-threads=1',
+        ],
+        { cwd: root, env },
+      );
+      await run(
+        'cargo',
+        [
+          'test',
+          '--locked',
+          '-p',
+          'tro-api',
+          '--test',
           'auth',
           '--',
           '--ignored',

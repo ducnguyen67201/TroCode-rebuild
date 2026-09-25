@@ -1,0 +1,353 @@
+use sea_orm_migration::prelude::*;
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(Workspace::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Workspace::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(Workspace::Name).string_len(120).not_null())
+                    .col(
+                        ColumnDef::new(Workspace::Status)
+                            .string_len(16)
+                            .not_null()
+                            .default("active"),
+                    )
+                    .col(
+                        ColumnDef::new(Workspace::CreatedByAccountId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Workspace::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Workspace::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_workspace_created_by_account")
+                            .from(Workspace::Table, Workspace::CreatedByAccountId)
+                            .to(Account::Table, Account::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
+                    )
+                    .check((
+                        "ck_workspace_status",
+                        Expr::col(Workspace::Status).is_in(["active", "archived"]),
+                    ))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(WorkspaceMembership::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::WorkspaceId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(WorkspaceMembership::AccountId).uuid().null())
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::Email)
+                            .string_len(254)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::EmailNormalized)
+                            .string_len(254)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::Role)
+                            .string_len(16)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::AddedByAccountId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::JoinedAt)
+                            .timestamp_with_time_zone()
+                            .null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceMembership::RemovedAt)
+                            .timestamp_with_time_zone()
+                            .null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_workspace_membership_workspace")
+                            .from(WorkspaceMembership::Table, WorkspaceMembership::WorkspaceId)
+                            .to(Workspace::Table, Workspace::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_workspace_membership_account")
+                            .from(WorkspaceMembership::Table, WorkspaceMembership::AccountId)
+                            .to(Account::Table, Account::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_workspace_membership_added_by_account")
+                            .from(
+                                WorkspaceMembership::Table,
+                                WorkspaceMembership::AddedByAccountId,
+                            )
+                            .to(Account::Table, Account::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
+                    )
+                    .check((
+                        "ck_workspace_membership_role",
+                        Expr::col(WorkspaceMembership::Role).is_in(["owner", "teacher", "student"]),
+                    ))
+                    .check((
+                        "ck_workspace_membership_join_state",
+                        Expr::col(WorkspaceMembership::AccountId)
+                            .is_null()
+                            .and(Expr::col(WorkspaceMembership::JoinedAt).is_null())
+                            .or(Expr::col(WorkspaceMembership::AccountId)
+                                .is_not_null()
+                                .and(Expr::col(WorkspaceMembership::JoinedAt).is_not_null())),
+                    ))
+                    .check((
+                        "ck_workspace_membership_owner_joined",
+                        Expr::col(WorkspaceMembership::Role)
+                            .ne("owner")
+                            .or(Expr::col(WorkspaceMembership::AccountId).is_not_null()),
+                    ))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("uq_workspace_membership_active_email")
+                    .table(WorkspaceMembership::Table)
+                    .col(WorkspaceMembership::WorkspaceId)
+                    .col(WorkspaceMembership::EmailNormalized)
+                    .unique()
+                    .cond_where(Expr::col(WorkspaceMembership::RemovedAt).is_null())
+                    .to_owned(),
+            )
+            .await?;
+        manager
+            .create_index(
+                Index::create()
+                    .name("uq_workspace_membership_active_account")
+                    .table(WorkspaceMembership::Table)
+                    .col(WorkspaceMembership::WorkspaceId)
+                    .col(WorkspaceMembership::AccountId)
+                    .unique()
+                    .cond_where(
+                        Expr::col(WorkspaceMembership::AccountId)
+                            .is_not_null()
+                            .and(Expr::col(WorkspaceMembership::RemovedAt).is_null()),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+        manager
+            .create_index(
+                Index::create()
+                    .name("ix_workspace_membership_claim")
+                    .table(WorkspaceMembership::Table)
+                    .col(WorkspaceMembership::EmailNormalized)
+                    .cond_where(
+                        Expr::col(WorkspaceMembership::AccountId)
+                            .is_null()
+                            .and(Expr::col(WorkspaceMembership::RemovedAt).is_null()),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+        manager
+            .create_index(
+                Index::create()
+                    .name("ix_workspace_membership_workspace_created")
+                    .table(WorkspaceMembership::Table)
+                    .col(WorkspaceMembership::WorkspaceId)
+                    .col(WorkspaceMembership::CreatedAt)
+                    .col(WorkspaceMembership::Id)
+                    .cond_where(Expr::col(WorkspaceMembership::RemovedAt).is_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(WorkspaceAuditEvent::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(WorkspaceAuditEvent::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceAuditEvent::WorkspaceId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceAuditEvent::ActorAccountId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceAuditEvent::TargetMembershipId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceAuditEvent::Action)
+                            .string_len(32)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(WorkspaceAuditEvent::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_workspace_audit_workspace")
+                            .from(WorkspaceAuditEvent::Table, WorkspaceAuditEvent::WorkspaceId)
+                            .to(Workspace::Table, Workspace::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_workspace_audit_actor")
+                            .from(
+                                WorkspaceAuditEvent::Table,
+                                WorkspaceAuditEvent::ActorAccountId,
+                            )
+                            .to(Account::Table, Account::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_workspace_audit_target_membership")
+                            .from(
+                                WorkspaceAuditEvent::Table,
+                                WorkspaceAuditEvent::TargetMembershipId,
+                            )
+                            .to(WorkspaceMembership::Table, WorkspaceMembership::Id)
+                            .on_delete(ForeignKeyAction::Restrict),
+                    )
+                    .check((
+                        "ck_workspace_audit_action",
+                        Expr::col(WorkspaceAuditEvent::Action).is_in([
+                            "workspace.member_added",
+                            "workspace.member_claimed",
+                            "workspace.member_removed",
+                        ]),
+                    ))
+                    .to_owned(),
+            )
+            .await?;
+        manager
+            .create_index(
+                Index::create()
+                    .name("ix_workspace_audit_workspace_created")
+                    .table(WorkspaceAuditEvent::Table)
+                    .col(WorkspaceAuditEvent::WorkspaceId)
+                    .col((WorkspaceAuditEvent::CreatedAt, IndexOrder::Desc))
+                    .col((WorkspaceAuditEvent::Id, IndexOrder::Desc))
+                    .to_owned(),
+            )
+            .await?;
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_table(Table::drop().table(WorkspaceAuditEvent::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(WorkspaceMembership::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Workspace::Table).to_owned())
+            .await
+    }
+}
+
+#[derive(DeriveIden)]
+enum Account {
+    Table,
+    Id,
+}
+
+#[derive(DeriveIden)]
+enum Workspace {
+    Table,
+    Id,
+    Name,
+    Status,
+    CreatedByAccountId,
+    CreatedAt,
+    UpdatedAt,
+}
+
+#[derive(DeriveIden)]
+enum WorkspaceMembership {
+    Table,
+    Id,
+    WorkspaceId,
+    AccountId,
+    Email,
+    EmailNormalized,
+    Role,
+    AddedByAccountId,
+    CreatedAt,
+    JoinedAt,
+    RemovedAt,
+}
+
+#[derive(DeriveIden)]
+enum WorkspaceAuditEvent {
+    Table,
+    Id,
+    WorkspaceId,
+    ActorAccountId,
+    TargetMembershipId,
+    Action,
+    CreatedAt,
+}

@@ -852,6 +852,97 @@ select {
   border: 1px solid #506757;
   border-radius: 16px;
 }
+
+.workspace-access {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border: 1px solid #506757;
+  border-radius: 16px;
+  background: #fffdf6;
+}
+.workspace-access h2 {
+  margin: 0.2rem 0 0;
+}
+.workspace-access-form {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(9rem, 0.35fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 1.25rem 0;
+}
+.workspace-access-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+}
+.workspace-access-form input,
+.workspace-access-form select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #84968a;
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+}
+.workspace-member-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.workspace-member-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.8rem;
+  border-top: 1px solid #d9ded8;
+}
+.workspace-member-identity {
+  display: grid;
+  min-width: 0;
+}
+.workspace-member-identity strong,
+.workspace-member-identity small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.workspace-member-meta {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  text-transform: capitalize;
+}
+.member-state {
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: #dfe8df;
+  font-size: 0.75rem;
+}
+.member-state--pending {
+  background: #f7e9b6;
+}
+.remove-access {
+  border-color: #8c4a3f;
+  color: #77362c;
+  background: transparent;
+}
+.remove-access.is-confirming {
+  color: white;
+  background: #77362c;
+}
+@media (max-width: 720px) {
+  .workspace-access-form,
+  .workspace-member-list li {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .workspace-member-meta {
+    justify-content: flex-start;
+  }
+}
 .teaching-panel label {
   display: block;
   margin: 1rem 0;

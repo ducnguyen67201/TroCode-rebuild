@@ -6,3 +6,6 @@ pub mod fixture_session;
 pub mod proof_account;
 pub mod proof_session;
 pub mod runtime_grant;
+pub mod workspace;
+pub mod workspace_audit_event;
+pub mod workspace_membership;

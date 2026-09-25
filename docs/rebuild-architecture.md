@@ -321,18 +321,18 @@ screens, transcripts, material text or provider secrets by default.
 
 ## Phased implementation plan
 
-| Phase | Deliverable                                                      | Dependency                      | Status                                                                                                                                            |
-| ----- | ---------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0    | Scope, ownership/migration inventory and shared test environment | None                            | Source complete; merged PR #1, local and final-revision CI passed                                                                                 |
-| P1    | Packaged native SDK/CUA + teaching cursor proof                  | P0 technical decisions          | In progress: source and local macOS packaging implemented; native acceptance open. See [architecture and acceptance](architecture/development.md) |
-| P2    | Adaptive student teaching journey                                | P1                              | In progress: bounded planned guidance/local progression slice; full journey acceptance open                                                       |
-| P3    | Materials, assignments, roles and teacher class overview         | P2 integration; P0 backend      | Planned                                                                                                                                           |
-| P4    | Resource distribution and learner follow-through receipts        | P3                              | Planned                                                                                                                                           |
-| P5    | Contextual teacher intervention and stuck assistance             | P2/P3; observation policy       | Planned                                                                                                                                           |
-| P6    | Explicit submissions and teacher review                          | P2/P3                           | Planned                                                                                                                                           |
-| P7    | Classroom voice and evidence-based summaries                     | P5/P6                           | Planned                                                                                                                                           |
-| P8    | Upgrade, real pilot and replacement release                      | Applicable P1–P7 gates          | Planned                                                                                                                                           |
-| P9    | Selected engagement features and additional platforms            | P8 evidence and scope decisions | Conditional                                                                                                                                       |
+| Phase | Deliverable                                                      | Dependency                      | Status                                                                                                                                                              |
+| ----- | ---------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0    | Scope, ownership/migration inventory and shared test environment | None                            | Source complete; merged PR #1, local and final-revision CI passed                                                                                                   |
+| P1    | Packaged native SDK/CUA + teaching cursor proof                  | P0 technical decisions          | In progress: source and local macOS packaging implemented; native acceptance open. See [architecture and acceptance](architecture/development.md)                   |
+| P2    | Adaptive student teaching journey                                | P1                              | In progress: bounded planned guidance/local progression slice; full journey acceptance open                                                                         |
+| P3    | Materials, assignments, roles and teacher class overview         | P2 integration; P0 backend      | In progress: source workspace membership/role adapter and owner exact-email management implemented; hosted/package acceptance, materials and live class remain open |
+| P4    | Resource distribution and learner follow-through receipts        | P3                              | Planned                                                                                                                                                             |
+| P5    | Contextual teacher intervention and stuck assistance             | P2/P3; observation policy       | Planned                                                                                                                                                             |
+| P6    | Explicit submissions and teacher review                          | P2/P3                           | Planned                                                                                                                                                             |
+| P7    | Classroom voice and evidence-based summaries                     | P5/P6                           | Planned                                                                                                                                                             |
+| P8    | Upgrade, real pilot and replacement release                      | Applicable P1–P7 gates          | Planned                                                                                                                                                             |
+| P9    | Selected engagement features and additional platforms            | P8 evidence and scope decisions | Conditional                                                                                                                                                         |
 
 Phases are dependency and acceptance boundaries, not time estimates. After each
 complete milestone, execute its verification batch. Implementation can contain
@@ -543,6 +543,8 @@ Unresolved help is represented explicitly for P5 to deliver to a teacher.
 - [ ] Complete hosted Google sign-in against the workspace-owned SeaORM
       membership adapter: an owner pre-adds the exact email, verified login claims it
       without an invitation, and no-workspace/removed users remain outside the app.
+      Source implementation and automated coverage are present; hosted Google and
+      packaged OS acceptance remain required before this item is complete.
 - [ ] Teacher creates class membership, uploads supported materials, sees
       processing/error status, reviews extracted content and publishes an assignment.
 - [ ] Pin assignment/material versions; retrieve bounded relevant passages with

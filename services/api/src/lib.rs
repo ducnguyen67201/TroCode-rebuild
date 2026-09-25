@@ -7,6 +7,7 @@ pub mod hosted;
 pub mod model_gateway;
 pub mod persistence;
 pub mod storage;
+pub mod workspace;
 use axum::{
     Extension, Json, Router,
     extract::{Request, State},

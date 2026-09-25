@@ -1,51 +1,34 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
-#[sea_orm(table_name = "account")]
+#[sea_orm(table_name = "workspace")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub display_name: String,
-    pub verified_email: String,
-    pub email_normalized: String,
+    pub name: String,
     pub status: String,
+    pub created_by_account_id: Uuid,
     pub created_at: TimeDateTimeWithTimeZone,
     pub updated_at: TimeDateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::auth_identity::Entity")]
-    AuthIdentity,
-    #[sea_orm(has_many = "super::auth_session::Entity")]
-    AuthSession,
     #[sea_orm(has_many = "super::workspace_membership::Entity")]
-    WorkspaceMembership,
+    Membership,
     #[sea_orm(has_many = "super::workspace_audit_event::Entity")]
-    WorkspaceAuditEvent,
-}
-
-impl Related<super::auth_identity::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::AuthIdentity.def()
-    }
-}
-
-impl Related<super::auth_session::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::AuthSession.def()
-    }
+    AuditEvent,
 }
 
 impl Related<super::workspace_membership::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::WorkspaceMembership.def()
+        Relation::Membership.def()
     }
 }
 
 impl Related<super::workspace_audit_event::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::WorkspaceAuditEvent.def()
+        Relation::AuditEvent.def()
     }
 }
 

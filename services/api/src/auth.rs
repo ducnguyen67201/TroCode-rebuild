@@ -55,9 +55,8 @@ pub trait WorkspaceMembershipStore: Send + Sync {
     ) -> Result<Vec<WorkspaceSummary>, sea_orm::DbErr>;
 }
 
-/// Temporary integration adapter until the workspace branch supplies its SeaORM
-/// entities and repository. It authenticates accounts safely but grants no
-/// workspace authority.
+/// Explicit no-access adapter for isolated session tests. Production startup
+/// injects `WorkspaceService` and must never use this implementation.
 pub struct PendingWorkspaceMembershipStore;
 
 #[async_trait::async_trait]

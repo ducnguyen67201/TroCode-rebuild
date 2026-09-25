@@ -1,5 +1,5 @@
 use crate::{
-    auth::{AuthManager, AuthStatus},
+    auth::{AuthManager, AuthStatus, WorkspaceMember, WorkspaceMemberList},
     lifecycle::Status,
     manager::RuntimeManager,
     worker::WorkerError,
@@ -18,15 +18,8 @@ fn require_main(window: &tauri::WebviewWindow) -> Result<(), WorkerError> {
     }
 }
 
-fn require_workspace(auth: &AuthManager) -> Result<(), WorkerError> {
-    if auth.has_workspace_access() {
-        Ok(())
-    } else {
-        Err(WorkerError::new(
-            "UNAUTHORIZED",
-            "Sign in to an active workspace before using Tro.",
-        ))
-    }
+async fn require_workspace(auth: &AuthManager) -> Result<(), WorkerError> {
+    auth.require_workspace_access().await
 }
 
 #[tauri::command]
@@ -69,11 +62,58 @@ pub async fn auth_sign_out(
 }
 
 #[tauri::command]
+pub async fn workspace_members(
+    window: tauri::WebviewWindow,
+    workspace_id: String,
+    auth: Authentication<'_>,
+) -> Result<WorkspaceMemberList, WorkerError> {
+    require_main(&window)?;
+    auth.workspace_members(&workspace_id).await
+}
+
+#[tauri::command]
+pub async fn workspace_add_member(
+    window: tauri::WebviewWindow,
+    workspace_id: String,
+    email: String,
+    role: String,
+    auth: Authentication<'_>,
+) -> Result<WorkspaceMember, WorkerError> {
+    require_main(&window)?;
+    if email.len() > 254 || role.len() > 16 {
+        return Err(WorkerError::new(
+            "INVALID_MESSAGE",
+            "Invalid workspace membership request.",
+        ));
+    }
+    auth.add_workspace_member(&workspace_id, &email, &role)
+        .await
+}
+
+#[tauri::command]
+pub async fn workspace_remove_member(
+    window: tauri::WebviewWindow,
+    workspace_id: String,
+    membership_id: String,
+    auth: Authentication<'_>,
+) -> Result<(), WorkerError> {
+    require_main(&window)?;
+    if Uuid::parse_str(&membership_id).is_err() {
+        return Err(WorkerError::new(
+            "INVALID_MESSAGE",
+            "Invalid workspace membership request.",
+        ));
+    }
+    auth.remove_workspace_member(&workspace_id, &membership_id)
+        .await
+}
+
+#[tauri::command]
 pub async fn runtime_start(
     manager: Manager<'_>,
     auth: Authentication<'_>,
 ) -> Result<Status, WorkerError> {
-    require_workspace(&auth)?;
+    require_workspace(&auth).await?;
     manager.start().await
 }
 #[tauri::command]
@@ -81,7 +121,7 @@ pub async fn runtime_health(
     manager: Manager<'_>,
     auth: Authentication<'_>,
 ) -> Result<Status, WorkerError> {
-    require_workspace(&auth)?;
+    require_workspace(&auth).await?;
     manager.health().await
 }
 #[tauri::command]
@@ -93,11 +133,11 @@ pub async fn runtime_stop(
     Ok(manager.stop().await)
 }
 #[tauri::command]
-pub fn runtime_status(
+pub async fn runtime_status(
     manager: Manager<'_>,
     auth: Authentication<'_>,
 ) -> Result<Status, WorkerError> {
-    require_workspace(&auth)?;
+    require_workspace(&auth).await?;
     Ok(manager.status())
 }
 #[tauri::command]
@@ -105,7 +145,7 @@ pub async fn runtime_restart(
     manager: Manager<'_>,
     auth: Authentication<'_>,
 ) -> Result<Status, WorkerError> {
-    require_workspace(&auth)?;
+    require_workspace(&auth).await?;
     manager.stop().await;
     manager.start().await
 }
@@ -115,7 +155,7 @@ pub async fn account_select(
     manager: Manager<'_>,
     auth: Authentication<'_>,
 ) -> Result<Status, WorkerError> {
-    require_workspace(&auth)?;
+    require_workspace(&auth).await?;
     let ticket = manager.begin_account_change().await;
     if !cfg!(debug_assertions) || !matches!(profile.as_str(), "teacher" | "student-a" | "student-b")
     {
@@ -179,7 +219,7 @@ pub async fn teaching_request(
     auth: Authentication<'_>,
 ) -> Result<serde_json::Value, WorkerError> {
     require_main(&window)?;
-    require_workspace(&auth)?;
+    require_workspace(&auth).await?;
     crate::overlay::hide(&app);
     let epoch = crate::overlay::epoch(&app);
     let state = manager.teaching(&kind, payload).await?;
@@ -197,6 +237,6 @@ pub async fn proof_connect(
     auth: Authentication<'_>,
 ) -> Result<Status, WorkerError> {
     require_main(&window)?;
-    require_workspace(&auth)?;
+    require_workspace(&auth).await?;
     manager.connect_proof().await
 }
