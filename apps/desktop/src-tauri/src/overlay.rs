@@ -40,7 +40,7 @@ pub fn prepare(app: &tauri::AppHandle) -> Result<(), WorkerError> {
         tauri::WebviewUrl::App("index.html?voiceHud=1".into()),
     )
     .title("Tro voice status")
-    .inner_size(360.0, 84.0)
+    .inner_size(92.0, 40.0)
     .decorations(false)
     .transparent(true)
     .shadow(false)
@@ -54,8 +54,28 @@ pub fn prepare(app: &tauri::AppHandle) -> Result<(), WorkerError> {
     .map_err(|_| WorkerError::new("NOT_READY", "Voice status display unavailable."))?;
     hud.set_ignore_cursor_events(true)
         .map_err(|_| WorkerError::new("NOT_READY", "Voice status display unavailable."))?;
-    let _ = hud.center();
+    position_voice_hud(app, &hud);
     Ok(())
+}
+
+fn position_voice_hud(app: &tauri::AppHandle, hud: &tauri::WebviewWindow) {
+    let monitor = app
+        .get_webview_window("main")
+        .and_then(|main| main.current_monitor().ok().flatten())
+        .or_else(|| hud.current_monitor().ok().flatten());
+    let Some(monitor) = monitor else {
+        let _ = hud.center();
+        return;
+    };
+    let scale = monitor.scale_factor();
+    let logical_width = 92.0_f64;
+    let physical_width = (logical_width * scale).round().max(1.0) as u32;
+    let top_margin = (18.0_f64 * scale).round() as i32;
+    let monitor_position = monitor.position();
+    let monitor_size = monitor.size();
+    let x = monitor_position.x + monitor_size.width.saturating_sub(physical_width) as i32 / 2;
+    let y = monitor_position.y + top_margin;
+    let _ = hud.set_position(tauri::PhysicalPosition::new(x, y));
 }
 
 pub fn hide(app: &tauri::AppHandle) {
@@ -82,6 +102,7 @@ pub fn show_voice(app: &tauri::AppHandle, status: &crate::voice::VoiceStatus) {
         let Some(window) = handle.get_webview_window("voice-hud") else { return; };
         let visible = matches!(status.phase.as_str(), "listening" | "transcribing" | "dispatching" | "executing" | "confirmation" | "failed");
         if visible {
+            position_voice_hud(&handle, &window);
             let _ = window.emit("voice-hud-status", serde_json::json!({"phase":status.phase,"revision":status.revision,"message":status.message}));
             let _ = window.show();
         } else {

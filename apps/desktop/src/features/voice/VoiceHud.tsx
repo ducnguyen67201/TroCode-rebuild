@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 
-interface HudStatus {
+export interface HudStatus {
   phase: string;
   revision: number;
   message: string;
@@ -37,14 +37,22 @@ export function VoiceHud() {
     };
   }, []);
   if (!status) return null;
+  return <VoiceHudPresentation status={status} />;
+}
+
+export function VoiceHudPresentation({ status }: { status: HudStatus }) {
   return (
     <div
       className={`voice-hud voice-hud-${status.phase}`}
       role="status"
       aria-live="polite"
+      aria-label={status.message}
     >
-      <span aria-hidden="true" />
-      {status.message}
+      <span className="voice-wave" aria-hidden="true">
+        {Array.from({ length: 13 }, (_, index) => (
+          <i key={index} />
+        ))}
+      </span>
     </div>
   );
 }
