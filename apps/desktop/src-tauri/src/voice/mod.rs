@@ -4,7 +4,10 @@ pub mod chunks;
 pub mod transcript;
 
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 use tokio::sync::watch;
 #[cfg(feature = "desktop")]
 use tokio::sync::{Mutex, oneshot};
@@ -76,8 +79,24 @@ impl Default for VoiceStatus {
 
 pub struct VoiceManager {
     status: watch::Sender<VoiceStatus>,
+    manual_disable: AtomicBool,
     #[cfg(feature = "desktop")]
     capture: Mutex<Option<ActiveCapture>>,
+}
+
+#[cfg(any(feature = "desktop", test))]
+#[derive(Default)]
+pub(crate) struct AutoArmGate {
+    authenticated: bool,
+}
+
+#[cfg(any(feature = "desktop", test))]
+impl AutoArmGate {
+    pub(crate) fn update(&mut self, authenticated: bool) -> bool {
+        let should_arm = authenticated && !self.authenticated;
+        self.authenticated = authenticated;
+        should_arm
+    }
 }
 
 #[cfg(feature = "desktop")]
@@ -91,6 +110,7 @@ impl Default for VoiceManager {
         let (status, _) = watch::channel(VoiceStatus::default());
         Self {
             status,
+            manual_disable: AtomicBool::new(false),
             #[cfg(feature = "desktop")]
             capture: Mutex::new(None),
         }
@@ -107,6 +127,7 @@ impl VoiceManager {
     }
 
     pub fn enable(&self, permissions: VoicePermissions) -> VoiceStatus {
+        self.manual_disable.store(false, Ordering::Release);
         self.status.send_modify(|status| {
             status.revision += 1;
             status.permissions = permissions;
@@ -123,6 +144,10 @@ impl VoiceManager {
             };
         });
         self.status()
+    }
+
+    pub fn auto_arm_allowed(&self) -> bool {
+        !self.manual_disable.load(Ordering::Acquire)
     }
 
     #[cfg(feature = "desktop")]
@@ -180,16 +205,29 @@ impl VoiceManager {
                 .and_then(|value| Uuid::parse_str(value).ok());
             let _ = runtime.cancel_action(run_id).await;
         }
-        self.status.send_modify(|status| {
-            status.revision += 1;
-            status.phase = "cancelled".into();
-            status.message = "Voice instruction cancelled.".into();
-            status.confirmation = None;
-        });
+        if self.status.borrow().phase != "disabled" {
+            self.status.send_modify(|status| {
+                status.revision += 1;
+                status.phase = "cancelled".into();
+                status.message = "Voice instruction cancelled.".into();
+                status.confirmation = None;
+            });
+        }
         self.status()
     }
 
     pub fn disable(&self) -> VoiceStatus {
+        self.disable_with_reason(true, "Voice control is disabled.")
+    }
+
+    pub fn disable_due_to_auth_loss(&self) -> VoiceStatus {
+        self.disable_with_reason(false, "Voice control is disabled until you sign in again.")
+    }
+
+    fn disable_with_reason(&self, manual: bool, message: &str) -> VoiceStatus {
+        if manual {
+            self.manual_disable.store(true, Ordering::Release);
+        }
         self.status.send_modify(|status| {
             status.revision += 1;
             status.phase = "disabled".into();
@@ -199,7 +237,7 @@ impl VoiceManager {
             status.final_transcript.clear();
             status.target_title = None;
             status.confirmation = None;
-            status.message = "Voice control is disabled.".into();
+            status.message = message.into();
         });
         self.status()
     }
@@ -423,5 +461,59 @@ impl VoiceManager {
         {
             let _ = release.send(());
         }
+    }
+}
+
+#[cfg(test)]
+mod auto_arm_tests {
+    use super::{AutoArmGate, VoiceManager, VoicePermissions};
+
+    fn ready_permissions() -> VoicePermissions {
+        VoicePermissions {
+            microphone: "granted".into(),
+            keyboard_monitoring: "granted".into(),
+            ready: true,
+            recovery: String::new(),
+        }
+    }
+
+    #[test]
+    fn arms_once_per_authenticated_session() {
+        let mut gate = AutoArmGate::default();
+
+        assert!(!gate.update(false));
+        assert!(gate.update(true));
+        assert!(!gate.update(true));
+        assert!(!gate.update(false));
+        assert!(gate.update(true));
+    }
+
+    #[test]
+    fn manual_disable_blocks_auto_arm_until_explicit_enable() {
+        let voice = VoiceManager::default();
+
+        assert!(voice.auto_arm_allowed());
+        assert_eq!(voice.disable().phase, "disabled");
+        assert!(!voice.auto_arm_allowed());
+
+        assert_eq!(voice.disable_due_to_auth_loss().phase, "disabled");
+        assert!(!voice.auto_arm_allowed());
+
+        assert_eq!(voice.enable(ready_permissions()).phase, "idle");
+        assert!(voice.auto_arm_allowed());
+    }
+
+    #[test]
+    fn auth_loss_projects_disabled_voice_status() {
+        let voice = VoiceManager::default();
+
+        assert_eq!(voice.enable(ready_permissions()).phase, "idle");
+        let status = voice.disable_due_to_auth_loss();
+
+        assert_eq!(status.phase, "disabled");
+        assert_eq!(
+            status.message,
+            "Voice control is disabled until you sign in again."
+        );
     }
 }

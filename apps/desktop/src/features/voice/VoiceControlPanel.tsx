@@ -100,9 +100,9 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
         </p>
       )}
       <div className="voice-actions">
-        {status.phase === 'disabled' ? (
+        {status.phase === 'disabled' || !status.permissions.ready ? (
           <button onClick={() => void run(() => client.enable())}>
-            Enable voice
+            {status.phase === 'disabled' ? 'Enable voice' : 'Check permissions'}
           </button>
         ) : (
           <button

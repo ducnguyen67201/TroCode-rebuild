@@ -937,6 +937,13 @@ tradeoff, not a claim that file transcription always beats realtime latency.
 P7-A/P8 acceptance must record actual EN/VI/noisy accuracy, billed duration,
 request count and reference-network latency on packaged macOS and Windows.
 
+After an authenticated app launch, the voice client arms push-to-talk once
+automatically so the normal path requires only holding the two-key chord,
+speaking and releasing. A manual disable remains effective for the rest of that
+app session. Missing OS permission fails visibly and retains a direct permission
+retry; permission setup remains a one-time platform action rather than a normal
+voice-control step.
+
 ### P1 implementation checkpoint — 2026-09-13
 
 P1 source implementation is in progress on `codex/plan-native-teaching-foundation`.

@@ -14,7 +14,8 @@ record audio, transcript text, screenshots, accessibility values or typed values
 
 ## Permission and lifecycle
 
-- [ ] Voice remains disabled until the user explicitly selects Enable voice.
+- [ ] After authenticated launch, voice auto-arms once without an extra click;
+      manual Disable voice keeps it off for the rest of that app session.
 - [ ] Microphone and keyboard-monitoring/accessibility denial is visible and recoverable.
 - [ ] Revocation, device removal, sleep/lock, sign-out and app exit stop capture/input.
 - [ ] Emergency stop cancels capture, uploads, confirmation and action work with no replay.

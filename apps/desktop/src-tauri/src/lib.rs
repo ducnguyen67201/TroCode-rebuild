@@ -120,14 +120,27 @@ pub fn run() {
             let handle = app.handle().clone();
             let mut status = auth.subscribe();
             tauri::async_runtime::spawn(async move {
+                let mut auto_arm = voice::AutoArmGate::default();
                 while status.changed().await.is_ok() {
                     let value = status.borrow_and_update().clone();
-                    if value.state != "authenticated" {
+                    let authenticated = value.state == "authenticated";
+                    let should_arm = auto_arm.update(authenticated);
+                    if !authenticated {
                         overlay::hide(&handle);
                         let _ = handle.state::<Arc<modifier_chord::ModifierListener>>().set_enabled(false);
                         let voice = handle.state::<Arc<voice::VoiceManager>>().inner().clone();
                         let runtime = handle.state::<Arc<manager::RuntimeManager>>().inner().clone();
-                        tauri::async_runtime::spawn(async move { voice.cancel(Some(&runtime)).await; });
+                        voice.disable_due_to_auth_loss();
+                        tauri::async_runtime::spawn(async move {
+                            voice.cancel(Some(&runtime)).await;
+                        });
+                    } else if should_arm {
+                        let voice = handle.state::<Arc<voice::VoiceManager>>().inner().clone();
+                        if voice.auto_arm_allowed() {
+                            let listener = handle.state::<Arc<modifier_chord::ModifierListener>>().inner().clone();
+                            let runtime = handle.state::<Arc<manager::RuntimeManager>>().inner().clone();
+                            let _ = commands::arm_voice_control(voice, listener, runtime).await;
+                        }
                     }
                     let _ = handle.emit_to("main", "auth-status", value);
                 }

@@ -263,6 +263,19 @@ pub async fn voice_enable(
 ) -> Result<VoiceStatus, WorkerError> {
     require_main(&window)?;
     require_workspace(&auth).await?;
+    arm_voice_control(
+        voice.inner().clone(),
+        listener.inner().clone(),
+        manager.inner().clone(),
+    )
+    .await
+}
+
+pub(crate) async fn arm_voice_control(
+    voice: Arc<VoiceManager>,
+    listener: Arc<crate::modifier_chord::ModifierListener>,
+    manager: Arc<RuntimeManager>,
+) -> Result<VoiceStatus, WorkerError> {
     manager.start().await?;
     let status = voice.enable(crate::permissions::voice_permissions(true));
     listener

@@ -7,19 +7,19 @@ const confirmationId = '00000000-0000-0000-0000-000000000012';
 
 export function createPreviewVoice(): VoiceClient {
   let status: VoiceStatus = {
-    phase: 'disabled',
+    phase: 'idle',
     revision: 0,
     utteranceId: null,
     runId: null,
     partialTranscript: '',
     finalTranscript: '',
     targetTitle: null,
-    message: 'Enable voice control to use push-to-talk.',
+    message: `Hold ${previewShortcut()} to speak.`,
     shortcut: previewShortcut(),
     permissions: {
-      microphone: 'prompt',
-      keyboardMonitoring: 'prompt',
-      ready: false,
+      microphone: 'granted',
+      keyboardMonitoring: 'granted',
+      ready: true,
       recovery: '',
     },
     confirmation: null,
