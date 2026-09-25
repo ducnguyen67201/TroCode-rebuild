@@ -66,6 +66,7 @@ impl AuthApiClient {
         Ok(Self { origin, client })
     }
 
+    #[cfg(feature = "desktop")]
     pub(super) fn origin(&self) -> &str {
         self.origin.as_str()
     }
