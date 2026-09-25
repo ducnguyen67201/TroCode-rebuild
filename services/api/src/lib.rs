@@ -3,7 +3,9 @@ pub mod config;
 pub mod db;
 pub mod entities;
 pub mod error;
+pub mod hosted;
 pub mod model_gateway;
+pub mod persistence;
 pub mod storage;
 use axum::{
     Extension, Json, Router,
@@ -34,7 +36,7 @@ pub fn router(state: AppState) -> Router {
         .with_state(state)
         .layer(middleware::from_fn(correlation))
 }
-async fn correlation(mut request: Request, next: Next) -> Response {
+pub(crate) async fn correlation(mut request: Request, next: Next) -> Response {
     let id = Uuid::new_v4();
     let start = Instant::now();
     request.extensions_mut().insert(id);

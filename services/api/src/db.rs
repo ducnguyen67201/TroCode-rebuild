@@ -1,6 +1,6 @@
 use crate::config::Config;
 use sea_orm::{
-    ConnectOptions, ConnectionTrait, Database, DatabaseConnection, DbErr,
+    ConnectOptions, ConnectionTrait, Database, DatabaseConnection, DbErr, ExprTrait,
     sea_query::{Alias, Expr, Func, Order, Query},
 };
 use std::time::Duration;
@@ -25,7 +25,7 @@ async fn current_database(pool: &DatabaseConnection) -> Result<String, DbErr> {
     let statement = Query::select()
         .expr(Func::cust(Alias::new("current_database")))
         .to_owned();
-    pool.query_one(pool.get_database_backend().build(&statement))
+    pool.query_one(&statement)
         .await?
         .ok_or_else(|| DbErr::RecordNotFound("database identity".into()))?
         .try_get_by_index(0)
@@ -39,10 +39,7 @@ async fn has_legacy_users(pool: &DatabaseConnection) -> Result<bool, DbErr> {
         .and_where(Expr::col(Alias::new("table_name")).eq("users"))
         .limit(1)
         .to_owned();
-    Ok(pool
-        .query_one(pool.get_database_backend().build(&statement))
-        .await?
-        .is_some())
+    Ok(pool.query_one(&statement).await?.is_some())
 }
 
 pub async fn validate_target(
@@ -69,7 +66,7 @@ pub async fn ready(pool: &DatabaseConnection) -> bool {
             .and_where(Expr::col(Alias::new("success")).eq(true))
             .order_by(Alias::new("version"), Order::Asc)
             .to_owned();
-        pool.query_all(pool.get_database_backend().build(&statement))
+        pool.query_all(&statement)
             .await?
             .into_iter()
             .map(|row| Ok((row.try_get_by_index(0)?, row.try_get_by_index(1)?)))

@@ -11,6 +11,7 @@ The learner performs every external-app action (F10).
 3. [Visual targeting](visual-targeting.md): screenshot coordinates and accessibility fallback.
 4. [Contracts and lifecycle](contracts-and-lifecycle.md): routing, cancellation and state delivery.
 5. [Development and acceptance](development.md): extending the system, tests and limitations.
+6. [Hosted authentication operations](../authentication-operations.md): Google, keys, migration and packaged evidence.
 
 ## Overview
 

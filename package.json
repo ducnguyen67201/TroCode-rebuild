@@ -23,6 +23,7 @@
     "package": "node scripts/rebuild/cli.mjs package",
     "db:up": "node scripts/rebuild/cli.mjs db:up",
     "db:migrate": "node scripts/rebuild/cli.mjs db:migrate",
+    "db:migrate:hosted": "node scripts/rebuild/cli.mjs db:migrate:hosted",
     "db:seed": "node scripts/rebuild/cli.mjs db:seed",
     "env:check": "node scripts/rebuild/cli.mjs env:check",
     "test:integration": "node scripts/rebuild/cli.mjs test:integration",

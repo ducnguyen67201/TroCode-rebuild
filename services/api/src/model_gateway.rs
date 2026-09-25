@@ -12,8 +12,8 @@ use axum::{
     routing::{get, post},
 };
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QuerySelect, Set, TransactionTrait,
-    entity::prelude::ChronoDateTimeUtc, sea_query::Expr,
+    ColumnTrait, DatabaseConnection, EntityTrait, ExprTrait, QueryFilter, QuerySelect, Set,
+    TransactionTrait, entity::prelude::ChronoDateTimeUtc, sea_query::Expr,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};

@@ -4,6 +4,10 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "allow-auth-status",
+    "allow-auth-sign-in-google",
+    "allow-auth-retry",
+    "allow-auth-sign-out",
     "allow-runtime-start",
     "allow-runtime-health",
     "allow-runtime-stop",

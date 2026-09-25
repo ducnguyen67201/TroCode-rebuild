@@ -4,17 +4,80 @@ use crate::{
 };
 use axum::http::HeaderMap;
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set, TransactionTrait,
+    ColumnTrait, DatabaseConnection, EntityTrait, ExprTrait, QueryFilter, Set, TransactionTrait,
     entity::prelude::ChronoDateTimeUtc, sea_query::Expr,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
+
+pub mod google;
+pub mod handlers;
+pub mod jwt;
+pub mod sessions;
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     pub account_id: Uuid,
     pub role: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthUser {
+    pub account_id: Uuid,
+    pub display_name: String,
+    pub email: String,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceSummary {
+    pub workspace_id: Uuid,
+    pub name: String,
+    pub role: String,
+}
+
+#[async_trait::async_trait]
+pub trait WorkspaceMembershipStore: Send + Sync {
+    async fn claim_pending_memberships(
+        &self,
+        transaction: &sea_orm::DatabaseTransaction,
+        account_id: Uuid,
+        verified_email_normalized: &str,
+    ) -> Result<Vec<WorkspaceSummary>, sea_orm::DbErr>;
+
+    async fn active_memberships(
+        &self,
+        transaction: &sea_orm::DatabaseTransaction,
+        account_id: Uuid,
+    ) -> Result<Vec<WorkspaceSummary>, sea_orm::DbErr>;
+}
+
+/// Temporary integration adapter until the workspace branch supplies its SeaORM
+/// entities and repository. It authenticates accounts safely but grants no
+/// workspace authority.
+pub struct PendingWorkspaceMembershipStore;
+
+#[async_trait::async_trait]
+impl WorkspaceMembershipStore for PendingWorkspaceMembershipStore {
+    async fn claim_pending_memberships(
+        &self,
+        _transaction: &sea_orm::DatabaseTransaction,
+        _account_id: Uuid,
+        _verified_email_normalized: &str,
+    ) -> Result<Vec<WorkspaceSummary>, sea_orm::DbErr> {
+        Ok(Vec::new())
+    }
+
+    async fn active_memberships(
+        &self,
+        _transaction: &sea_orm::DatabaseTransaction,
+        _account_id: Uuid,
+    ) -> Result<Vec<WorkspaceSummary>, sea_orm::DbErr> {
+        Ok(Vec::new())
+    }
 }
 pub fn digest(token: &str) -> Vec<u8> {
     Sha256::digest(token.as_bytes()).to_vec()

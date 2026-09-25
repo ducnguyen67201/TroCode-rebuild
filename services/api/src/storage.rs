@@ -1,5 +1,5 @@
 use crate::config::Config;
-use object_store::{ObjectStore, aws::AmazonS3Builder, path::Path};
+use object_store::{ObjectStore, ObjectStoreExt, aws::AmazonS3Builder, path::Path};
 use std::{sync::Arc, time::Duration};
 pub const BUCKET: &str = "tro-rebuild-fixtures";
 pub const SAMPLE: &str = "materials/example.md";

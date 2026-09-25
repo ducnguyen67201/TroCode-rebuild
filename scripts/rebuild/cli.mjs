@@ -121,6 +121,13 @@ try {
     case 'db:migrate':
       await apiCommand('migrate', await fixtureEnvironment());
       break;
+    case 'db:migrate:hosted':
+      await apiCommand('migrate', {
+        ...process.env,
+        TRO_API_MODE: 'hosted',
+        TRO_ALLOW_HOSTED_MIGRATION: '1',
+      });
+      break;
     case 'db:seed':
       await apiCommand('seed', await fixtureEnvironment());
       break;
@@ -143,6 +150,21 @@ try {
           'tro-api',
           '--test',
           'foundation',
+          '--',
+          '--ignored',
+          '--test-threads=1',
+        ],
+        { cwd: root, env },
+      );
+      await run(
+        'cargo',
+        [
+          'test',
+          '--locked',
+          '-p',
+          'tro-api',
+          '--test',
+          'auth',
           '--',
           '--ignored',
           '--test-threads=1',

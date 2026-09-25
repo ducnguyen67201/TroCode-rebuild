@@ -1,12 +1,26 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { parseStatus, parseTeaching } from '@tro/contracts';
+import { parseAuthStatus, parseStatus, parseTeaching } from '@tro/contracts';
 import type { DesktopClient } from './desktop-client';
 async function call(command: string, args?: Record<string, unknown>) {
   return parseStatus(await invoke(command, args));
 }
 export const tauriClient: DesktopClient = {
   preview: false,
+  auth: {
+    status: () => auth('auth_status'),
+    signIn: () => auth('auth_sign_in_google'),
+    retry: () => auth('auth_retry'),
+    signOut: () => auth('auth_sign_out'),
+    subscribe: (listener, onBoundaryError) =>
+      listen('auth-status', (event) => {
+        try {
+          listener(parseAuthStatus(event.payload));
+        } catch {
+          onBoundaryError?.();
+        }
+      }),
+  },
   teaching: {
     subscribe: (listener) =>
       listen('teaching-state', (event) =>
@@ -47,4 +61,8 @@ export const tauriClient: DesktopClient = {
 
 async function teaching(kind: string, payload: Record<string, unknown>) {
   return parseTeaching(await invoke('teaching_request', { kind, payload }));
+}
+
+async function auth(command: string) {
+  return parseAuthStatus(await invoke(command));
 }

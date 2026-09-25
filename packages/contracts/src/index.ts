@@ -6,4 +6,10 @@ export type {
   Target,
 } from './generated';
 export type { RuntimeStatus } from './generated-status';
-export { parseMessage, parseStatus, parseTeaching } from './validate';
+export type { AuthStatus, AuthUser, WorkspaceSummary } from './generated-auth';
+export {
+  parseAuthStatus,
+  parseMessage,
+  parseStatus,
+  parseTeaching,
+} from './validate';
