@@ -13,6 +13,7 @@ use tokio::{
 use url::Url;
 
 const CALLBACK_PATH: &str = "/oauth2/callback";
+const GOOGLE_ISSUER: &str = "https://accounts.google.com";
 const MAX_CALLBACK_BYTES: usize = 8192;
 
 pub async fn authorize(
@@ -173,10 +174,11 @@ fn parse_callback(
     }
     let mut parameters: HashMap<String, Vec<String>> = HashMap::new();
     for (name, value) in callback.query_pairs() {
-        if !matches!(
+        if matches!(
             name.as_ref(),
             "code"
                 | "state"
+                | "iss"
                 | "error"
                 | "error_description"
                 | "scope"
@@ -184,15 +186,11 @@ fn parse_callback(
                 | "prompt"
                 | "hd"
         ) {
-            return Err(WorkerError::new(
-                "INVALID_MESSAGE",
-                "Invalid sign-in callback.",
-            ));
+            parameters
+                .entry(name.into_owned())
+                .or_default()
+                .push(value.into_owned());
         }
-        parameters
-            .entry(name.into_owned())
-            .or_default()
-            .push(value.into_owned());
     }
     if parameters.values().any(|values| values.len() != 1) {
         return Err(WorkerError::new(
@@ -204,6 +202,17 @@ fn parse_callback(
         return Err(WorkerError::new(
             "AUTH_CANCELLED",
             "Google sign-in was cancelled.",
+        ));
+    }
+    if parameters
+        .get("iss")
+        .and_then(|values| values.first())
+        .map(String::as_str)
+        != Some(GOOGLE_ISSUER)
+    {
+        return Err(WorkerError::new(
+            "UNAUTHORIZED",
+            "Google sign-in could not be verified.",
         ));
     }
     if parameters
@@ -256,14 +265,25 @@ mod tests {
 
     #[test]
     fn callback_requires_exact_host_path_and_state() {
-        let request =
-            "GET /oauth2/callback?code=ok&state=expected HTTP/1.1\r\nHost: 127.0.0.1:51234\r\n\r\n";
+        let request = "GET /oauth2/callback?code=ok&state=expected&iss=https%3A%2F%2Faccounts.google.com HTTP/1.1\r\nHost: 127.0.0.1:51234\r\n\r\n";
         assert_eq!(
             parse_callback(request, 51234, "expected").unwrap(),
             Some("ok".to_owned())
         );
         assert!(parse_callback(request, 51235, "expected").is_err());
         assert!(parse_callback(request, 51234, "wrong").is_err());
+    }
+
+    #[test]
+    fn callback_validates_google_issuer_and_ignores_extension_parameters() {
+        let request = "GET /oauth2/callback?code=ok&state=expected&iss=https%3A%2F%2Faccounts.google.com&future_parameter=value HTTP/1.1\r\nHost: 127.0.0.1:51234\r\n\r\n";
+        assert_eq!(
+            parse_callback(request, 51234, "expected").unwrap(),
+            Some("ok".to_owned())
+        );
+
+        let wrong_issuer = "GET /oauth2/callback?code=ok&state=expected&iss=https%3A%2F%2Fevil.example HTTP/1.1\r\nHost: 127.0.0.1:51234\r\n\r\n";
+        assert!(parse_callback(wrong_issuer, 51234, "expected").is_err());
     }
 
     #[test]
