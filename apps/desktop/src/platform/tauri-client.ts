@@ -48,8 +48,8 @@ export const tauriClient: DesktopClient = {
     planControl: (action) => teaching('planControl', { action }),
     permissions: async () => {
       const value = await invoke<{
-        screenCapture: boolean;
-        accessibility: boolean;
+        screenCapture: boolean | null;
+        accessibility: boolean | null;
         message: string;
       }>('observation_permissions', { request: true });
       if (typeof value.message !== 'string')

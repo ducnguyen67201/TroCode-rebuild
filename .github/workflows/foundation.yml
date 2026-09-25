@@ -21,6 +21,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit
       - id: route
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}

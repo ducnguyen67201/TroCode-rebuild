@@ -404,6 +404,62 @@ class CheckResult(BaseModel):
     message: constr(max_length=256)
 
 
+class Observation1(Enum):
+    unknown = 'unknown'
+    available = 'available'
+    unavailable = 'unavailable'
+
+
+class Model(Enum):
+    unconfigured = 'unconfigured'
+    ready = 'ready'
+    unavailable = 'unavailable'
+
+
+class Reason(Enum):
+    none = 'none'
+    connect_model = 'connect_model'
+    observe_again = 'observe_again'
+    retry_plan = 'retry_plan'
+
+
+class Screen(Enum):
+    unknown = 'unknown'
+    available = 'available'
+    unavailable = 'unavailable'
+
+
+class Accessibility(Enum):
+    unknown = 'unknown'
+    available = 'available'
+    unavailable = 'unavailable'
+
+
+class Readiness(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    observation: Observation1
+    model: Model
+    reason: Reason
+    screen: Screen
+    accessibility: Accessibility
+
+
+class Phase(Enum):
+    observation = 'observation'
+    model = 'model'
+    grounding = 'grounding'
+
+
+class Timing(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    phase: Phase
+    elapsed_ms: confloat(ge=0.0, le=3600000.0)
+
+
 class Kind11(Enum):
     runtime_listTargets = 'runtime.listTargets'
 
@@ -748,6 +804,8 @@ class TeachingState(BaseModel):
     cue: TeachingCue | None
     check: CheckResult | None
     journey: Journey | None = None
+    readiness: Readiness | None = None
+    timings: list[Timing] | None = Field(None, max_length=200)
 
 
 class RuntimeListTargetsResult(BaseModel):

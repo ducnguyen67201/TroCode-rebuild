@@ -6,7 +6,9 @@ from typing import Literal
 
 from agents import Agent, Model, ModelSettings, RunConfig, Runner, set_tracing_disabled
 from agents.items import TResponseInputItem
+from openai import APIError
 
+from tro_runtime.errors import GuidanceError
 from tro_runtime.observations import Observation
 from tro_runtime.planning import TeachingPlan
 
@@ -68,16 +70,23 @@ class GuidanceAgent:
                     ],
                 }
             ]
-        result = await asyncio.wait_for(
-            Runner.run(
-                agent,
-                model_input,
-                max_turns=4,
-                run_config=RunConfig(tracing_disabled=True, trace_include_sensitive_data=False),
-            ),
-            25,
-        )
-        plan = TeachingPlan.model_validate(result.final_output)
-        if plan.steps[0].target.resolve(observation) is None:
-            raise ValueError("The first plan target is not uniquely observed.")
-        return plan
+        try:
+            result = await asyncio.wait_for(
+                Runner.run(
+                    agent,
+                    model_input,
+                    max_turns=4,
+                    run_config=RunConfig(tracing_disabled=True, trace_include_sensitive_data=False),
+                ),
+                25,
+            )
+            plan = TeachingPlan.model_validate(result.final_output)
+            if plan.steps[0].target.resolve(observation) is None:
+                raise ValueError("The first plan target is not uniquely observed.")
+            return plan
+        except TimeoutError:
+            raise GuidanceError("model_timeout") from None
+        except APIError:
+            raise GuidanceError("model_unavailable") from None
+        except ValueError:
+            raise GuidanceError("invalid_plan") from None

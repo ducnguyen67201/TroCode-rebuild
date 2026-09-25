@@ -19589,6 +19589,55 @@ impl<'de> ::serde::Deserialize<'de> for TeachingCueScreenshotId {
 ///        }
 ///      ]
 ///    },
+///    "readiness": {
+///      "type": "object",
+///      "required": [
+///        "accessibility",
+///        "model",
+///        "observation",
+///        "reason",
+///        "screen"
+///      ],
+///      "properties": {
+///        "accessibility": {
+///          "enum": [
+///            "unknown",
+///            "available",
+///            "unavailable"
+///          ]
+///        },
+///        "model": {
+///          "enum": [
+///            "unconfigured",
+///            "ready",
+///            "unavailable"
+///          ]
+///        },
+///        "observation": {
+///          "enum": [
+///            "unknown",
+///            "available",
+///            "unavailable"
+///          ]
+///        },
+///        "reason": {
+///          "enum": [
+///            "none",
+///            "connect_model",
+///            "observe_again",
+///            "retry_plan"
+///          ]
+///        },
+///        "screen": {
+///          "enum": [
+///            "unknown",
+///            "available",
+///            "unavailable"
+///          ]
+///        }
+///      },
+///      "additionalProperties": false
+///    },
 ///    "revision": {
 ///      "type": "integer",
 ///      "minimum": 0.0
@@ -19620,6 +19669,32 @@ impl<'de> ::serde::Deserialize<'de> for TeachingCueScreenshotId {
 ///        "$ref": "#/definitions/Target"
 ///      },
 ///      "maxItems": 100
+///    },
+///    "timings": {
+///      "type": "array",
+///      "items": {
+///        "type": "object",
+///        "required": [
+///          "elapsed_ms",
+///          "phase"
+///        ],
+///        "properties": {
+///          "elapsed_ms": {
+///            "type": "number",
+///            "maximum": 3600000.0,
+///            "minimum": 0.0
+///          },
+///          "phase": {
+///            "enum": [
+///              "observation",
+///              "model",
+///              "grounding"
+///            ]
+///          }
+///        },
+///        "additionalProperties": false
+///      },
+///      "maxItems": 200
 ///    }
 ///  },
 ///  "additionalProperties": false
@@ -19634,14 +19709,522 @@ pub struct TeachingState {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub journey: ::std::option::Option<Journey>,
     pub observation: ::std::option::Option<Observation>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub readiness: ::std::option::Option<TeachingStateReadiness>,
     pub revision: u64,
     pub session_id: ::std::option::Option<TeachingStateSessionId>,
     pub target: ::std::option::Option<Target>,
     pub targets: ::std::vec::Vec<Target>,
+    #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub timings: ::std::vec::Vec<TeachingStateTimingsItem>,
 }
 impl ::std::convert::From<&TeachingState> for TeachingState {
     fn from(value: &TeachingState) -> Self {
         value.clone()
+    }
+}
+///`TeachingStateReadiness`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "accessibility",
+///    "model",
+///    "observation",
+///    "reason",
+///    "screen"
+///  ],
+///  "properties": {
+///    "accessibility": {
+///      "enum": [
+///        "unknown",
+///        "available",
+///        "unavailable"
+///      ]
+///    },
+///    "model": {
+///      "enum": [
+///        "unconfigured",
+///        "ready",
+///        "unavailable"
+///      ]
+///    },
+///    "observation": {
+///      "enum": [
+///        "unknown",
+///        "available",
+///        "unavailable"
+///      ]
+///    },
+///    "reason": {
+///      "enum": [
+///        "none",
+///        "connect_model",
+///        "observe_again",
+///        "retry_plan"
+///      ]
+///    },
+///    "screen": {
+///      "enum": [
+///        "unknown",
+///        "available",
+///        "unavailable"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct TeachingStateReadiness {
+    pub accessibility: TeachingStateReadinessAccessibility,
+    pub model: TeachingStateReadinessModel,
+    pub observation: TeachingStateReadinessObservation,
+    pub reason: TeachingStateReadinessReason,
+    pub screen: TeachingStateReadinessScreen,
+}
+impl ::std::convert::From<&TeachingStateReadiness> for TeachingStateReadiness {
+    fn from(value: &TeachingStateReadiness) -> Self {
+        value.clone()
+    }
+}
+///`TeachingStateReadinessAccessibility`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "enum": [
+///    "unknown",
+///    "available",
+///    "unavailable"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TeachingStateReadinessAccessibility {
+    #[serde(rename = "unknown")]
+    Unknown,
+    #[serde(rename = "available")]
+    Available,
+    #[serde(rename = "unavailable")]
+    Unavailable,
+}
+impl ::std::convert::From<&Self> for TeachingStateReadinessAccessibility {
+    fn from(value: &TeachingStateReadinessAccessibility) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TeachingStateReadinessAccessibility {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Unknown => f.write_str("unknown"),
+            Self::Available => f.write_str("available"),
+            Self::Unavailable => f.write_str("unavailable"),
+        }
+    }
+}
+impl ::std::str::FromStr for TeachingStateReadinessAccessibility {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "unknown" => Ok(Self::Unknown),
+            "available" => Ok(Self::Available),
+            "unavailable" => Ok(Self::Unavailable),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingStateReadinessAccessibility {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for TeachingStateReadinessAccessibility {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for TeachingStateReadinessAccessibility {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`TeachingStateReadinessModel`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "enum": [
+///    "unconfigured",
+///    "ready",
+///    "unavailable"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TeachingStateReadinessModel {
+    #[serde(rename = "unconfigured")]
+    Unconfigured,
+    #[serde(rename = "ready")]
+    Ready,
+    #[serde(rename = "unavailable")]
+    Unavailable,
+}
+impl ::std::convert::From<&Self> for TeachingStateReadinessModel {
+    fn from(value: &TeachingStateReadinessModel) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TeachingStateReadinessModel {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Unconfigured => f.write_str("unconfigured"),
+            Self::Ready => f.write_str("ready"),
+            Self::Unavailable => f.write_str("unavailable"),
+        }
+    }
+}
+impl ::std::str::FromStr for TeachingStateReadinessModel {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "unconfigured" => Ok(Self::Unconfigured),
+            "ready" => Ok(Self::Ready),
+            "unavailable" => Ok(Self::Unavailable),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingStateReadinessModel {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TeachingStateReadinessModel {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TeachingStateReadinessModel {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`TeachingStateReadinessObservation`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "enum": [
+///    "unknown",
+///    "available",
+///    "unavailable"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TeachingStateReadinessObservation {
+    #[serde(rename = "unknown")]
+    Unknown,
+    #[serde(rename = "available")]
+    Available,
+    #[serde(rename = "unavailable")]
+    Unavailable,
+}
+impl ::std::convert::From<&Self> for TeachingStateReadinessObservation {
+    fn from(value: &TeachingStateReadinessObservation) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TeachingStateReadinessObservation {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Unknown => f.write_str("unknown"),
+            Self::Available => f.write_str("available"),
+            Self::Unavailable => f.write_str("unavailable"),
+        }
+    }
+}
+impl ::std::str::FromStr for TeachingStateReadinessObservation {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "unknown" => Ok(Self::Unknown),
+            "available" => Ok(Self::Available),
+            "unavailable" => Ok(Self::Unavailable),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingStateReadinessObservation {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for TeachingStateReadinessObservation {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for TeachingStateReadinessObservation {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`TeachingStateReadinessReason`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "enum": [
+///    "none",
+///    "connect_model",
+///    "observe_again",
+///    "retry_plan"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TeachingStateReadinessReason {
+    #[serde(rename = "none")]
+    None,
+    #[serde(rename = "connect_model")]
+    ConnectModel,
+    #[serde(rename = "observe_again")]
+    ObserveAgain,
+    #[serde(rename = "retry_plan")]
+    RetryPlan,
+}
+impl ::std::convert::From<&Self> for TeachingStateReadinessReason {
+    fn from(value: &TeachingStateReadinessReason) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TeachingStateReadinessReason {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::None => f.write_str("none"),
+            Self::ConnectModel => f.write_str("connect_model"),
+            Self::ObserveAgain => f.write_str("observe_again"),
+            Self::RetryPlan => f.write_str("retry_plan"),
+        }
+    }
+}
+impl ::std::str::FromStr for TeachingStateReadinessReason {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "none" => Ok(Self::None),
+            "connect_model" => Ok(Self::ConnectModel),
+            "observe_again" => Ok(Self::ObserveAgain),
+            "retry_plan" => Ok(Self::RetryPlan),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingStateReadinessReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TeachingStateReadinessReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TeachingStateReadinessReason {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`TeachingStateReadinessScreen`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "enum": [
+///    "unknown",
+///    "available",
+///    "unavailable"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TeachingStateReadinessScreen {
+    #[serde(rename = "unknown")]
+    Unknown,
+    #[serde(rename = "available")]
+    Available,
+    #[serde(rename = "unavailable")]
+    Unavailable,
+}
+impl ::std::convert::From<&Self> for TeachingStateReadinessScreen {
+    fn from(value: &TeachingStateReadinessScreen) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TeachingStateReadinessScreen {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Unknown => f.write_str("unknown"),
+            Self::Available => f.write_str("available"),
+            Self::Unavailable => f.write_str("unavailable"),
+        }
+    }
+}
+impl ::std::str::FromStr for TeachingStateReadinessScreen {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "unknown" => Ok(Self::Unknown),
+            "available" => Ok(Self::Available),
+            "unavailable" => Ok(Self::Unavailable),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingStateReadinessScreen {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TeachingStateReadinessScreen {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TeachingStateReadinessScreen {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///`TeachingStateSessionId`
@@ -19729,5 +20312,130 @@ impl<'de> ::serde::Deserialize<'de> for TeachingStateSessionId {
             .map_err(|e: self::error::ConversionError| {
                 <D::Error as ::serde::de::Error>::custom(e.to_string())
             })
+    }
+}
+///`TeachingStateTimingsItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "elapsed_ms",
+///    "phase"
+///  ],
+///  "properties": {
+///    "elapsed_ms": {
+///      "type": "number",
+///      "maximum": 3600000.0,
+///      "minimum": 0.0
+///    },
+///    "phase": {
+///      "enum": [
+///        "observation",
+///        "model",
+///        "grounding"
+///      ]
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct TeachingStateTimingsItem {
+    pub elapsed_ms: f64,
+    pub phase: TeachingStateTimingsItemPhase,
+}
+impl ::std::convert::From<&TeachingStateTimingsItem> for TeachingStateTimingsItem {
+    fn from(value: &TeachingStateTimingsItem) -> Self {
+        value.clone()
+    }
+}
+///`TeachingStateTimingsItemPhase`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "enum": [
+///    "observation",
+///    "model",
+///    "grounding"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TeachingStateTimingsItemPhase {
+    #[serde(rename = "observation")]
+    Observation,
+    #[serde(rename = "model")]
+    Model,
+    #[serde(rename = "grounding")]
+    Grounding,
+}
+impl ::std::convert::From<&Self> for TeachingStateTimingsItemPhase {
+    fn from(value: &TeachingStateTimingsItemPhase) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TeachingStateTimingsItemPhase {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Observation => f.write_str("observation"),
+            Self::Model => f.write_str("model"),
+            Self::Grounding => f.write_str("grounding"),
+        }
+    }
+}
+impl ::std::str::FromStr for TeachingStateTimingsItemPhase {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "observation" => Ok(Self::Observation),
+            "model" => Ok(Self::Model),
+            "grounding" => Ok(Self::Grounding),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TeachingStateTimingsItemPhase {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TeachingStateTimingsItemPhase {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TeachingStateTimingsItemPhase {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }

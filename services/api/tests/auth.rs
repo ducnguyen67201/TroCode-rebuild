@@ -24,6 +24,7 @@ fn config() -> HostedConfig {
         issuer: "https://api.tro.test".to_owned(),
         audience: "tro-desktop-api".to_owned(),
         google_client_id: "desktop.apps.googleusercontent.com".to_owned(),
+        google_client_secret: None,
         jwt_key: vec![7_u8; 32],
         refresh_key: vec![8_u8; 32],
         access_ttl: Duration::from_secs(900),

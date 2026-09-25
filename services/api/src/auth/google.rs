@@ -25,6 +25,7 @@ pub enum GoogleError {
 
 pub struct GoogleVerifier {
     client_id: String,
+    client_secret: Option<String>,
     token_endpoint: Url,
     jwks_endpoint: Url,
     client: reqwest::Client,
@@ -41,6 +42,8 @@ struct CachedKeys {
 struct TokenRequest<'a> {
     code: &'a str,
     client_id: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_secret: Option<&'a str>,
     code_verifier: &'a str,
     grant_type: &'static str,
     redirect_uri: &'a str,
@@ -81,9 +84,13 @@ struct GoogleClaims {
 }
 
 impl GoogleVerifier {
-    pub fn production(client_id: String) -> Result<Self, &'static str> {
+    pub fn production(
+        client_id: String,
+        client_secret: Option<String>,
+    ) -> Result<Self, &'static str> {
         Self::new(
             client_id,
+            client_secret,
             Url::parse(GOOGLE_TOKEN_ENDPOINT).expect("fixed Google token endpoint"),
             Url::parse(GOOGLE_JWKS_ENDPOINT).expect("fixed Google JWKS endpoint"),
         )
@@ -91,6 +98,7 @@ impl GoogleVerifier {
 
     pub fn new(
         client_id: String,
+        client_secret: Option<String>,
         token_endpoint: Url,
         jwks_endpoint: Url,
     ) -> Result<Self, &'static str> {
@@ -107,6 +115,7 @@ impl GoogleVerifier {
             .map_err(|_| "Google client unavailable.")?;
         Ok(Self {
             client_id,
+            client_secret,
             token_endpoint,
             jwks_endpoint,
             client,
@@ -128,6 +137,7 @@ impl GoogleVerifier {
             .form(&TokenRequest {
                 code,
                 client_id: &self.client_id,
+                client_secret: self.client_secret.as_deref(),
                 code_verifier,
                 grant_type: "authorization_code",
                 redirect_uri,
@@ -382,5 +392,30 @@ mod tests {
             Some("student.name+lab@gmail.com".to_owned())
         );
         assert_eq!(normalize_email("missing-domain"), None);
+    }
+
+    #[test]
+    fn token_request_sends_server_secret_only_when_configured() {
+        let with_secret = serde_json::to_value(TokenRequest {
+            code: "code",
+            client_id: "client",
+            client_secret: Some("secret"),
+            code_verifier: "verifier",
+            grant_type: "authorization_code",
+            redirect_uri: "http://127.0.0.1/callback",
+        })
+        .unwrap();
+        assert_eq!(with_secret["client_secret"], "secret");
+
+        let without_secret = serde_json::to_value(TokenRequest {
+            code: "code",
+            client_id: "client",
+            client_secret: None,
+            code_verifier: "verifier",
+            grant_type: "authorization_code",
+            redirect_uri: "http://127.0.0.1/callback",
+        })
+        .unwrap();
+        assert!(without_secret.get("client_secret").is_none());
     }
 }
