@@ -8,6 +8,7 @@ import {
   interruptOwned,
 } from './processes.mjs';
 import { root, fixtureEnvironment } from './environment.mjs';
+import { localAuthService, waitForReady } from './local-auth.mjs';
 import { verify } from './verify.mjs';
 const action = process.argv[2];
 const pythonProject = resolve(root, 'services/teaching-runtime');
@@ -97,16 +98,30 @@ try {
     }
     case 'dev:full': {
       const env = await prepareApi();
-      const api = start(
-        'cargo',
-        ['run', '--locked', '-p', 'tro-api', '--', 'serve'],
-        { cwd: root, env },
-      );
+      const localAuth = localAuthService(env);
+      if (localAuth) {
+        await apiCommand('migrate', localAuth.environment);
+      }
+      const apis = [
+        start('cargo', ['run', '--locked', '-p', 'tro-api', '--', 'serve'], {
+          cwd: root,
+          env,
+        }),
+      ];
+      if (localAuth) {
+        const authApi = start(
+          'cargo',
+          ['run', '--locked', '-p', 'tro-api', '--', 'serve'],
+          { cwd: root, env: localAuth.environment },
+        );
+        apis.push(authApi);
+        await waitForReady(localAuth.origin, authApi.done);
+      }
       try {
-        await Promise.race([api.done, desktop()]);
+        await Promise.race([...apis.map((api) => api.done), desktop()]);
       } finally {
         stopOwned();
-        await Promise.allSettled([api.done]);
+        await Promise.allSettled(apis.map((api) => api.done));
       }
       break;
     }

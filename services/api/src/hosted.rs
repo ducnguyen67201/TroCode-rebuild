@@ -41,7 +41,10 @@ impl HostedState {
         memberships: Arc<dyn WorkspaceMembershipStore>,
         workspaces: Arc<WorkspaceService>,
     ) -> Result<Self, &'static str> {
-        let google = Arc::new(GoogleVerifier::production(config.google_client_id.clone())?);
+        let google = Arc::new(GoogleVerifier::production(
+            config.google_client_id.clone(),
+            config.google_client_secret.clone(),
+        )?);
         let jwt = JwtService::new(
             &config.jwt_key,
             config.issuer.clone(),

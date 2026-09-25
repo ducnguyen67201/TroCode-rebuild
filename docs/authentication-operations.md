@@ -6,10 +6,12 @@ authorize Google Cloud changes, hosted migration, deployment, signing or release
 ## Required inputs
 
 Create a Google OAuth client of type **Desktop app** in the authorized Google
-Cloud project. Configure the consent screen and permitted testers/domains there;
-do not create or ship a client secret. Supply the public client ID to both the
-hosted API and desktop as `TRO_GOOGLE_CLIENT_ID`. The loopback redirect is chosen
-at runtime as `http://127.0.0.1:<ephemeral>/oauth2/callback`.
+Cloud project. Configure the consent screen and permitted testers/domains there.
+Supply the public client ID to both the hosted API and desktop as
+`TRO_GOOGLE_CLIENT_ID`. If Google issued a client secret for the desktop client,
+store it only in the hosted API secret manager as `TRO_GOOGLE_CLIENT_SECRET`;
+never ship it to the desktop. The loopback redirect is chosen at runtime as
+`http://127.0.0.1:<ephemeral>/oauth2/callback`.
 
 The hosted API also requires:
 
@@ -19,6 +21,7 @@ The hosted API also requires:
 | `TRO_API_BIND`            | Loopback address behind the trusted HTTPS proxy     |
 | `TRO_AUTH_ISSUER`         | Public HTTPS API origin used as JWT issuer          |
 | `TRO_AUTH_AUDIENCE`       | Fixed desktop API audience                          |
+| `TRO_GOOGLE_CLIENT_SECRET`| Google client secret, when issued; hosted API only  |
 | `TRO_JWT_KEY_B64`         | At least 32 random bytes, base64 encoded            |
 | `TRO_REFRESH_KEY_B64`     | Different 32+ random bytes, base64 encoded          |
 | `TRO_ACCESS_TTL_SECONDS`  | 300–3600; production default 900                    |

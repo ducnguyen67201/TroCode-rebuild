@@ -17,6 +17,7 @@ pub struct HostedConfig {
     pub issuer: String,
     pub audience: String,
     pub google_client_id: String,
+    pub google_client_secret: Option<String>,
     pub jwt_key: Vec<u8>,
     pub refresh_key: Vec<u8>,
     pub access_ttl: Duration,
@@ -71,6 +72,16 @@ impl HostedConfig {
         {
             return Err("Invalid Google desktop client ID.");
         }
+        let google_client_secret = values
+            .get("TRO_GOOGLE_CLIENT_SECRET")
+            .filter(|value| !value.is_empty())
+            .cloned();
+        if google_client_secret
+            .as_ref()
+            .is_some_and(|value| value.len() > 512)
+        {
+            return Err("Invalid Google client secret.");
+        }
         let jwt_key = decode_key(&get("TRO_JWT_KEY_B64")?)?;
         let refresh_key = decode_key(&get("TRO_REFRESH_KEY_B64")?)?;
         let access_seconds = parse_seconds(values, "TRO_ACCESS_TTL_SECONDS", 900)?;
@@ -87,6 +98,7 @@ impl HostedConfig {
             issuer,
             audience,
             google_client_id,
+            google_client_secret,
             jwt_key,
             refresh_key,
             access_ttl: Duration::from_secs(access_seconds),
@@ -231,6 +243,20 @@ mod tests {
         let config = HostedConfig::from_values(&values).unwrap();
         assert_eq!(config.access_ttl, Duration::from_secs(900));
         assert_eq!(config.refresh_ttl, Duration::from_secs(30 * 24 * 60 * 60));
+        assert!(config.google_client_secret.is_none());
+
+        let mut values_with_secret = values.clone();
+        values_with_secret.insert(
+            "TRO_GOOGLE_CLIENT_SECRET".into(),
+            "server-only-client-secret".into(),
+        );
+        assert_eq!(
+            HostedConfig::from_values(&values_with_secret)
+                .unwrap()
+                .google_client_secret
+                .as_deref(),
+            Some("server-only-client-secret")
+        );
 
         let mut unsafe_values = values.clone();
         unsafe_values.insert("TRO_AUTH_ISSUER".into(), "http://api.tro.example".into());
