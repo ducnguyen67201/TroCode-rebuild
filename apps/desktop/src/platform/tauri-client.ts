@@ -1,6 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { parseAuthStatus, parseStatus, parseTeaching } from '@tro/contracts';
+import {
+  parseAuthStatus,
+  parseStatus,
+  parseTeaching,
+  parseWorkspaceMember,
+  parseWorkspaceMemberList,
+} from '@tro/contracts';
 import type { DesktopClient } from './desktop-client';
 async function call(command: string, args?: Record<string, unknown>) {
   return parseStatus(await invoke(command, args));
@@ -20,6 +26,19 @@ export const tauriClient: DesktopClient = {
           onBoundaryError?.();
         }
       }),
+  },
+  workspace: {
+    members: async (workspaceId) =>
+      parseWorkspaceMemberList(
+        await invoke('workspace_members', { workspaceId }),
+      ),
+    addMember: async (workspaceId, email, role) =>
+      parseWorkspaceMember(
+        await invoke('workspace_add_member', { workspaceId, email, role }),
+      ),
+    removeMember: async (workspaceId, membershipId) => {
+      await invoke('workspace_remove_member', { workspaceId, membershipId });
+    },
   },
   teaching: {
     subscribe: (listener) =>

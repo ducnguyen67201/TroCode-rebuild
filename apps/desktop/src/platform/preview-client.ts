@@ -1,5 +1,9 @@
 import { createPreviewTeaching } from './preview-teaching';
-import type { AuthStatus, RuntimeStatus } from '@tro/contracts';
+import type {
+  AuthStatus,
+  RuntimeStatus,
+  WorkspaceMember,
+} from '@tro/contracts';
 import type { AuthClient } from './auth-client';
 import type { DesktopClient } from './desktop-client';
 
@@ -14,7 +18,10 @@ export type PreviewAuthScenario =
 
 interface PreviewClientOptions {
   authScenario?: PreviewAuthScenario;
+  workspaceRole?: PreviewWorkspaceRole;
 }
+
+export type PreviewWorkspaceRole = 'owner' | 'teacher' | 'student';
 
 const previewUser = {
   accountId: '00000000-0000-0000-0000-000000000001',
@@ -22,15 +29,24 @@ const previewUser = {
   email: 'ada@example.com',
 };
 
-const previewWorkspace = {
-  workspaceId: '00000000-0000-0000-0000-000000000002',
-  name: 'Northstar Robotics',
-  role: 'student' as const,
-};
-
 export function createPreviewClient(
   options: PreviewClientOptions = {},
 ): DesktopClient {
+  const workspace = {
+    workspaceId: '00000000-0000-0000-0000-000000000002',
+    name: 'Northstar Robotics',
+    role: options.workspaceRole ?? ('student' as const),
+  };
+  let members: WorkspaceMember[] = [
+    {
+      membershipId: '00000000-0000-0000-0000-000000000003',
+      email: 'owner@example.com',
+      displayName: 'Northstar Owner',
+      role: 'owner',
+      state: 'active',
+      joinedAt: '2026-09-25T12:00:00Z',
+    },
+  ];
   let status: RuntimeStatus = {
     state: 'stopped',
     generationId: null,
@@ -38,7 +54,10 @@ export function createPreviewClient(
     message: 'Ready to preview a diagnostic session.',
   };
   const listeners = new Set<(value: RuntimeStatus) => void>();
-  const auth = createPreviewAuth(options.authScenario ?? 'signedOut');
+  const auth = createPreviewAuth(
+    options.authScenario ?? 'signedOut',
+    workspace,
+  );
   async function change(state: RuntimeStatus['state']) {
     status = {
       state,
@@ -55,6 +74,33 @@ export function createPreviewClient(
   return {
     preview: true,
     auth,
+    workspace: {
+      members: async () => ({
+        workspace: { ...workspace, role: 'owner' },
+        members,
+      }),
+      addMember: async (_workspaceId, email, role) => {
+        const existing = members.find(
+          (member) => member.email.toLowerCase() === email.trim().toLowerCase(),
+        );
+        if (existing) return existing;
+        const member: WorkspaceMember = {
+          membershipId: `00000000-0000-0000-0000-${String(members.length + 3).padStart(12, '0')}`,
+          email: email.trim(),
+          displayName: null,
+          role,
+          state: 'pending',
+          joinedAt: null,
+        };
+        members = [...members, member];
+        return member;
+      },
+      removeMember: async (_workspaceId, membershipId) => {
+        members = members.filter(
+          (member) => member.membershipId !== membershipId,
+        );
+      },
+    },
     teaching: createPreviewTeaching(),
     status: async () => status,
     start: () => change('running'),
@@ -71,14 +117,21 @@ export function createPreviewClient(
   };
 }
 
-function createPreviewAuth(initial: PreviewAuthScenario): AuthClient {
+function createPreviewAuth(
+  initial: PreviewAuthScenario,
+  workspace: {
+    workspaceId: string;
+    name: string;
+    role: PreviewWorkspaceRole;
+  },
+): AuthClient {
   let revision = 0;
-  let status = previewAuthStatus(initial, revision);
+  let status = previewAuthStatus(initial, revision, workspace);
   const listeners = new Set<(value: AuthStatus) => void>();
 
   function publish(state: PreviewAuthScenario) {
     revision += 1;
-    status = previewAuthStatus(state, revision);
+    status = previewAuthStatus(state, revision, workspace);
     for (const listener of listeners) listener(status);
     return status;
   }
@@ -111,6 +164,11 @@ function createPreviewAuth(initial: PreviewAuthScenario): AuthClient {
 function previewAuthStatus(
   state: PreviewAuthScenario,
   revision: number,
+  workspace: {
+    workspaceId: string;
+    name: string;
+    role: PreviewWorkspaceRole;
+  },
 ): AuthStatus {
   const hasIdentity =
     state === 'authenticated' || state === 'membershipRequired';
@@ -160,7 +218,7 @@ function previewAuthStatus(
     revision,
     ...details[state],
     user: hasIdentity ? previewUser : null,
-    workspaces: state === 'authenticated' ? [previewWorkspace] : [],
+    workspaces: state === 'authenticated' ? [workspace] : [],
     accessTokenExpiresAt: hasIdentity ? '2026-10-25T12:15:00Z' : null,
   };
 }

@@ -5,11 +5,13 @@ The [master specification](rebuild-architecture.md) owns product decisions and p
 | Surface | Owner/entry | Dependency direction |
 | --- | --- | --- |
 | UI | `apps/desktop/src/features/teaching/TeachingPanel.tsx` | Feature → DesktopClient; no native tool/credential imports |
+| Workspace UI | `apps/desktop/src/features/workspace/WorkspaceAccessPanel.tsx` | Owner-only presentation → WorkspaceClient; no bearer credentials |
 | Native adapter | `apps/desktop/src/platform/tauri-client.ts` | Typed Tauri commands; received payloads validated |
 | Host | `apps/desktop/src-tauri/src/commands.rs` | Commands → manager → worker actor |
 | Worker lifecycle | `apps/desktop/src-tauri/src/worker.rs` | Actor owns child/pipes/pending requests; no UI types |
 | Runtime | `services/teaching-runtime/src/tro_runtime/teaching.py` | Session decisions → read-only observation/model adapters; transport in `__main__.py` |
 | API | `services/api/src/lib.rs`, `model_gateway.rs` | Fixture API and isolated proof mode; provider secrets stay on backend |
+| Hosted workspace authority | `services/api/src/workspace.rs`, `workspace/handlers.rs` | JWT/session authentication → owner recheck → SeaORM transaction/audit |
 | Contracts | `packages/contracts/schema/` | Single authority → generated bindings/validators |
 | Dev workflow | `scripts/rebuild/cli.mjs` | Thin composition of existing package tools |
 

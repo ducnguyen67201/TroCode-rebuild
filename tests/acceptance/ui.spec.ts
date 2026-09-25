@@ -74,6 +74,23 @@ test('sign out removes the protected product without a reload', async ({
   );
 });
 
+test('workspace owner can pre-add exact Google email access', async ({
+  page,
+}) => {
+  await page.goto('/?auth=authenticated&workspaceRole=owner');
+
+  await expect(
+    page.getByRole('heading', { name: 'People with access' }),
+  ).toBeVisible();
+  await page.getByLabel('Google email').fill('student+robotics@example.com');
+  await page.getByLabel('Role').selectOption('student');
+  await page.getByRole('button', { name: 'Add access' }).click();
+
+  await expect(page.getByText('student+robotics@example.com')).toBeVisible();
+  await expect(page.getByText('pending', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Access added\./)).toBeVisible();
+});
+
 test('signed-out threshold does not overflow a narrow viewport', async ({
   page,
 }) => {

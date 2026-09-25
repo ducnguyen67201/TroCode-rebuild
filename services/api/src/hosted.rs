@@ -1,10 +1,11 @@
 use crate::{
     auth::{
-        PendingWorkspaceMembershipStore, WorkspaceMembershipStore, google::GoogleVerifier,
-        handlers, jwt::JwtService, sessions::SessionService,
+        WorkspaceMembershipStore, google::GoogleVerifier, handlers, jwt::JwtService,
+        sessions::SessionService,
     },
     config::HostedConfig,
     persistence,
+    workspace::{WorkspaceService, handlers as workspace_handlers},
 };
 use axum::{
     Json, Router,
@@ -21,6 +22,7 @@ pub struct HostedState {
     pub database: DatabaseConnection,
     pub google: Arc<GoogleVerifier>,
     pub sessions: Arc<SessionService>,
+    pub workspaces: Arc<WorkspaceService>,
 }
 
 impl HostedState {
@@ -28,15 +30,16 @@ impl HostedState {
         let database = persistence::connect(&config.database_url)
             .await
             .map_err(|_| "Hosted database unavailable.")?;
-        let memberships: Arc<dyn WorkspaceMembershipStore> =
-            Arc::new(PendingWorkspaceMembershipStore);
-        Self::from_database(config, database, memberships)
+        let workspaces = Arc::new(WorkspaceService::new(database.clone()));
+        let memberships: Arc<dyn WorkspaceMembershipStore> = workspaces.clone();
+        Self::from_database(config, database, memberships, workspaces)
     }
 
     pub fn from_database(
         config: &HostedConfig,
         database: DatabaseConnection,
         memberships: Arc<dyn WorkspaceMembershipStore>,
+        workspaces: Arc<WorkspaceService>,
     ) -> Result<Self, &'static str> {
         let google = Arc::new(GoogleVerifier::production(config.google_client_id.clone())?);
         let jwt = JwtService::new(
@@ -56,6 +59,7 @@ impl HostedState {
             database,
             google,
             sessions,
+            workspaces,
         })
     }
 }
@@ -71,6 +75,14 @@ pub fn router(state: HostedState) -> Router {
         .route("/v1/auth/session/refresh", post(handlers::refresh_session))
         .route("/v1/auth/session", delete(handlers::logout))
         .route("/v1/me", get(handlers::me))
+        .route(
+            "/v1/workspaces/{workspace_id}/members",
+            get(workspace_handlers::list_members).post(workspace_handlers::add_member),
+        )
+        .route(
+            "/v1/workspaces/{workspace_id}/members/{membership_id}",
+            delete(workspace_handlers::remove_member),
+        )
         .layer(DefaultBodyLimit::max(16 * 1024))
         .with_state(state)
         .layer(axum::middleware::from_fn(crate::correlation))

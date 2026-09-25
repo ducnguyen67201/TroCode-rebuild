@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-workspace-members"
+description = "Enables the workspace_members command without any pre-configured scope."
+commands.allow = ["workspace_members"]
+
+[[permission]]
+identifier = "deny-workspace-members"
+description = "Denies the workspace_members command without any pre-configured scope."
+commands.deny = ["workspace_members"]

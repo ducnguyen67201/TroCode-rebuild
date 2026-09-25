@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import corpus from '../../../tests/fixtures/contracts/corpus.json';
-import { parseAuthStatus, parseMessage, parseStatus } from '../src/index';
+import {
+  parseAuthStatus,
+  parseMessage,
+  parseStatus,
+  parseWorkspaceMember,
+  parseWorkspaceMemberList,
+} from '../src/index';
 describe('wire conformance', () => {
   for (const entry of corpus)
     it(entry.name, () => {
@@ -54,5 +60,45 @@ describe('wire conformance', () => {
     expect(() => parseAuthStatus({ ...base, refreshToken: 'secret' })).toThrow(
       'Invalid auth status',
     );
+  });
+  it('accepts the bounded owner workspace member projection', () => {
+    const value = {
+      workspace: {
+        workspaceId: '00000000-0000-0000-0000-000000000002',
+        name: 'Robotics Studio',
+        role: 'owner',
+      },
+      members: [
+        {
+          membershipId: '00000000-0000-0000-0000-000000000003',
+          email: 'student+robotics@example.com',
+          displayName: null,
+          role: 'student',
+          state: 'pending',
+          joinedAt: null,
+        },
+      ],
+    };
+    expect(parseWorkspaceMemberList(value)).toEqual(value);
+  });
+  it('rejects malformed workspace lifecycle states and extra credential data', () => {
+    const member = {
+      membershipId: '00000000-0000-0000-0000-000000000003',
+      email: 'student@example.com',
+      displayName: null,
+      role: 'student',
+      state: 'active',
+      joinedAt: null,
+    };
+    expect(() => parseWorkspaceMember(member)).toThrow(
+      'Invalid workspace member',
+    );
+    expect(() =>
+      parseWorkspaceMember({
+        ...member,
+        state: 'pending',
+        refreshToken: 'must-never-cross-the-bridge',
+      }),
+    ).toThrow('Invalid workspace member');
   });
 });

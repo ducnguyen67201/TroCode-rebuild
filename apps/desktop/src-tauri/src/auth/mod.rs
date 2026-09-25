@@ -4,6 +4,7 @@ pub mod credential_store;
 pub mod oauth;
 
 use crate::manager::RuntimeManager;
+use crate::worker::WorkerError;
 use api_client::{ApiFailure, AuthApiClient};
 use credential_store::CredentialStore;
 use serde::{Deserialize, Serialize};
@@ -25,6 +26,24 @@ pub struct WorkspaceSummary {
     pub workspace_id: String,
     pub name: String,
     pub role: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkspaceMember {
+    pub membership_id: String,
+    pub email: String,
+    pub display_name: Option<String>,
+    pub role: String,
+    pub state: String,
+    pub joined_at: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkspaceMemberList {
+    pub workspace: WorkspaceSummary,
+    pub members: Vec<WorkspaceMember>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -167,6 +186,66 @@ impl AuthManager {
                 .as_deref()
                 .and_then(|value| OffsetDateTime::parse(value, &Rfc3339).ok())
                 .is_some_and(|expires_at| expires_at > OffsetDateTime::now_utc())
+    }
+
+    pub async fn workspace_members(
+        &self,
+        workspace_id: &str,
+    ) -> Result<WorkspaceMemberList, WorkerError> {
+        let (api, access_token) = self.owner_access(workspace_id).await?;
+        match api.workspace_members(&access_token, workspace_id).await {
+            Err(error) if error.terminal() => {
+                self.retry().await;
+                let (api, access_token) = self.owner_access(workspace_id).await?;
+                api.workspace_members(&access_token, workspace_id)
+                    .await
+                    .map_err(workspace_failure)
+            }
+            result => result.map_err(workspace_failure),
+        }
+    }
+
+    pub async fn add_workspace_member(
+        &self,
+        workspace_id: &str,
+        email: &str,
+        role: &str,
+    ) -> Result<WorkspaceMember, WorkerError> {
+        let (api, access_token) = self.owner_access(workspace_id).await?;
+        match api
+            .add_workspace_member(&access_token, workspace_id, email, role)
+            .await
+        {
+            Err(error) if error.terminal() => {
+                self.retry().await;
+                let (api, access_token) = self.owner_access(workspace_id).await?;
+                api.add_workspace_member(&access_token, workspace_id, email, role)
+                    .await
+                    .map_err(workspace_failure)
+            }
+            result => result.map_err(workspace_failure),
+        }
+    }
+
+    pub async fn remove_workspace_member(
+        &self,
+        workspace_id: &str,
+        membership_id: &str,
+    ) -> Result<(), WorkerError> {
+        let (api, access_token) = self.owner_access(workspace_id).await?;
+        match api
+            .remove_workspace_member(&access_token, workspace_id, membership_id)
+            .await
+        {
+            Err(error) if error.terminal() => {
+                self.retry().await;
+                let (api, access_token) = self.owner_access(workspace_id).await?;
+                api.remove_workspace_member(&access_token, workspace_id, membership_id)
+                    .await
+                    .map_err(workspace_failure)
+            }
+            result => result.map_err(workspace_failure),
+        }
     }
 
     pub async fn restore(&self) -> AuthStatus {
@@ -458,6 +537,46 @@ impl AuthManager {
         self.runtime.select_account(None).await;
     }
 
+    async fn owner_access(
+        &self,
+        workspace_id: &str,
+    ) -> Result<(AuthApiClient, String), WorkerError> {
+        if uuid::Uuid::parse_str(workspace_id).is_err() {
+            return Err(WorkerError::new(
+                "INVALID_MESSAGE",
+                "Invalid workspace request.",
+            ));
+        }
+        let needs_refresh = self
+            .session
+            .lock()
+            .await
+            .as_ref()
+            .is_none_or(|session| !access_is_valid(&session.access_token_expires_at));
+        if needs_refresh {
+            self.retry().await;
+        }
+        let api = self.api.clone().ok_or(WorkerError::new(
+            "NOT_READY",
+            "Workspace service unavailable.",
+        ))?;
+        let session = self.session.lock().await.clone().ok_or(WorkerError::new(
+            "UNAUTHORIZED",
+            "Sign in to an active workspace before continuing.",
+        ))?;
+        if !access_is_valid(&session.access_token_expires_at)
+            || !session.workspaces.iter().any(|workspace| {
+                workspace.workspace_id == workspace_id && workspace.role == "owner"
+            })
+        {
+            return Err(WorkerError::new(
+                "FORBIDDEN",
+                "Workspace owner access is required.",
+            ));
+        }
+        Ok((api, session.access_token))
+    }
+
     fn next_epoch(&self) -> u64 {
         self.epoch.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1
     }
@@ -504,6 +623,36 @@ fn refresh_delay(state: &str, until_refresh: time::Duration) -> Duration {
         Duration::from_secs(until_refresh.whole_seconds() as u64)
     } else {
         Duration::ZERO
+    }
+}
+
+fn workspace_failure(error: ApiFailure) -> WorkerError {
+    match error.code.as_str() {
+        "WORKSPACE_INVALID_REQUEST" => WorkerError::new(
+            "WORKSPACE_INVALID_REQUEST",
+            "A valid workspace membership request is required.",
+        ),
+        "WORKSPACE_OWNER_REQUIRED" => WorkerError::new(
+            "WORKSPACE_OWNER_REQUIRED",
+            "Workspace owner access is required.",
+        ),
+        "WORKSPACE_MEMBERSHIP_CONFLICT" => WorkerError::new(
+            "WORKSPACE_MEMBERSHIP_CONFLICT",
+            "This email already has a different active assignment in the workspace.",
+        ),
+        "WORKSPACE_MEMBERSHIP_NOT_FOUND" => WorkerError::new(
+            "WORKSPACE_MEMBERSHIP_NOT_FOUND",
+            "The workspace membership was not found.",
+        ),
+        "WORKSPACE_OWNER_REMOVAL_FORBIDDEN" => WorkerError::new(
+            "WORKSPACE_OWNER_REMOVAL_FORBIDDEN",
+            "The workspace owner cannot be removed here.",
+        ),
+        _ if error.retryable => WorkerError::new(
+            "NOT_READY",
+            "Workspace access is temporarily unavailable. Try again.",
+        ),
+        _ => WorkerError::new("UNAUTHORIZED", "Workspace access could not be verified."),
     }
 }
 

@@ -39,6 +39,7 @@ try {
     ['status', '-status'],
     ['model-access', '-model-access'],
     ['auth', '-auth'],
+    ['workspace', '-workspace'],
   ]) {
     const source = join(
       root,

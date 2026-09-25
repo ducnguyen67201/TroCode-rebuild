@@ -110,6 +110,51 @@ impl ApiError {
             true,
         )
     }
+    pub fn workspace_invalid_request(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::BAD_REQUEST,
+            "WORKSPACE_INVALID_REQUEST",
+            "A valid workspace membership request is required.",
+            id,
+            false,
+        )
+    }
+    pub fn workspace_owner_required(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::FORBIDDEN,
+            "WORKSPACE_OWNER_REQUIRED",
+            "Workspace owner access is required.",
+            id,
+            false,
+        )
+    }
+    pub fn workspace_membership_conflict(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::CONFLICT,
+            "WORKSPACE_MEMBERSHIP_CONFLICT",
+            "This workspace membership conflicts with an existing assignment.",
+            id,
+            false,
+        )
+    }
+    pub fn workspace_membership_not_found(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::NOT_FOUND,
+            "WORKSPACE_MEMBERSHIP_NOT_FOUND",
+            "The workspace membership was not found.",
+            id,
+            false,
+        )
+    }
+    pub fn workspace_owner_removal_forbidden(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::FORBIDDEN,
+            "WORKSPACE_OWNER_REMOVAL_FORBIDDEN",
+            "The workspace owner cannot be removed here.",
+            id,
+            false,
+        )
+    }
 }
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {

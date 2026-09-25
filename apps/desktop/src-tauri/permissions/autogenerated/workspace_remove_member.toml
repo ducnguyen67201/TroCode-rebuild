@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-workspace-remove-member"
+description = "Enables the workspace_remove_member command without any pre-configured scope."
+commands.allow = ["workspace_remove_member"]
+
+[[permission]]
+identifier = "deny-workspace-remove-member"
+description = "Denies the workspace_remove_member command without any pre-configured scope."
+commands.deny = ["workspace_remove_member"]

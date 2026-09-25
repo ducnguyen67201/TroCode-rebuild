@@ -36,11 +36,19 @@ variables loaded. The command sets the explicit migration guard and uses the
 SeaORM migration ledger. Take and verify a recoverable backup first, record the
 source/target versions, and do not edit published migrations.
 
-Before deployment, replace `PendingWorkspaceMembershipStore` with the workspace
-branch's SeaORM repository. Its claim method must run in the auth transaction,
-match only trim-and-lowercase verified email, preserve the owner-assigned role,
-be idempotent, and record the workspace audit event. Without that adapter, login
-is intentionally limited to `membershipRequired`.
+The hosted service uses `WorkspaceService` as the canonical SeaORM membership
+adapter. Its claim method runs in the auth transaction, matches only the
+trim-and-lowercase verified email, preserves the owner-assigned role, is
+idempotent and records the workspace audit event. `PendingWorkspaceMembershipStore`
+remains only as an explicit test double; production startup must never select it.
+An account without an active membership remains in `membershipRequired`.
+
+The first workspace owner is provisioned by the approved operator/bootstrap
+workflow; public self-service workspace creation is not part of this slice. Once
+provisioned, an owner can list, add and remove non-owner memberships from the
+desktop. Additions are pending until the matching Google account authenticates.
+Removing a membership immediately excludes it from subsequent `/me` projections
+and refresh responses.
 
 Legacy Electron sessions are not imported. Supported upgrades require a fresh
 Google sign-in; do not decrypt or copy old refresh material into the new keychain
@@ -65,15 +73,19 @@ repository; do not add an ad-hoc SQL script.
 
 ## Public error taxonomy
 
-| Code                     | Meaning                                    | Client behavior                                   |
-| ------------------------ | ------------------------------------------ | ------------------------------------------------- |
-| `AUTH_INVALID_GOOGLE`    | Provider proof is invalid                  | End attempt; allow a new sign-in                  |
-| `AUTH_IDENTITY_CONFLICT` | Email belongs to another provider identity | Gate access; operator reconciliation              |
-| `AUTH_UNAVAILABLE`       | Provider/backend transport failed          | Offline gate; retain refresh credential and retry |
-| `SESSION_EXPIRED`        | Refresh/access validity ended              | Clear local credential and sign out               |
-| `SESSION_REVOKED`        | Account or device session is inactive      | Clear local credential and sign out               |
-| `SESSION_REPLAYED`       | A replaced refresh credential was reused   | Revoke the device family and sign out             |
-| `INVALID_REQUEST`        | Bounded request validation failed          | Do not retry the same payload                     |
+| Code                             | Meaning                                    | Client behavior                                   |
+| -------------------------------- | ------------------------------------------ | ------------------------------------------------- |
+| `AUTH_INVALID_GOOGLE`            | Provider proof is invalid                  | End attempt; allow a new sign-in                  |
+| `AUTH_IDENTITY_CONFLICT`         | Email belongs to another provider identity | Gate access; operator reconciliation              |
+| `AUTH_UNAVAILABLE`               | Provider/backend transport failed          | Offline gate; retain refresh credential and retry |
+| `SESSION_EXPIRED`                | Refresh/access validity ended              | Clear local credential and sign out               |
+| `SESSION_REVOKED`                | Account or device session is inactive      | Clear local credential and sign out               |
+| `SESSION_REPLAYED`               | A replaced refresh credential was reused   | Revoke the device family and sign out             |
+| `INVALID_REQUEST`                | Bounded request validation failed          | Do not retry the same payload                     |
+| `WORKSPACE_INVALID_REQUEST`      | Invalid email, role or workspace input     | Correct the owner-entered value                   |
+| `WORKSPACE_OWNER_REQUIRED`       | Active owner membership is absent          | Hide management UI; do not retry as authorization |
+| `WORKSPACE_MEMBERSHIP_CONFLICT`  | Email has a different active role          | Reconcile the existing assignment                 |
+| `WORKSPACE_MEMBERSHIP_NOT_FOUND` | Membership is absent or removed            | Refresh the member list                           |
 
 Logs may contain the stable code, correlation ID, account UUID after successful
 identity establishment and workspace count. They must not contain email, Google

@@ -2,6 +2,7 @@ import { TeachingPanel } from './features/teaching/TeachingPanel';
 import type { DesktopClient } from './platform/desktop-client';
 import { RuntimeStatus } from './features/runtime/RuntimeStatus';
 import type { AuthenticatedContext } from './features/auth/AuthGate';
+import { WorkspaceAccessPanel } from './features/workspace/WorkspaceAccessPanel';
 
 export function App({
   client,
@@ -48,6 +49,15 @@ export function App({
         </p>
       </div>
       {client.preview && <p className="preview">Preview — simulated runtime</p>}
+      {session.workspaces
+        .filter((candidate) => candidate.role === 'owner')
+        .map((candidate) => (
+          <WorkspaceAccessPanel
+            client={client.workspace}
+            key={candidate.workspaceId}
+            workspace={candidate}
+          />
+        ))}
       <RuntimeStatus client={client} />
       <TeachingPanel client={client} />
       <footer>React presentation · Rust supervision · Python runtime</footer>

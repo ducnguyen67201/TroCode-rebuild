@@ -94,7 +94,7 @@ pub async fn me(
     ))
 }
 
-fn bearer(headers: &HeaderMap, correlation: Uuid) -> Result<&str, ApiError> {
+pub(crate) fn bearer(headers: &HeaderMap, correlation: Uuid) -> Result<&str, ApiError> {
     headers
         .get("authorization")
         .and_then(|value| value.to_str().ok())

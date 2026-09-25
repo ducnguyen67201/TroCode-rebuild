@@ -1,4 +1,7 @@
-use super::{AuthUser, OAuthExchange, SessionEnvelope, WorkspaceSummary};
+use super::{
+    AuthUser, OAuthExchange, SessionEnvelope, WorkspaceMember, WorkspaceMemberList,
+    WorkspaceSummary,
+};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::time::Duration;
 use url::Url;
@@ -32,6 +35,13 @@ struct PublicError {
 #[serde(rename_all = "camelCase")]
 struct RefreshRequest<'a> {
     refresh_token: &'a str,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AddWorkspaceMemberRequest<'a> {
+    email: &'a str,
+    role: &'a str,
 }
 
 #[derive(Deserialize)]
@@ -108,6 +118,60 @@ impl AuthApiClient {
         let response = self
             .client
             .delete(self.url("v1/auth/session"))
+            .bearer_auth(access_token)
+            .send()
+            .await
+            .map_err(|_| ApiFailure::unavailable())?;
+        if response.status().is_success() {
+            return Ok(());
+        }
+        Err(error_response(response).await)
+    }
+
+    pub async fn workspace_members(
+        &self,
+        access_token: &str,
+        workspace_id: &str,
+    ) -> Result<WorkspaceMemberList, ApiFailure> {
+        let response = self
+            .client
+            .get(self.url(&format!("v1/workspaces/{workspace_id}/members")))
+            .bearer_auth(access_token)
+            .send()
+            .await
+            .map_err(|_| ApiFailure::unavailable())?;
+        response_json(response).await
+    }
+
+    pub async fn add_workspace_member(
+        &self,
+        access_token: &str,
+        workspace_id: &str,
+        email: &str,
+        role: &str,
+    ) -> Result<WorkspaceMember, ApiFailure> {
+        let response = self
+            .client
+            .post(self.url(&format!("v1/workspaces/{workspace_id}/members")))
+            .bearer_auth(access_token)
+            .json(&AddWorkspaceMemberRequest { email, role })
+            .send()
+            .await
+            .map_err(|_| ApiFailure::unavailable())?;
+        response_json(response).await
+    }
+
+    pub async fn remove_workspace_member(
+        &self,
+        access_token: &str,
+        workspace_id: &str,
+        membership_id: &str,
+    ) -> Result<(), ApiFailure> {
+        let response = self
+            .client
+            .delete(self.url(&format!(
+                "v1/workspaces/{workspace_id}/members/{membership_id}"
+            )))
             .bearer_auth(access_token)
             .send()
             .await

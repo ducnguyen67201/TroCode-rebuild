@@ -14,6 +14,7 @@ use tro_api::{
     config::HostedConfig,
     entities::account,
     hosted::{HostedState, router},
+    workspace::WorkspaceService,
 };
 
 fn config() -> HostedConfig {
@@ -36,6 +37,7 @@ fn app() -> axum::Router {
             &config(),
             DatabaseConnection::default(),
             Arc::new(PendingWorkspaceMembershipStore),
+            Arc::new(WorkspaceService::new(DatabaseConnection::default())),
         )
         .unwrap(),
     )

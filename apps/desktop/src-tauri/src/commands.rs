@@ -1,5 +1,5 @@
 use crate::{
-    auth::{AuthManager, AuthStatus},
+    auth::{AuthManager, AuthStatus, WorkspaceMember, WorkspaceMemberList},
     lifecycle::Status,
     manager::RuntimeManager,
     worker::WorkerError,
@@ -66,6 +66,53 @@ pub async fn auth_sign_out(
     require_main(&window)?;
     crate::overlay::hide(&app);
     Ok(auth.sign_out().await)
+}
+
+#[tauri::command]
+pub async fn workspace_members(
+    window: tauri::WebviewWindow,
+    workspace_id: String,
+    auth: Authentication<'_>,
+) -> Result<WorkspaceMemberList, WorkerError> {
+    require_main(&window)?;
+    auth.workspace_members(&workspace_id).await
+}
+
+#[tauri::command]
+pub async fn workspace_add_member(
+    window: tauri::WebviewWindow,
+    workspace_id: String,
+    email: String,
+    role: String,
+    auth: Authentication<'_>,
+) -> Result<WorkspaceMember, WorkerError> {
+    require_main(&window)?;
+    if email.len() > 254 || role.len() > 16 {
+        return Err(WorkerError::new(
+            "INVALID_MESSAGE",
+            "Invalid workspace membership request.",
+        ));
+    }
+    auth.add_workspace_member(&workspace_id, &email, &role)
+        .await
+}
+
+#[tauri::command]
+pub async fn workspace_remove_member(
+    window: tauri::WebviewWindow,
+    workspace_id: String,
+    membership_id: String,
+    auth: Authentication<'_>,
+) -> Result<(), WorkerError> {
+    require_main(&window)?;
+    if Uuid::parse_str(&membership_id).is_err() {
+        return Err(WorkerError::new(
+            "INVALID_MESSAGE",
+            "Invalid workspace membership request.",
+        ));
+    }
+    auth.remove_workspace_member(&workspace_id, &membership_id)
+        .await
 }
 
 #[tauri::command]
