@@ -1,0 +1,34 @@
+use sea_orm::entity::prelude::*;
+
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
+#[sea_orm(table_name = "auth_identity")]
+pub struct Model {
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub id: Uuid,
+    pub account_id: Uuid,
+    pub provider: String,
+    pub provider_subject: String,
+    pub issuer: String,
+    pub created_at: TimeDateTimeWithTimeZone,
+    pub updated_at: TimeDateTimeWithTimeZone,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::account::Entity",
+        from = "Column::AccountId",
+        to = "super::account::Column::Id",
+        on_update = "NoAction",
+        on_delete = "Cascade"
+    )]
+    Account,
+}
+
+impl Related<super::account::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Account.def()
+    }
+}
+
+impl ActiveModelBehavior for ActiveModel {}

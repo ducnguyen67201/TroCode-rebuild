@@ -8,6 +8,21 @@ Database: `tro_rebuild_test`; migration: `0001_foundation.sql`; tables: fixture_
 
 Profiles: teacher, student-a, student-b. These tokens represent isolated engineering fixtures, not production authentication. The API refuses fixture mode in release builds; commands never deploy it. Teacher/student roles are stored by the API. `GET /v1/me` ignores claimed role/account headers and reports the credential's account. `POST /v1/model-access/check` explicitly reports providerEnabled=false. Real authenticated SDK Responses/streaming integration is a P1/P2 gate.
 
+Hosted authentication is a separate explicit mode (`TRO_API_MODE=hosted`). It
+requires PostgreSQL, loopback binding behind a trusted HTTPS reverse proxy, a
+Google desktop client ID, distinct base64-encoded JWT/refresh keys and the
+SeaORM migrator. `npm run db:migrate:hosted` additionally requires
+`TRO_ALLOW_HOSTED_MIGRATION=1`; it does not run as part of fixture setup. The
+reference environment file names variables but contains no usable provider or
+signing secret. Desktop builds require the matching fixed `TRO_AUTH_API_ORIGIN`
+and public Google client ID.
+
+Browser preview auth scenarios are visual/interaction fixtures only. Real
+acceptance still requires a packaged desktop, system browser callback, OS
+credential manager, hosted HTTPS API and the workspace branch's membership
+adapter. No production Google client, database or secret is provisioned by local
+verification.
+
 Sample material: `tests/fixtures/materials/example.md`, object `tro-rebuild-fixtures/materials/example.md`. An unsigned read must return 401/403. Readiness verifies the expected migration checksum and fixture object; liveness only reports that HTTP is alive.
 
 ## Acceptance environments
@@ -18,6 +33,7 @@ Local fixture environment is reproducible engineering infrastructure. The legacy
 
 - `npm run db:up`: start only owned fixture infrastructure and create private bucket.
 - `npm run db:migrate`: apply isolated migrations; DB must already be running.
+- `npm run db:migrate:hosted`: run append-only SeaORM hosted migrations with the explicit hosted migration guard.
 - `npm run db:seed`: idempotent account/material seed.
 - `npm run env:check`: inspect running API readiness.
 - `npm run test:integration`: prepare fixture environment and run explicit integration tests.

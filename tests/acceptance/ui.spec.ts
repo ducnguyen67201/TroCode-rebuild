@@ -5,7 +5,15 @@ test('preview lifecycle is explicit, usable and responsive', async ({
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Continue with Google' }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start session' })).toHaveCount(
+    0,
+  );
+  await page.getByRole('button', { name: 'Continue with Google' }).click();
   await expect(page.getByText('Preview — simulated runtime')).toBeVisible();
+  await expect(page.getByText('Northstar Robotics')).toBeVisible();
   await page.getByRole('button', { name: 'Start session' }).click();
   await expect(page.getByRole('status')).toHaveText(
     'Simulated runtime is running.',
@@ -33,5 +41,111 @@ test('preview lifecycle is explicit, usable and responsive', async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('workspace holding state reveals no product and can be retried', async ({
+  page,
+}) => {
+  await page.goto('/?auth=membershipRequired');
+
+  await expect(page.getByText('ada@example.com')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start session' })).toHaveCount(
+    0,
+  );
+  await page.getByRole('button', { name: 'Check for access' }).click();
+  await expect(page.getByText('Northstar Robotics')).toBeVisible();
+});
+
+test('sign out removes the protected product without a reload', async ({
+  page,
+}) => {
+  await page.goto('/?auth=authenticated');
+
+  await expect(
+    page.getByRole('button', { name: 'Start session' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Continue with Google' }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start session' })).toHaveCount(
+    0,
+  );
+});
+
+test('signed-out threshold does not overflow a narrow viewport', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  await expect(page.getByRole('heading', { name: /Begin with/ })).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+
+const authLayoutCases = [
+  {
+    scenario: 'signedOut',
+    marker: /Begin with/,
+    primaryAction: 'Continue with Google',
+  },
+  {
+    scenario: 'membershipRequired',
+    marker: /Your place is/,
+    primaryAction: 'Check for access',
+  },
+  {
+    scenario: 'offline',
+    marker: /We lost the/,
+    primaryAction: 'Try again',
+  },
+  {
+    scenario: 'authenticated',
+    marker: 'Northstar Robotics',
+    primaryAction: 'Start session',
+  },
+] as const;
+
+test('auth layouts remain within narrow and desktop viewports', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  for (const viewport of [
+    { name: 'mobile', width: 390, height: 844 },
+    { name: 'desktop', width: 1280, height: 900 },
+  ] as const) {
+    await page.setViewportSize(viewport);
+
+    for (const authCase of authLayoutCases) {
+      await page.goto(`/?auth=${authCase.scenario}`);
+      await expect(page.getByText(authCase.marker).first()).toBeVisible();
+      const primaryAction = page.getByRole('button', {
+        name: authCase.primaryAction,
+      });
+      await expect(primaryAction).toBeVisible();
+      const actionBox = await primaryAction.boundingBox();
+      expect(actionBox).not.toBeNull();
+      expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(
+        viewport.height,
+      );
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true);
+      await page.screenshot({
+        path: `.local/auth-${authCase.scenario}-${viewport.name}.png`,
+        fullPage: true,
+      });
+    }
+  }
+
   expect(errors).toEqual([]);
 });

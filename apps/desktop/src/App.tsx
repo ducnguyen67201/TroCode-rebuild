@@ -1,14 +1,39 @@
 import { TeachingPanel } from './features/teaching/TeachingPanel';
 import type { DesktopClient } from './platform/desktop-client';
 import { RuntimeStatus } from './features/runtime/RuntimeStatus';
-export function App({ client }: { client: DesktopClient }) {
+import type { AuthenticatedContext } from './features/auth/AuthGate';
+
+export function App({
+  client,
+  session,
+}: {
+  client: DesktopClient;
+  session: AuthenticatedContext;
+}) {
+  const workspace = session.workspaces[0]!;
   return (
-    <main>
-      <header>
+    <main className="app-shell">
+      <header className="app-header">
         <a className="wordmark" href="#">
           tro<span> / foundation</span>
         </a>
-        <span className="phase">P1 · Visual teaching foundation</span>
+        <div className="account-context">
+          <span className="workspace-context">
+            <strong>{workspace.name}</strong>
+            <small>{workspace.role}</small>
+          </span>
+          <span className="account-avatar" aria-hidden="true">
+            {session.user.displayName.charAt(0).toUpperCase()}
+          </span>
+          <span className="account-name">{session.user.displayName}</span>
+          <button
+            className="sign-out-button"
+            disabled={session.signingOut}
+            onClick={session.signOut}
+          >
+            {session.signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+        </div>
       </header>
       <div className="intro">
         <p className="eyebrow">A solid place to begin</p>

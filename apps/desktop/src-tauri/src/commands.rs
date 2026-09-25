@@ -1,14 +1,87 @@
-use crate::{lifecycle::Status, manager::RuntimeManager, worker::WorkerError};
+use crate::{
+    auth::{AuthManager, AuthStatus},
+    lifecycle::Status,
+    manager::RuntimeManager,
+    worker::WorkerError,
+};
 use std::{sync::Arc, time::Duration};
 use tauri::State;
 use uuid::Uuid;
 type Manager<'a> = State<'a, Arc<RuntimeManager>>;
+type Authentication<'a> = State<'a, Arc<AuthManager>>;
+
+fn require_main(window: &tauri::WebviewWindow) -> Result<(), WorkerError> {
+    if window.label() == "main" {
+        Ok(())
+    } else {
+        Err(WorkerError::new("FORBIDDEN", "Main window required."))
+    }
+}
+
+fn require_workspace(auth: &AuthManager) -> Result<(), WorkerError> {
+    if auth.has_workspace_access() {
+        Ok(())
+    } else {
+        Err(WorkerError::new(
+            "UNAUTHORIZED",
+            "Sign in to an active workspace before using Tro.",
+        ))
+    }
+}
+
 #[tauri::command]
-pub async fn runtime_start(manager: Manager<'_>) -> Result<Status, WorkerError> {
+pub fn auth_status(
+    window: tauri::WebviewWindow,
+    auth: Authentication<'_>,
+) -> Result<AuthStatus, WorkerError> {
+    require_main(&window)?;
+    Ok(auth.status())
+}
+
+#[tauri::command]
+pub async fn auth_sign_in_google(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    auth: Authentication<'_>,
+) -> Result<AuthStatus, WorkerError> {
+    require_main(&window)?;
+    Ok(auth.sign_in(&app).await)
+}
+
+#[tauri::command]
+pub async fn auth_retry(
+    window: tauri::WebviewWindow,
+    auth: Authentication<'_>,
+) -> Result<AuthStatus, WorkerError> {
+    require_main(&window)?;
+    Ok(auth.retry().await)
+}
+
+#[tauri::command]
+pub async fn auth_sign_out(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    auth: Authentication<'_>,
+) -> Result<AuthStatus, WorkerError> {
+    require_main(&window)?;
+    crate::overlay::hide(&app);
+    Ok(auth.sign_out().await)
+}
+
+#[tauri::command]
+pub async fn runtime_start(
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<Status, WorkerError> {
+    require_workspace(&auth)?;
     manager.start().await
 }
 #[tauri::command]
-pub async fn runtime_health(manager: Manager<'_>) -> Result<Status, WorkerError> {
+pub async fn runtime_health(
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<Status, WorkerError> {
+    require_workspace(&auth)?;
     manager.health().await
 }
 #[tauri::command]
@@ -20,16 +93,29 @@ pub async fn runtime_stop(
     Ok(manager.stop().await)
 }
 #[tauri::command]
-pub fn runtime_status(manager: Manager<'_>) -> Status {
-    manager.status()
+pub fn runtime_status(
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<Status, WorkerError> {
+    require_workspace(&auth)?;
+    Ok(manager.status())
 }
 #[tauri::command]
-pub async fn runtime_restart(manager: Manager<'_>) -> Result<Status, WorkerError> {
+pub async fn runtime_restart(
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<Status, WorkerError> {
+    require_workspace(&auth)?;
     manager.stop().await;
     manager.start().await
 }
 #[tauri::command]
-pub async fn account_select(profile: String, manager: Manager<'_>) -> Result<Status, WorkerError> {
+pub async fn account_select(
+    profile: String,
+    manager: Manager<'_>,
+    auth: Authentication<'_>,
+) -> Result<Status, WorkerError> {
+    require_workspace(&auth)?;
     let ticket = manager.begin_account_change().await;
     if !cfg!(debug_assertions) || !matches!(profile.as_str(), "teacher" | "student-a" | "student-b")
     {
@@ -90,13 +176,10 @@ pub async fn teaching_request(
     kind: String,
     payload: serde_json::Value,
     manager: Manager<'_>,
+    auth: Authentication<'_>,
 ) -> Result<serde_json::Value, WorkerError> {
-    if window.label() != "main" {
-        return Err(WorkerError::new(
-            "FORBIDDEN",
-            "Teaching controls belong to the main window.",
-        ));
-    }
+    require_main(&window)?;
+    require_workspace(&auth)?;
     crate::overlay::hide(&app);
     let epoch = crate::overlay::epoch(&app);
     let state = manager.teaching(&kind, payload).await?;
@@ -111,9 +194,9 @@ pub async fn teaching_request(
 pub async fn proof_connect(
     window: tauri::WebviewWindow,
     manager: Manager<'_>,
+    auth: Authentication<'_>,
 ) -> Result<Status, WorkerError> {
-    if window.label() != "main" {
-        return Err(WorkerError::new("FORBIDDEN", "Main window required."));
-    }
+    require_main(&window)?;
+    require_workspace(&auth)?;
     manager.connect_proof().await
 }

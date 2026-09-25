@@ -38,6 +38,7 @@ try {
     ['protocol', ''],
     ['status', '-status'],
     ['model-access', '-model-access'],
+    ['auth', '-auth'],
   ]) {
     const source = join(
       root,

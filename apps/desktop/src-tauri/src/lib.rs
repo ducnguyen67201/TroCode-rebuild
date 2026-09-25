@@ -1,4 +1,5 @@
 pub mod account;
+pub mod auth;
 #[cfg(feature = "desktop")]
 mod commands;
 pub mod config;
@@ -16,6 +17,11 @@ pub fn run() {
     use tauri::{Emitter, Manager};
 
     let app = tauri::Builder::default()
+        .plugin(
+            tauri_plugin_opener::Builder::new()
+                .open_js_links_on_click(false)
+                .build(),
+        )
         .plugin(tauri_plugin_global_shortcut::Builder::new().with_handler(|app, _, event| {
             if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
                 overlay::hide(app);
@@ -25,6 +31,10 @@ pub fn run() {
         }).build())
         .manage(overlay::OverlayState::default())
         .invoke_handler(tauri::generate_handler![
+            commands::auth_status,
+            commands::auth_sign_in_google,
+            commands::auth_retry,
+            commands::auth_sign_out,
             commands::runtime_start,
             commands::runtime_health,
             commands::runtime_stop,
@@ -41,6 +51,8 @@ pub fn run() {
                 else { config::bundled_program(&app.path().resource_dir()?)? };
             let runtime=Arc::new(manager::RuntimeManager::new(program));
             app.manage(runtime.clone());
+            let auth = Arc::new(auth::AuthManager::from_env(runtime.clone()));
+            app.manage(auth.clone());
             overlay::prepare(app.handle())?;
             use tauri_plugin_global_shortcut::GlobalShortcutExt;
             app.global_shortcut().register("CommandOrControl+Shift+Escape")
@@ -54,6 +66,22 @@ pub fn run() {
                     let _ = handle.emit_to("main", "runtime-status", value);
                 }
             });
+            let handle = app.handle().clone();
+            let mut status = auth.subscribe();
+            tauri::async_runtime::spawn(async move {
+                while status.changed().await.is_ok() {
+                    let value = status.borrow_and_update().clone();
+                    if value.state != "authenticated" {
+                        overlay::hide(&handle);
+                    }
+                    let _ = handle.emit_to("main", "auth-status", value);
+                }
+            });
+            let restore = auth.clone();
+            tauri::async_runtime::spawn(async move {
+                restore.restore().await;
+            });
+            tauri::async_runtime::spawn(auth.refresh_loop());
             Ok(())
         })
         .build(tauri::generate_context!())

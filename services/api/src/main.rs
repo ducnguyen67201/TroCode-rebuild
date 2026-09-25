@@ -14,6 +14,9 @@ async fn run() -> Result<(), &'static str> {
     if std::env::var("TRO_API_MODE").as_deref() == Ok("proof") {
         return tro_api::model_gateway::run().await;
     }
+    if std::env::var("TRO_API_MODE").as_deref() == Ok("hosted") {
+        return run_hosted().await;
+    }
     let config = Config::from_env()?;
     let pool = db::connect(&config)
         .await
@@ -50,5 +53,32 @@ async fn run() -> Result<(), &'static str> {
                 .map_err(|_| "Fixture API stopped unexpectedly.")
         }
         _ => Err("Use serve, migrate, or seed."),
+    }
+}
+
+async fn run_hosted() -> Result<(), &'static str> {
+    let config = tro_api::config::HostedConfig::from_env()?;
+    let state = tro_api::hosted::HostedState::connect(&config).await?;
+    match std::env::args().nth(1).as_deref().unwrap_or("serve") {
+        "migrate" => {
+            if std::env::var("TRO_ALLOW_HOSTED_MIGRATION").as_deref() != Ok("1") {
+                return Err("Hosted migrations require TRO_ALLOW_HOSTED_MIGRATION=1.");
+            }
+            tro_api_migration::migrate(&state.database)
+                .await
+                .map_err(|_| "Hosted migration failed.")
+        }
+        "serve" => {
+            let listener = tokio::net::TcpListener::bind(config.bind)
+                .await
+                .map_err(|_| "Hosted API port unavailable.")?;
+            axum::serve(listener, tro_api::hosted::router(state))
+                .with_graceful_shutdown(async {
+                    let _ = tokio::signal::ctrl_c().await;
+                })
+                .await
+                .map_err(|_| "Hosted API stopped unexpectedly.")
+        }
+        _ => Err("Hosted mode supports serve or migrate."),
     }
 }

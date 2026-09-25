@@ -2,6 +2,10 @@ fn main() {
     #[cfg(feature = "desktop")]
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "auth_status",
+            "auth_sign_in_google",
+            "auth_retry",
+            "auth_sign_out",
             "runtime_start",
             "runtime_health",
             "runtime_stop",

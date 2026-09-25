@@ -16,6 +16,10 @@ Detailed defaults remain proposals where the spec says they are unresolved.
 - React owns presentation. Keep raw native tools, arbitrary process spawning
   and provider credentials out of the frontend. Validate cross-process messages.
 - The Rust backend owns shared classroom authority, assignments and submissions.
+- New Rust backend persistence uses SeaORM entities, ActiveModels, typed queries,
+  transactions and the SeaORM migration DSL. Do not add handwritten SQL in new
+  handlers, repositories, tests or migrations. Preserve existing published SQL
+  migrations; replacing legacy SQLx code is separate, explicitly scoped work.
 - Teaching cursor motion does not move/click the real pointer. Presentation
   completion is not evidence of learning or student submission.
 - Preserve legacy data and published migrations. A rewrite is not permission to

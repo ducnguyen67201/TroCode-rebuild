@@ -1,0 +1,12 @@
+[package]
+name = "tro-api-migration"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lib]
+name = "tro_api_migration"
+
+[dependencies]
+sea-orm-migration = { version = "=2.0.3", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "with-time", "with-uuid"] }
+tokio.workspace = true

@@ -11,27 +11,117 @@ pub struct ApiError {
     pub code: &'static str,
     pub message: &'static str,
     pub correlation: Uuid,
+    pub retryable: bool,
 }
 impl ApiError {
-    pub fn unauthorized(id: Uuid) -> Self {
+    pub fn new(
+        status: StatusCode,
+        code: &'static str,
+        message: &'static str,
+        correlation: Uuid,
+        retryable: bool,
+    ) -> Self {
         Self {
-            status: StatusCode::UNAUTHORIZED,
-            code: "UNAUTHORIZED",
-            message: "A valid development credential is required.",
-            correlation: id,
+            status,
+            code,
+            message,
+            correlation,
+            retryable,
         }
     }
+    pub fn unauthorized(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "A valid development credential is required.",
+            id,
+            false,
+        )
+    }
     pub fn internal(id: Uuid) -> Self {
-        Self {
-            status: StatusCode::INTERNAL_SERVER_ERROR,
-            code: "INTERNAL",
-            message: "The request could not be completed.",
-            correlation: id,
-        }
+        Self::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "INTERNAL",
+            "The request could not be completed.",
+            id,
+            false,
+        )
+    }
+    pub fn invalid_google(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::UNAUTHORIZED,
+            "AUTH_INVALID_GOOGLE",
+            "Google could not verify this sign-in.",
+            id,
+            false,
+        )
+    }
+    pub fn session_expired(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::UNAUTHORIZED,
+            "SESSION_EXPIRED",
+            "Your session has expired. Sign in again.",
+            id,
+            false,
+        )
+    }
+    pub fn session_revoked(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::UNAUTHORIZED,
+            "SESSION_REVOKED",
+            "Your session is no longer active. Sign in again.",
+            id,
+            false,
+        )
+    }
+    pub fn session_replayed(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::UNAUTHORIZED,
+            "SESSION_REPLAYED",
+            "This session can no longer be renewed. Sign in again.",
+            id,
+            false,
+        )
+    }
+    pub fn identity_conflict(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::CONFLICT,
+            "AUTH_IDENTITY_CONFLICT",
+            "This verified email needs account support before it can be used.",
+            id,
+            false,
+        )
+    }
+    pub fn invalid_request(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::BAD_REQUEST,
+            "INVALID_REQUEST",
+            "The authentication request is invalid.",
+            id,
+            false,
+        )
+    }
+    pub fn unavailable(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "AUTH_UNAVAILABLE",
+            "Authentication is temporarily unavailable. Try again.",
+            id,
+            true,
+        )
     }
 }
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        (self.status, Json(json!({"code": self.code, "message": self.message, "retryable": false, "correlationId": self.correlation}))).into_response()
+        (
+            self.status,
+            Json(json!({
+                "code": self.code,
+                "message": self.message,
+                "retryable": self.retryable,
+                "correlationId": self.correlation,
+            })),
+        )
+            .into_response()
     }
 }
