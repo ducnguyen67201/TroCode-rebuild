@@ -160,6 +160,39 @@ async fn owner_add_claim_remove_is_exact_idempotent_and_audited() {
     transaction.commit().await.unwrap();
     assert!(active.is_empty());
 
+    let capacity_members = (0..499).map(|index| workspace_membership::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        workspace_id: Set(workspace_id),
+        account_id: Set(None),
+        email: Set(format!("capacity-{index}@example.com")),
+        email_normalized: Set(format!("capacity-{index}@example.com")),
+        role: Set("student".to_owned()),
+        added_by_account_id: Set(owner_id),
+        created_at: Set(now),
+        joined_at: Set(None),
+        removed_at: Set(None),
+    });
+    workspace_membership::Entity::insert_many(capacity_members)
+        .exec(&database)
+        .await
+        .unwrap();
+    let capped = service
+        .list_members(owner_id, workspace_id, Uuid::new_v4())
+        .await
+        .unwrap();
+    assert_eq!(capped.members.len(), 500);
+    let limit = service
+        .add_member(
+            owner_id,
+            workspace_id,
+            "one-too-many@example.com",
+            "student",
+            Uuid::new_v4(),
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(limit.code, "WORKSPACE_MEMBER_LIMIT_REACHED");
+
     workspace_audit_event::Entity::delete_many()
         .filter(workspace_audit_event::Column::WorkspaceId.eq(workspace_id))
         .exec(&database)

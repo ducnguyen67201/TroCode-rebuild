@@ -12,7 +12,7 @@ use std::{sync::Arc, time::Duration};
 use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 use tokio::sync::{Mutex, watch};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AuthUser {
     pub account_id: String,
@@ -20,7 +20,7 @@ pub struct AuthUser {
     pub email: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WorkspaceSummary {
     pub workspace_id: String,
@@ -186,6 +186,35 @@ impl AuthManager {
                 .as_deref()
                 .and_then(|value| OffsetDateTime::parse(value, &Rfc3339).ok())
                 .is_some_and(|expires_at| expires_at > OffsetDateTime::now_utc())
+    }
+
+    pub async fn require_workspace_access(&self) -> Result<(), WorkerError> {
+        let (api, access_token) = self.session_access().await?;
+        let mut response = api.me(&access_token).await;
+        if response.as_ref().is_err_and(ApiFailure::terminal) {
+            self.retry().await;
+            if !self.has_workspace_access() {
+                return Err(current_access_failure(&self.status()));
+            }
+            let (api, access_token) = self.session_access().await?;
+            response = api.me(&access_token).await;
+        }
+        match response {
+            Ok(response) => self.apply_current_account(response).await,
+            Err(error) if error.terminal() => {
+                self.end_local_session().await;
+                Err(WorkerError::new(
+                    "UNAUTHORIZED",
+                    "Your session ended. Sign in again to continue.",
+                ))
+            }
+            Err(error) => {
+                let failure = authenticated_request_failure(&error);
+                let ticket = self.next_epoch();
+                self.apply_api_failure(error, ticket).await;
+                Err(failure)
+            }
+        }
     }
 
     pub async fn workspace_members(
@@ -537,16 +566,75 @@ impl AuthManager {
         self.runtime.select_account(None).await;
     }
 
-    async fn owner_access(
+    async fn end_local_session(&self) {
+        let _ = self.credentials.clear().await;
+        self.clear_runtime_identity().await;
+        self.publish(status(
+            "signedOut",
+            "Your session ended. Sign in again to continue.",
+            true,
+            false,
+        ));
+    }
+
+    async fn apply_current_account(
         &self,
-        workspace_id: &str,
-    ) -> Result<(AuthApiClient, String), WorkerError> {
-        if uuid::Uuid::parse_str(workspace_id).is_err() {
+        response: api_client::MeResponse,
+    ) -> Result<(), WorkerError> {
+        let mut session = self.session.lock().await;
+        let active = session.as_mut().ok_or(WorkerError::new(
+            "UNAUTHORIZED",
+            "Sign in to an active workspace before continuing.",
+        ))?;
+        if active.account.account_id != response.account.account_id {
+            drop(session);
+            self.end_local_session().await;
             return Err(WorkerError::new(
-                "INVALID_MESSAGE",
-                "Invalid workspace request.",
+                "UNAUTHORIZED",
+                "Workspace access could not be verified.",
             ));
         }
+        let changed =
+            active.account != response.account || active.workspaces != response.workspaces;
+        active.account = response.account;
+        active.workspaces = response.workspaces;
+        let current = active.clone();
+        drop(session);
+
+        if current.workspaces.is_empty() {
+            self.runtime.select_account(None).await;
+            self.publish(AuthStatus {
+                state: "membershipRequired".to_owned(),
+                revision: 0,
+                message: "This account no longer has active workspace access.".to_owned(),
+                configured: true,
+                retryable: true,
+                user: Some(current.account),
+                workspaces: Vec::new(),
+                access_token_expires_at: Some(current.access_token_expires_at),
+            });
+            return Err(WorkerError::new(
+                "UNAUTHORIZED",
+                "Active workspace access is required.",
+            ));
+        }
+
+        if changed || self.status().state != "authenticated" {
+            self.publish(AuthStatus {
+                state: "authenticated".to_owned(),
+                revision: 0,
+                message: "Signed in securely.".to_owned(),
+                configured: true,
+                retryable: false,
+                user: Some(current.account),
+                workspaces: current.workspaces,
+                access_token_expires_at: Some(current.access_token_expires_at),
+            });
+        }
+        Ok(())
+    }
+
+    async fn session_access(&self) -> Result<(AuthApiClient, String), WorkerError> {
         let needs_refresh = self
             .session
             .lock()
@@ -564,17 +652,41 @@ impl AuthManager {
             "UNAUTHORIZED",
             "Sign in to an active workspace before continuing.",
         ))?;
-        if !access_is_valid(&session.access_token_expires_at)
-            || !session.workspaces.iter().any(|workspace| {
-                workspace.workspace_id == workspace_id && workspace.role == "owner"
-            })
+        if !access_is_valid(&session.access_token_expires_at) {
+            return Err(WorkerError::new(
+                "UNAUTHORIZED",
+                "Sign in to an active workspace before continuing.",
+            ));
+        }
+        Ok((api, session.access_token))
+    }
+
+    async fn owner_access(
+        &self,
+        workspace_id: &str,
+    ) -> Result<(AuthApiClient, String), WorkerError> {
+        if uuid::Uuid::parse_str(workspace_id).is_err() {
+            return Err(WorkerError::new(
+                "INVALID_MESSAGE",
+                "Invalid workspace request.",
+            ));
+        }
+        let (api, access_token) = self.session_access().await?;
+        let session = self.session.lock().await.clone().ok_or(WorkerError::new(
+            "UNAUTHORIZED",
+            "Sign in to an active workspace before continuing.",
+        ))?;
+        if !session
+            .workspaces
+            .iter()
+            .any(|workspace| workspace.workspace_id == workspace_id && workspace.role == "owner")
         {
             return Err(WorkerError::new(
                 "FORBIDDEN",
                 "Workspace owner access is required.",
             ));
         }
-        Ok((api, session.access_token))
+        Ok((api, access_token))
     }
 
     fn next_epoch(&self) -> u64 {
@@ -648,6 +760,10 @@ fn workspace_failure(error: ApiFailure) -> WorkerError {
             "WORKSPACE_OWNER_REMOVAL_FORBIDDEN",
             "The workspace owner cannot be removed here.",
         ),
+        "WORKSPACE_MEMBER_LIMIT_REACHED" => WorkerError::new(
+            "WORKSPACE_MEMBER_LIMIT_REACHED",
+            "This workspace has reached its 500-member limit.",
+        ),
         _ if error.retryable => WorkerError::new(
             "NOT_READY",
             "Workspace access is temporarily unavailable. Try again.",
@@ -656,9 +772,37 @@ fn workspace_failure(error: ApiFailure) -> WorkerError {
     }
 }
 
+fn authenticated_request_failure(error: &ApiFailure) -> WorkerError {
+    if error.retryable {
+        WorkerError::new(
+            "NOT_READY",
+            "Workspace access is temporarily unavailable. Try again.",
+        )
+    } else {
+        WorkerError::new("UNAUTHORIZED", "Workspace access could not be verified.")
+    }
+}
+
+fn current_access_failure(status: &AuthStatus) -> WorkerError {
+    if status.retryable && matches!(status.state.as_str(), "offline" | "error") {
+        WorkerError::new(
+            "NOT_READY",
+            "Workspace access is temporarily unavailable. Try again.",
+        )
+    } else {
+        WorkerError::new(
+            "UNAUTHORIZED",
+            "Sign in to an active workspace before continuing.",
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::worker::WorkerProgram;
+    use credential_store::MemoryCredentialStore;
+    use std::path::PathBuf;
 
     #[test]
     fn public_status_never_contains_credentials() {
@@ -693,5 +837,70 @@ mod tests {
         assert_eq!(refresh_delay("offline", expired), Duration::from_secs(30));
         assert_eq!(refresh_delay("error", expired), Duration::from_secs(30));
         assert_eq!(refresh_delay("authenticated", expired), Duration::ZERO);
+    }
+
+    #[tokio::test]
+    async fn current_account_revalidation_removes_cached_workspace_authority() {
+        let runtime = Arc::new(RuntimeManager::new(WorkerProgram {
+            executable: PathBuf::from("unused-test-worker"),
+            args: Vec::new(),
+            directory: PathBuf::from("."),
+        }));
+        let auth = AuthManager::new(
+            runtime,
+            None,
+            None,
+            Arc::new(MemoryCredentialStore::new(Some("refresh".to_owned()))),
+        );
+        let account = AuthUser {
+            account_id: "00000000-0000-0000-0000-000000000001".to_owned(),
+            display_name: "Ada Learner".to_owned(),
+            email: "ada@example.com".to_owned(),
+        };
+        let workspace = WorkspaceSummary {
+            workspace_id: "00000000-0000-0000-0000-000000000002".to_owned(),
+            name: "Northstar Robotics".to_owned(),
+            role: "student".to_owned(),
+        };
+        let expires_at = (OffsetDateTime::now_utc() + time::Duration::minutes(5))
+            .format(&Rfc3339)
+            .unwrap();
+        *auth.session.lock().await = Some(ActiveSession {
+            access_token: "access".to_owned(),
+            access_token_expires_at: expires_at.clone(),
+            account: account.clone(),
+            workspaces: vec![workspace.clone()],
+        });
+        auth.publish(AuthStatus {
+            state: "authenticated".to_owned(),
+            revision: 0,
+            message: "Signed in securely.".to_owned(),
+            configured: true,
+            retryable: false,
+            user: Some(account.clone()),
+            workspaces: vec![workspace],
+            access_token_expires_at: Some(expires_at),
+        });
+
+        let error = auth
+            .apply_current_account(api_client::MeResponse {
+                account,
+                workspaces: Vec::new(),
+            })
+            .await
+            .unwrap_err();
+
+        assert_eq!(error.code, "UNAUTHORIZED");
+        assert_eq!(auth.status().state, "membershipRequired");
+        assert!(!auth.has_workspace_access());
+        assert!(
+            auth.session
+                .lock()
+                .await
+                .as_ref()
+                .unwrap()
+                .workspaces
+                .is_empty()
+        );
     }
 }

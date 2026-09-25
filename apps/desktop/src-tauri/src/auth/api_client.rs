@@ -7,6 +7,7 @@ use std::time::Duration;
 use url::Url;
 
 const MAX_AUTH_RESPONSE_BYTES: usize = 32 * 1024;
+const MAX_WORKSPACE_RESPONSE_BYTES: usize = 1024 * 1024;
 
 #[derive(Clone)]
 pub struct AuthApiClient {
@@ -140,7 +141,7 @@ impl AuthApiClient {
             .send()
             .await
             .map_err(|_| ApiFailure::unavailable())?;
-        response_json(response).await
+        response_json_with_limit(response, MAX_WORKSPACE_RESPONSE_BYTES).await
     }
 
     pub async fn add_workspace_member(
@@ -205,10 +206,17 @@ impl ApiFailure {
 }
 
 async fn response_json<T: DeserializeOwned>(response: reqwest::Response) -> Result<T, ApiFailure> {
+    response_json_with_limit(response, MAX_AUTH_RESPONSE_BYTES).await
+}
+
+async fn response_json_with_limit<T: DeserializeOwned>(
+    response: reqwest::Response,
+    max_bytes: usize,
+) -> Result<T, ApiFailure> {
     if !response.status().is_success() {
         return Err(error_response(response).await);
     }
-    let body = bounded_body(response)
+    let body = bounded_body(response, max_bytes)
         .await
         .map_err(|_| ApiFailure::unavailable())?;
     serde_json::from_slice(&body).map_err(|_| ApiFailure {
@@ -219,7 +227,7 @@ async fn response_json<T: DeserializeOwned>(response: reqwest::Response) -> Resu
 }
 
 async fn error_response(response: reqwest::Response) -> ApiFailure {
-    bounded_body(response)
+    bounded_body(response, MAX_AUTH_RESPONSE_BYTES)
         .await
         .ok()
         .and_then(|body| serde_json::from_slice::<PublicError>(&body).ok())
@@ -231,16 +239,16 @@ async fn error_response(response: reqwest::Response) -> ApiFailure {
         .unwrap_or_else(ApiFailure::unavailable)
 }
 
-async fn bounded_body(mut response: reqwest::Response) -> Result<Vec<u8>, ()> {
+async fn bounded_body(mut response: reqwest::Response, max_bytes: usize) -> Result<Vec<u8>, ()> {
     if response
         .content_length()
-        .is_some_and(|length| length as usize > MAX_AUTH_RESPONSE_BYTES)
+        .is_some_and(|length| length as usize > max_bytes)
     {
         return Err(());
     }
     let mut body = Vec::new();
     while let Some(chunk) = response.chunk().await.map_err(|_| ())? {
-        if body.len() + chunk.len() > MAX_AUTH_RESPONSE_BYTES {
+        if body.len() + chunk.len() > max_bytes {
             return Err(());
         }
         body.extend_from_slice(&chunk);
@@ -259,5 +267,29 @@ mod tests {
         assert!(AuthApiClient::new("http://127.0.0.1:4318", false).is_err());
         assert!(AuthApiClient::new("https://api.tro.example/path", false).is_err());
         assert!(AuthApiClient::new("https://user@api.tro.example", false).is_err());
+    }
+
+    #[test]
+    fn maximum_workspace_roster_fits_its_dedicated_response_bound() {
+        let member = WorkspaceMember {
+            membership_id: "00000000-0000-0000-0000-000000000003".to_owned(),
+            email: format!("{}@x.example", "a".repeat(244)),
+            display_name: Some("𐀀".repeat(120)),
+            role: "student".to_owned(),
+            state: "active".to_owned(),
+            joined_at: Some("2026-09-25T12:00:00Z".to_owned()),
+        };
+        let roster = WorkspaceMemberList {
+            workspace: WorkspaceSummary {
+                workspace_id: "00000000-0000-0000-0000-000000000002".to_owned(),
+                name: "Northstar Robotics".to_owned(),
+                role: "owner".to_owned(),
+            },
+            members: vec![member; 500],
+        };
+        let encoded = serde_json::to_vec(&roster).unwrap();
+
+        assert!(encoded.len() > MAX_AUTH_RESPONSE_BYTES);
+        assert!(encoded.len() <= MAX_WORKSPACE_RESPONSE_BYTES);
     }
 }

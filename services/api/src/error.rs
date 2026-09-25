@@ -155,6 +155,15 @@ impl ApiError {
             false,
         )
     }
+    pub fn workspace_member_limit_reached(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::CONFLICT,
+            "WORKSPACE_MEMBER_LIMIT_REACHED",
+            "This workspace has reached its member limit.",
+            id,
+            false,
+        )
+    }
 }
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {

@@ -7,7 +7,7 @@ use crate::{
 };
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
-    QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
 };
 use serde::Serialize;
 use time::{OffsetDateTime, format_description::well_known::Rfc3339};
@@ -115,6 +115,16 @@ impl WorkspaceService {
                 .await
                 .map_err(|_| ApiError::internal(correlation))?;
             return Ok(member);
+        }
+
+        let active_member_count = workspace_membership::Entity::find()
+            .filter(workspace_membership::Column::WorkspaceId.eq(workspace_id))
+            .filter(workspace_membership::Column::RemovedAt.is_null())
+            .count(&transaction)
+            .await
+            .map_err(|_| ApiError::internal(correlation))?;
+        if active_member_count >= MAX_MEMBERS {
+            return Err(ApiError::workspace_member_limit_reached(correlation));
         }
 
         let now = OffsetDateTime::now_utc();
