@@ -75,6 +75,8 @@ Debug terminal diagnostics identify only the bounded failure stage and code
 (capture start, selected-window observation, transcription transport, action
 setup or model transport); they never include audio, transcript, screen content,
 typed values, grants or provider response bodies.
+The voice HUD has a transparent document root and is hidden on every terminal
+state, including failure, so it cannot leave a persistent strip above other apps.
 
 Daily use is exactly Command+Control on macOS or physical Left Control+Left Alt
 on Windows. Hold to record and release either key to finalize. Windows AltGr and

@@ -11,6 +11,8 @@ import './styles.css';
 import { VoiceHud } from './features/voice/VoiceHud';
 // Preview is explicitly requested by the dev:ui command, never a bridge fallback.
 const search = new URLSearchParams(location.search);
+if (search.has('voiceHud') || search.has('overlay'))
+  document.documentElement.classList.add('transparent-window');
 const previewScenario = search.get('auth');
 const previewWorkspaceRole = search.get('workspaceRole');
 const client =

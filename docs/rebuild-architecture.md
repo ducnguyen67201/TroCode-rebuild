@@ -943,6 +943,8 @@ gateway used by local development; release runtimes continue to require HTTPS.
 Debug diagnostics expose only bounded stage/code pairs for capture, observation,
 transcription transport, action setup and model transport. They must never log
 audio, transcript text, screenshots, typed values, grants or provider bodies.
+The voice HUD is visible only during active capture/action or confirmation and
+hides immediately on failed, completed, cancelled, ready or disabled states.
 
 After an authenticated app launch, the voice client arms push-to-talk once
 automatically so the normal path requires only holding the two-key chord,

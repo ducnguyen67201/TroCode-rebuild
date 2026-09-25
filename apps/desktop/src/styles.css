@@ -1382,6 +1382,9 @@ select {
   background: #fff;
   overflow: hidden;
 }
+html.transparent-window,
+html.transparent-window body,
+html.transparent-window #root,
 body.overlay-page,
 body.overlay-page #root {
   background: transparent;
