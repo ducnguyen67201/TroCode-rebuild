@@ -21,7 +21,7 @@ use std::{sync::Arc, time::Instant};
 use uuid::Uuid;
 #[derive(Clone)]
 pub struct AppState {
-    pub pool: sqlx::PgPool,
+    pub pool: sea_orm::DatabaseConnection,
     pub store: Arc<dyn ObjectStore>,
 }
 pub fn router(state: AppState) -> Router {

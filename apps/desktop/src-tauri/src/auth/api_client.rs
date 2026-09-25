@@ -66,6 +66,10 @@ impl AuthApiClient {
         Ok(Self { origin, client })
     }
 
+    pub(super) fn origin(&self) -> &str {
+        self.origin.as_str()
+    }
+
     pub async fn exchange(&self, exchange: &OAuthExchange) -> Result<SessionEnvelope, ApiFailure> {
         let response = self
             .client

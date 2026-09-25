@@ -64,8 +64,21 @@ pub async fn authorize(
             continue;
         }
         let mut stream = accepted.0;
-        match receive_callback(&mut stream, port, &state).await {
-            Ok(Some(code)) => {
+        let callback_remaining = deadline.saturating_duration_since(Instant::now());
+        let callback = tokio::time::timeout(
+            callback_remaining,
+            receive_callback(&mut stream, port, &state),
+        )
+        .await;
+        match callback {
+            Err(_) => {
+                write_completion(&mut stream, false).await;
+                return Err(WorkerError::new(
+                    "AUTH_TIMEOUT",
+                    "Google sign-in timed out. Try again.",
+                ));
+            }
+            Ok(Ok(Some(code))) => {
                 write_completion(&mut stream, true).await;
                 return Ok(OAuthExchange {
                     code,
@@ -74,8 +87,8 @@ pub async fn authorize(
                     nonce,
                 });
             }
-            Ok(None) => continue,
-            Err(error) => {
+            Ok(Ok(None)) => continue,
+            Ok(Err(error)) => {
                 write_completion(&mut stream, false).await;
                 return Err(error);
             }

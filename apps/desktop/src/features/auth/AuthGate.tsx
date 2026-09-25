@@ -116,6 +116,11 @@ export function AuthGate({ auth, preview, children }: AuthGateProps) {
     : status.state === 'authenticated'
       ? boundaryMessage
       : status.message;
+  const canRestartSignIn =
+    status.configured &&
+    status.state === 'error' &&
+    !status.retryable &&
+    !status.user;
 
   return (
     <AuthThreshold
@@ -125,7 +130,7 @@ export function AuthGate({ auth, preview, children }: AuthGateProps) {
       state={publicState}
       user={status.user}
       onPrimary={
-        status.state === 'signedOut' && status.configured
+        (status.state === 'signedOut' && status.configured) || canRestartSignIn
           ? () => void perform(() => auth.signIn())
           : status.retryable || status.state === 'membershipRequired'
             ? () => void perform(() => auth.retry())

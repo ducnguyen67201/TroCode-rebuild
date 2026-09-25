@@ -84,7 +84,6 @@ pub struct AuthManager {
 impl AuthManager {
     #[cfg(feature = "desktop")]
     pub fn from_env(runtime: Arc<RuntimeManager>) -> Self {
-        let credentials: Arc<dyn CredentialStore> = Arc::new(credential_store::OsCredentialStore);
         let configuration = (|| {
             let origin = std::env::var("TRO_AUTH_API_ORIGIN").map_err(|_| ())?;
             let client_id = std::env::var("TRO_GOOGLE_CLIENT_ID").map_err(|_| ())?;
@@ -95,11 +94,21 @@ impl AuthManager {
                 return Err(());
             }
             let api = AuthApiClient::new(&origin, cfg!(debug_assertions)).map_err(|_| ())?;
-            Ok((api, client_id))
+            let credentials: Arc<dyn CredentialStore> = Arc::new(
+                credential_store::OsCredentialStore::for_origin(api.origin()),
+            );
+            Ok((api, client_id, credentials))
         })();
         match configuration {
-            Ok((api, client_id)) => Self::new(runtime, Some(api), Some(client_id), credentials),
-            Err(()) => Self::new(runtime, None, None, credentials),
+            Ok((api, client_id, credentials)) => {
+                Self::new(runtime, Some(api), Some(client_id), credentials)
+            }
+            Err(()) => Self::new(
+                runtime,
+                None,
+                None,
+                Arc::new(credential_store::OsCredentialStore::unconfigured()),
+            ),
         }
     }
 
@@ -301,13 +310,7 @@ impl AuthManager {
             };
             let until_refresh =
                 expires_at - OffsetDateTime::now_utc() - time::Duration::seconds(60);
-            let delay = if current.state == "offline" {
-                Duration::from_secs(30)
-            } else if until_refresh.is_positive() {
-                Duration::from_secs(until_refresh.whole_seconds() as u64)
-            } else {
-                Duration::ZERO
-            };
+            let delay = refresh_delay(&current.state, until_refresh);
             let sleep = tokio::time::sleep(delay);
             tokio::pin!(sleep);
             tokio::select! {
@@ -494,6 +497,16 @@ fn access_is_valid(expires_at: &str) -> bool {
         .is_ok_and(|expires_at| expires_at > OffsetDateTime::now_utc())
 }
 
+fn refresh_delay(state: &str, until_refresh: time::Duration) -> Duration {
+    if matches!(state, "offline" | "error") {
+        Duration::from_secs(30)
+    } else if until_refresh.is_positive() {
+        Duration::from_secs(until_refresh.whole_seconds() as u64)
+    } else {
+        Duration::ZERO
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -522,5 +535,14 @@ mod tests {
         assert!(access_is_valid(&future));
         assert!(!access_is_valid(&expired));
         assert!(!access_is_valid("not-a-timestamp"));
+    }
+
+    #[test]
+    fn retained_session_failures_back_off_before_refreshing() {
+        let expired = time::Duration::seconds(-60);
+
+        assert_eq!(refresh_delay("offline", expired), Duration::from_secs(30));
+        assert_eq!(refresh_delay("error", expired), Duration::from_secs(30));
+        assert_eq!(refresh_delay("authenticated", expired), Duration::ZERO);
     }
 }

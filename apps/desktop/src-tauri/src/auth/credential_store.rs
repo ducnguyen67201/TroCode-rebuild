@@ -1,5 +1,10 @@
 use crate::worker::WorkerError;
 
+#[cfg(feature = "desktop")]
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+#[cfg(feature = "desktop")]
+use sha2::{Digest, Sha256};
+
 #[async_trait::async_trait]
 pub trait CredentialStore: Send + Sync {
     async fn read(&self) -> Result<Option<String>, WorkerError>;
@@ -8,15 +13,30 @@ pub trait CredentialStore: Send + Sync {
 }
 
 #[cfg(feature = "desktop")]
-pub struct OsCredentialStore;
+pub(super) struct OsCredentialStore {
+    user: String,
+}
 
 #[cfg(feature = "desktop")]
 impl OsCredentialStore {
     const SERVICE: &'static str = "com.tro.desktop.auth";
-    const USER: &'static str = "refresh-session";
 
-    fn entry() -> Result<keyring::Entry, WorkerError> {
-        keyring::Entry::new(Self::SERVICE, Self::USER).map_err(|_| {
+    pub(super) fn for_origin(origin: &str) -> Self {
+        let digest = Sha256::digest(origin.as_bytes());
+        let scope = URL_SAFE_NO_PAD.encode(&digest[..18]);
+        Self {
+            user: format!("refresh-session-{scope}"),
+        }
+    }
+
+    pub(super) fn unconfigured() -> Self {
+        Self {
+            user: "refresh-session-unconfigured".to_owned(),
+        }
+    }
+
+    fn entry(user: &str) -> Result<keyring::Entry, WorkerError> {
+        keyring::Entry::new(Self::SERVICE, user).map_err(|_| {
             WorkerError::new(
                 "SECURE_STORAGE_UNAVAILABLE",
                 "Secure credential storage is unavailable on this device.",
@@ -29,7 +49,8 @@ impl OsCredentialStore {
 #[async_trait::async_trait]
 impl CredentialStore for OsCredentialStore {
     async fn read(&self) -> Result<Option<String>, WorkerError> {
-        tokio::task::spawn_blocking(|| match Self::entry()?.get_password() {
+        let user = self.user.clone();
+        tokio::task::spawn_blocking(move || match Self::entry(&user)?.get_password() {
             Ok(value) => Ok(Some(value)),
             Err(keyring::Error::NoEntry) => Ok(None),
             Err(_) => Err(WorkerError::new(
@@ -42,21 +63,25 @@ impl CredentialStore for OsCredentialStore {
     }
 
     async fn write(&self, refresh_token: &str) -> Result<(), WorkerError> {
+        let user = self.user.clone();
         let refresh_token = refresh_token.to_owned();
         tokio::task::spawn_blocking(move || {
-            Self::entry()?.set_password(&refresh_token).map_err(|_| {
-                WorkerError::new(
-                    "SECURE_STORAGE_UNAVAILABLE",
-                    "Secure credential storage could not save the session.",
-                )
-            })
+            Self::entry(&user)?
+                .set_password(&refresh_token)
+                .map_err(|_| {
+                    WorkerError::new(
+                        "SECURE_STORAGE_UNAVAILABLE",
+                        "Secure credential storage could not save the session.",
+                    )
+                })
         })
         .await
         .map_err(|_| WorkerError::new("INTERNAL", "Credential task failed."))?
     }
 
     async fn clear(&self) -> Result<(), WorkerError> {
-        tokio::task::spawn_blocking(|| match Self::entry()?.delete_credential() {
+        let user = self.user.clone();
+        tokio::task::spawn_blocking(move || match Self::entry(&user)?.delete_credential() {
             Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
             Err(_) => Err(WorkerError::new(
                 "SECURE_STORAGE_UNAVAILABLE",
@@ -65,6 +90,22 @@ impl CredentialStore for OsCredentialStore {
         })
         .await
         .map_err(|_| WorkerError::new("INTERNAL", "Credential task failed."))?
+    }
+}
+
+#[cfg(all(test, feature = "desktop"))]
+mod os_tests {
+    use super::OsCredentialStore;
+
+    #[test]
+    fn credential_namespace_is_stable_and_origin_scoped() {
+        let production = OsCredentialStore::for_origin("https://api.tro.example/");
+        let same_production = OsCredentialStore::for_origin("https://api.tro.example/");
+        let local = OsCredentialStore::for_origin("http://127.0.0.1:4318/");
+
+        assert_eq!(production.user, same_production.user);
+        assert_ne!(production.user, local.user);
+        assert!(!production.user.contains("api.tro.example"));
     }
 }
 

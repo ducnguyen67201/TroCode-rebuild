@@ -78,6 +78,14 @@ model grants and a fixed provider route. It enforces a four-request grant budget
 here. Shared classroom functionality is later work; proof identity is not a
 production authentication system.
 
+The Rust API maps its five current PostgreSQL tables with SeaORM entities, and
+the authentication and model-grant modules retain ownership of their policy and
+transaction boundaries. Application reads and writes use SeaORM/SeaQuery. SQLx
+is retained only to execute the published immutable migrations against SeaORM's
+underlying pool, so `_sqlx_migrations` remains the sole schema history. The
+Python teaching runtime's separately owned SQLite session store is unchanged and
+is not part of this PostgreSQL ORM boundary.
+
 Selected-window images and bounded AX context may go to model inference through
 the gateway. Images do not enter React projections or SQLite. SQLite stores
 identifiers and evidence kinds, including separately observed and learner-reported

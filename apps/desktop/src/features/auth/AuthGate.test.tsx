@@ -80,6 +80,31 @@ it('prevents a duplicate sign-in while the browser handoff is pending', async ()
   await screen.findByText('Inside');
 });
 
+it('starts a fresh Google sign-in after a non-retryable exchange failure', async () => {
+  const signIn = vi.fn(async () => authenticatedStatus(2));
+  const retry = vi.fn(async () => signedOutStatus(2));
+  const auth = clientWith({
+    status: async () => ({
+      ...signedOutStatus(1),
+      state: 'error',
+      message: 'Google could not verify this sign-in attempt.',
+    }),
+    signIn,
+    retry,
+  });
+
+  render(
+    <AuthGate auth={auth} preview={false}>
+      {() => <p>Inside</p>}
+    </AuthGate>,
+  );
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+  await screen.findByText('Inside');
+  expect(signIn).toHaveBeenCalledOnce();
+  expect(retry).not.toHaveBeenCalled();
+});
+
 it('fails closed when the native event boundary reports invalid data', async () => {
   let failBoundary: (() => void) | undefined;
   const auth = clientWith({
