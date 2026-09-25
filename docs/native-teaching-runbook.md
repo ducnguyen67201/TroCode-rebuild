@@ -61,11 +61,12 @@ until those records exist for both target platforms.
 
 ## F11 voice/control setup
 
-Hosted mode additionally requires backend-only `OPENAI_API_KEY`, fixed
-`TRO_TRANSCRIPTION_MODEL=gpt-transcribe`, and a fixed `TRO_ACTION_MODEL`. The
-desktop receives only short-lived subject-bound grants. Select Enable voice once
-in the main window to request microphone and keyboard-monitoring/accessibility
-permission; launching Tro or pressing a denied chord must not prompt.
+Hosted mode additionally requires backend-only `OPENAI_API_KEY` and fixed
+`TRO_TRANSCRIPTION_MODEL=gpt-transcribe`. The action model is compiled as
+`gpt-6-astra`; environment configuration cannot change it. The desktop receives
+only short-lived subject-bound grants. After authentication, voice auto-arms
+once per app session and reports any required microphone or
+keyboard-monitoring/accessibility recovery in the main window.
 
 Daily use is exactly Command+Control on macOS or physical Left Control+Left Alt
 on Windows. Hold to record and release either key to finalize. Windows AltGr and

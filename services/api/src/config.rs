@@ -1,6 +1,9 @@
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use std::{collections::HashMap, net::SocketAddr, time::Duration};
 use url::Url;
+
+pub const ACTION_MODEL: &str = "gpt-6-astra";
+
 #[derive(Clone)]
 pub struct Config {
     pub database_url: String,
@@ -97,11 +100,7 @@ impl HostedConfig {
             .get("TRO_TRANSCRIPTION_MODEL")
             .cloned()
             .unwrap_or_else(|| "gpt-transcribe".to_owned());
-        let action_model = get("TRO_ACTION_MODEL")?;
-        if transcription_model != "gpt-transcribe"
-            || action_model.is_empty()
-            || action_model.len() > 128
-        {
+        if transcription_model != "gpt-transcribe" {
             return Err("Invalid fixed provider model configuration.");
         }
         if !(5 * 60..=60 * 60).contains(&access_seconds) {
@@ -123,7 +122,7 @@ impl HostedConfig {
             refresh_ttl: Duration::from_secs(refresh_seconds),
             openai_api_key,
             transcription_model,
-            action_model,
+            action_model: ACTION_MODEL.to_owned(),
         })
     }
 }
@@ -254,7 +253,6 @@ mod tests {
             ),
             ("OPENAI_API_KEY", "test-provider-key"),
             ("TRO_TRANSCRIPTION_MODEL", "gpt-transcribe"),
-            ("TRO_ACTION_MODEL", "computer-use-preview"),
         ]
         .into_iter()
         .map(|(key, value)| (key.to_owned(), value.to_owned()))
@@ -263,11 +261,16 @@ mod tests {
 
     #[test]
     fn hosted_config_is_fail_closed_and_bounded() {
-        let values = hosted_values();
+        let mut values = hosted_values();
+        values.insert(
+            "TRO_ACTION_MODEL".into(),
+            "ignored-environment-model".into(),
+        );
         let config = HostedConfig::from_values(&values).unwrap();
         assert_eq!(config.access_ttl, Duration::from_secs(900));
         assert_eq!(config.refresh_ttl, Duration::from_secs(30 * 24 * 60 * 60));
         assert!(config.google_client_secret.is_none());
+        assert_eq!(config.action_model, ACTION_MODEL);
 
         let mut values_with_secret = values.clone();
         values_with_secret.insert(

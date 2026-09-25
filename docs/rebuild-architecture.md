@@ -936,6 +936,8 @@ two requests in flight and deterministic ordered merging. This is an application
 tradeoff, not a claim that file transcription always beats realtime latency.
 P7-A/P8 acceptance must record actual EN/VI/noisy accuracy, billed duration,
 request count and reference-network latency on packaged macOS and Windows.
+The bounded action loop uses the compiled `gpt-6-astra` model identifier; model
+policy is source-controlled and cannot be overridden by deployment environment.
 
 After an authenticated app launch, the voice client arms push-to-talk once
 automatically so the normal path requires only holding the two-key chord,
