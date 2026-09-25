@@ -29,6 +29,24 @@ TEACHING_REQUESTS = frozenset(
 )
 
 
+def safe_failure_details(kind: str) -> tuple[str, str]:
+    """Return a diagnostic category that never includes native/provider details."""
+    if kind == "runtime.prepareInstruction":
+        return (
+            "OBSERVATION_UNAVAILABLE",
+            "Selected-window observation is unavailable. Check observation permissions.",
+        )
+    if kind == "runtime.executeInstruction":
+        return (
+            "ACTION_SETUP_UNAVAILABLE",
+            "The selected-window action could not start.",
+        )
+    return (
+        "NOT_READY",
+        "Observation or guidance is unavailable. Retry explicitly.",
+    )
+
+
 async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
     runtime = Runtime()
     teaching: TeachingSession
@@ -228,13 +246,8 @@ async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
             raise
         except Exception:
             # Native errors can contain screen text, paths, or application titles.
-            write(
-                failure(
-                    request,
-                    "NOT_READY",
-                    "Observation or guidance is unavailable. Retry explicitly.",
-                )
-            )
+            code, message = safe_failure_details(request["kind"])
+            write(failure(request, code, message))
 
     threading.Thread(target=read, daemon=True, name="tro-stdin").start()
     control_wait = asyncio.create_task(controls.get())

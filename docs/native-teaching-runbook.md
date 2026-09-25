@@ -71,6 +71,10 @@ keyboard-monitoring/accessibility recovery in the main window.
 Debug desktop builds permit the private model gateway at the exact
 `http://127.0.0.1` loopback host used by `make dev`. Release builds do not set
 that runtime capability and continue to require HTTPS.
+Debug terminal diagnostics identify only the bounded failure stage and code
+(capture start, selected-window observation, transcription transport, action
+setup or model transport); they never include audio, transcript, screen content,
+typed values, grants or provider response bodies.
 
 Daily use is exactly Command+Control on macOS or physical Left Control+Left Alt
 on Windows. Hold to record and release either key to finalize. Windows AltGr and

@@ -126,6 +126,7 @@ pub async fn transcribe(
         form = form.text("languages[]", language.clone());
     }
     let started = std::time::Instant::now();
+    tracing::info!(event="provider.transcription.started", correlation_id=%correlation, sequence, audio_ms=actual_duration, model=%state.providers.transcription_model);
     let response = state
         .providers
         .client
@@ -134,7 +135,10 @@ pub async fn transcribe(
         .multipart(form)
         .send()
         .await
-        .map_err(|_| ApiError::provider_unavailable(correlation))?;
+        .map_err(|_| {
+            tracing::warn!(event="provider.transcription.transport_failed", correlation_id=%correlation, sequence, audio_ms=actual_duration, provider_elapsed_ms=started.elapsed().as_millis() as u64);
+            ApiError::provider_unavailable(correlation)
+        })?;
     let status = response.status();
     if response
         .content_length()

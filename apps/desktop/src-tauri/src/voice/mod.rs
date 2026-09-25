@@ -438,6 +438,8 @@ impl VoiceManager {
                 Ok::<(), crate::worker::WorkerError>(())
             }.await;
             if let Err(error) = outcome {
+                #[cfg(debug_assertions)]
+                eprintln!("tro diagnostic: voice_capture_failed code={}", error.code);
                 manager.status.send_modify(|status| {
                     status.revision += 1;
                     status.phase = "failed".into();

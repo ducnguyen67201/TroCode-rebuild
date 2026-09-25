@@ -940,6 +940,9 @@ The bounded action loop uses the compiled `gpt-5.6-sol` model identifier; model
 policy is source-controlled and cannot be overridden by deployment environment.
 The native debug launcher alone permits the exact `http://127.0.0.1` model
 gateway used by local development; release runtimes continue to require HTTPS.
+Debug diagnostics expose only bounded stage/code pairs for capture, observation,
+transcription transport, action setup and model transport. They must never log
+audio, transcript text, screenshots, typed values, grants or provider bodies.
 
 After an authenticated app launch, the voice client arms push-to-talk once
 automatically so the normal path requires only holding the two-key chord,

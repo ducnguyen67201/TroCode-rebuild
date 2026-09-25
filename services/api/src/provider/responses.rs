@@ -12,11 +12,14 @@ pub async fn responses(
     headers: HeaderMap,
     Json(request): Json<Value>,
 ) -> Result<Json<Value>, ApiError> {
-    validate_request(&request, state.providers.action_model.as_ref())
-        .map_err(|_| ApiError::provider_invalid(correlation))?;
+    if validate_request(&request, state.providers.action_model.as_ref()).is_err() {
+        tracing::warn!(event="provider.responses.request_rejected", correlation_id=%correlation);
+        return Err(ApiError::provider_invalid(correlation));
+    }
     let token = grants::grant_bearer(&headers, correlation)?;
     grants::consume(&state.providers, token, "agent", None, None, correlation).await?;
     let started = std::time::Instant::now();
+    tracing::info!(event="provider.responses.started", correlation_id=%correlation, model=%state.providers.action_model);
     let response = state
         .providers
         .client
@@ -25,7 +28,10 @@ pub async fn responses(
         .json(&request)
         .send()
         .await
-        .map_err(|_| ApiError::provider_unavailable(correlation))?;
+        .map_err(|_| {
+            tracing::warn!(event="provider.responses.transport_failed", correlation_id=%correlation, provider_elapsed_ms=started.elapsed().as_millis() as u64);
+            ApiError::provider_unavailable(correlation)
+        })?;
     let status = response.status();
     if response
         .content_length()

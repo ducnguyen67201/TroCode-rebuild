@@ -110,7 +110,10 @@ pub fn run() {
                             modifier_chord::ChordEdge::Pressed(_) => {
                                 let runtime = handle.state::<Arc<manager::RuntimeManager>>().inner().clone();
                                 let auth = handle.state::<Arc<auth::AuthManager>>().inner().clone();
-                                let _ = voice.begin_capture(runtime, auth).await;
+                                if let Err(error) = voice.begin_capture(runtime, auth).await {
+                                    #[cfg(debug_assertions)]
+                                    eprintln!("tro diagnostic: voice_capture_start_failed code={}", error.code);
+                                }
                             }
                             modifier_chord::ChordEdge::Released => voice.release_capture().await,
                         }
