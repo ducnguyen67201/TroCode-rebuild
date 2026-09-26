@@ -37,7 +37,7 @@ it('shows prepared steps, applies only fresh session updates, and clears on stop
   fireEvent.change(screen.getByLabelText('What would you like help with?'), {
     target: { value: 'Teach me' },
   });
-  fireEvent.click(screen.getByText('Plan guidance / replan'));
+  fireEvent.click(screen.getByText('Show me how / show another way'));
   await screen.findByText('Your steps');
   fireEvent.click(screen.getByText('Pause guidance'));
   await screen.findByText('Resume guidance');

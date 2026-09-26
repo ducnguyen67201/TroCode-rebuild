@@ -47,8 +47,6 @@ export const tauriClient: DesktopClient = {
     disable: () => voice('voice_disable'),
     executeText: (instruction) => voice('voice_execute_text', { instruction }),
     cancel: () => voice('voice_cancel'),
-    decide: (runId, confirmationId, approve) =>
-      voice('voice_decide', { runId, confirmationId, approve }),
     subscribe: (listener, onBoundaryError) =>
       listen('voice-status', (event) => {
         try {

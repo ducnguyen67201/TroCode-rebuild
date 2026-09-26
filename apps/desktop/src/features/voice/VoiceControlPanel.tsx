@@ -7,8 +7,8 @@ const busyPhases = new Set([
   'listening',
   'transcribing',
   'dispatching',
-  'executing',
-  'confirmation',
+  'planning',
+  'guiding',
 ]);
 
 export function VoiceControlPanel({ client }: { client: VoiceClient }) {
@@ -52,7 +52,7 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
         setStatus(next);
       }
     } catch {
-      setError('Voice control could not complete that request.');
+      setError('Voice guidance could not complete that request.');
     }
   }
 
@@ -67,7 +67,7 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
   if (!status)
     return (
       <section className="voice-panel" aria-busy="true">
-        <p>Loading voice control…</p>
+        <p>Loading voice guidance…</p>
       </section>
     );
   const busy = busyPhases.has(status.phase);
@@ -78,8 +78,8 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
     <section className="voice-panel" aria-labelledby="voice-heading">
       <div className="voice-heading-row">
         <div>
-          <p className="eyebrow">Fast computer control</p>
-          <h2 id="voice-heading">Hold two keys. Speak. Release.</h2>
+          <p className="eyebrow">Ask Tro to show you</p>
+          <h2 id="voice-heading">Hold two keys. Ask. Release.</h2>
         </div>
         <span className={`voice-phase voice-phase-${status.phase}`}>
           {status.phase}
@@ -117,7 +117,7 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
             className="secondary"
             onClick={() => void run(() => client.cancel())}
           >
-            Cancel instruction
+            Cancel guidance
           </button>
         )}
       </div>
@@ -129,19 +129,17 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
             maxLength={2000}
             value={instruction}
             onChange={(event) => setInstruction(event.target.value)}
-            placeholder="e.g. Open the settings panel"
+            placeholder="e.g. Show me how to open the settings panel"
           />
           <button disabled={!instruction.trim() || busy} type="submit">
-            Run instruction
+            Show me how
           </button>
         </div>
       </form>
       {transcript && (
         <div className="voice-transcript">
           <span>
-            {status.finalTranscript
-              ? 'Final instruction'
-              : 'Listening transcript'}
+            {status.finalTranscript ? 'Your request' : 'Listening transcript'}
           </span>
           <p>{transcript}</p>
           {!busy && (
@@ -155,39 +153,6 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
         <p className="voice-target">
           Selected window: <strong>{status.targetTitle}</strong>
         </p>
-      )}
-      {status.confirmation && status.runId && (
-        <div className="voice-confirmation" role="alert">
-          <h3>Approval required</h3>
-          <p>{status.confirmation.summary}</p>
-          <button
-            onClick={() =>
-              void run(() =>
-                client.decide(
-                  status.runId!,
-                  status.confirmation!.confirmationId,
-                  true,
-                ),
-              )
-            }
-          >
-            Approve action
-          </button>
-          <button
-            className="secondary"
-            onClick={() =>
-              void run(() =>
-                client.decide(
-                  status.runId!,
-                  status.confirmation!.confirmationId,
-                  false,
-                ),
-              )
-            }
-          >
-            Reject action
-          </button>
-        </div>
       )}
     </section>
   );

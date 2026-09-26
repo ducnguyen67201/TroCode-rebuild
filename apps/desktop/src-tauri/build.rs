@@ -24,7 +24,6 @@ fn main() {
             "voice_disable",
             "voice_execute_text",
             "voice_cancel",
-            "voice_decide",
         ]),
     ))
     .expect("Tauri build configuration");

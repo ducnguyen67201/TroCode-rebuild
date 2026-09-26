@@ -14,7 +14,7 @@ import { VoiceControlPanel } from './VoiceControlPanel';
 
 afterEach(cleanup);
 
-it('auto-enables voice, supports consequential confirmation, and filters stale state', async () => {
+it('starts observation-only guidance and filters stale state', async () => {
   const client = createPreviewVoice();
   let publish: ((status: VoiceStatus) => void) | undefined;
   client.subscribe = async (listener) => {
@@ -22,14 +22,13 @@ it('auto-enables voice, supports consequential confirmation, and filters stale s
     return () => {};
   };
   render(<VoiceControlPanel client={client} />);
-  await screen.findByText(/Hold .* to speak/);
+  await screen.findByText(/Hold .* to ask/);
   fireEvent.change(screen.getByLabelText('Type instead of speaking'), {
-    target: { value: 'send the message' },
+    target: { value: 'show me how to search' },
   });
-  fireEvent.click(screen.getByText('Run instruction'));
-  await screen.findByText('Approval required');
-  fireEvent.click(screen.getByText('Reject action'));
-  await screen.findByText('Instruction cancelled.');
+  fireEvent.click(screen.getByText('Show me how'));
+  await screen.findByText('Follow the cursor in the selected window.');
+  expect(screen.queryByText('Approval required')).toBeNull();
   const current = await client.status();
   await act(async () =>
     publish!({ ...current, revision: 100, message: 'Fresh voice state' }),
@@ -46,8 +45,10 @@ it('keeps text fallback available after automatic voice startup', async () => {
   render(<VoiceControlPanel client={client} />);
   const input = await screen.findByLabelText('Type instead of speaking');
   fireEvent.change(input, { target: { value: 'open settings' } });
-  fireEvent.click(screen.getByText('Run instruction'));
+  fireEvent.click(screen.getByText('Show me how'));
   await waitFor(() =>
-    expect(screen.getByText('Instruction completed.')).toBeTruthy(),
+    expect(
+      screen.getByText('Follow the cursor in the selected window.'),
+    ).toBeTruthy(),
   );
 });

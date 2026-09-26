@@ -1,5 +1,5 @@
 import { readFile, mkdtemp, cp, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
 import { spawn, execFile } from 'node:child_process';
@@ -19,6 +19,24 @@ if (manifest.platform !== process.platform || manifest.arch !== process.arch)
 const actual = await filesUnder(join(staging, 'tro-runtime'));
 if (actual.length !== Object.keys(manifest.artifacts).length)
   throw new Error('Runtime manifest file count mismatch.');
+const packagedPaths = actual.map((path) =>
+  relative(staging, path).replaceAll('\\', '/'),
+);
+if (
+  !packagedPaths.some((path) =>
+    path.endsWith('/tro_runtime/resources/read-only.json'),
+  )
+)
+  throw new Error('Packaged observation-only policy is missing.');
+for (const forbidden of [
+  '/tro_runtime/resources/window-control.json',
+  '/tro_runtime/action_agent.py',
+  '/tro_runtime/action_run.py',
+  '/tro_runtime/computer.py',
+]) {
+  if (packagedPaths.some((path) => path.endsWith(forbidden)))
+    throw new Error(`Packaged mutation authority is forbidden: ${forbidden}`);
+}
 for (const [path, digest] of Object.entries(manifest.artifacts)) {
   if (path.includes('..') || !path.startsWith('tro-runtime/'))
     throw new Error('Unsafe manifest path.');
@@ -39,6 +57,32 @@ try {
     'tro-runtime',
     process.platform === 'win32' ? 'tro-runtime.exe' : 'tro-runtime',
   );
+  const archive = await promisify(execFile)(
+    'uv',
+    [
+      'run',
+      '--project',
+      'services/teaching-runtime',
+      '--locked',
+      'pyi-archive_viewer',
+      '-l',
+      '-r',
+      executable,
+    ],
+    { cwd: process.cwd(), timeout: 15000, maxBuffer: 2 * 1024 * 1024 },
+  );
+  if (!archive.stdout.includes("'tro_runtime.instructor_cursor'"))
+    throw new Error('Packaged Instructor Cursor module is missing.');
+  for (const forbidden of [
+    'tro_runtime.action_agent',
+    'tro_runtime.action_run',
+    'tro_runtime.computer',
+  ]) {
+    if (archive.stdout.includes(`'${forbidden}'`))
+      throw new Error(
+        `Packaged Tro mutation module is forbidden: ${forbidden}`,
+      );
+  }
   const env = Object.fromEntries(
     ['SYSTEMROOT', 'WINDIR', 'TEMP', 'TMP', 'HOME', 'USERPROFILE']
       .filter((key) => process.env[key])

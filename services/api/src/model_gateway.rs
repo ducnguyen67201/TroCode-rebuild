@@ -4,6 +4,7 @@ use crate::{
     db,
     entities::{proof_session, runtime_grant},
     error::ApiError,
+    provider::cursor_tools::valid_cursor_tools,
 };
 use axum::{
     Json, Router,
@@ -189,9 +190,7 @@ pub fn validate_request(body: &Value, model: &str) -> bool {
         && body.get("store").is_none_or(|v| v == false)
         && body.get("stream").is_none_or(|v| v == false)
         && body.get("parallel_tool_calls").is_none_or(|v| v == false)
-        && body
-            .get("tools")
-            .is_none_or(|v| v.as_array().is_some_and(Vec::is_empty))
+        && valid_cursor_tools(body.get("tools"))
         && body
             .get("include")
             .is_none_or(|v| v.as_array().is_some_and(Vec::is_empty))
@@ -336,7 +335,7 @@ mod tests {
     use super::*;
     #[test]
     fn rejects_hosted_tools_storage_and_budget_expansion() {
-        let valid = json!({"model":"proof-model","input":"Help","max_output_tokens":1024,"tools":[],"store":false});
+        let valid = json!({"model":"proof-model","input":"Help","max_output_tokens":1024,"tools":crate::provider::cursor_tools::test_cursor_tools(),"store":false,"parallel_tool_calls":false,"tool_choice":"auto"});
         assert!(validate_request(&valid, "proof-model"));
         for (key, value) in [
             ("tools", json!([{"type":"computer_use_preview"}])),
@@ -346,6 +345,8 @@ mod tests {
             ("background", json!(true)),
             ("model", json!("other")),
             ("stream", json!(true)),
+            ("parallel_tool_calls", json!(true)),
+            ("tool_choice", json!("required")),
         ] {
             let mut body = valid.clone();
             body[key] = value;
@@ -511,7 +512,7 @@ mod integration_tests {
             .unwrap()
             .to_owned();
         let grant = issued["grant"].as_str().unwrap();
-        let body = json!({"model":"proof-model","input":"Help","max_output_tokens":1024});
+        let body = json!({"model":"proof-model","input":"Help","max_output_tokens":1024,"tools":crate::provider::cursor_tools::test_cursor_tools(),"store":false,"parallel_tool_calls":false});
         let mut tasks = Vec::new();
         for _ in 0..6 {
             let app = app.clone();
@@ -614,7 +615,7 @@ mod integration_tests {
                 app.clone(),
                 "/v1/responses",
                 grant,
-                json!({"model":"proof-model","input":input,"max_output_tokens":1024}),
+                json!({"model":"proof-model","input":input,"max_output_tokens":1024,"tools":crate::provider::cursor_tools::test_cursor_tools(),"store":false,"parallel_tool_calls":false}),
             )
             .await;
             assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);

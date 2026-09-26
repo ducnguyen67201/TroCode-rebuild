@@ -24,7 +24,6 @@
     "allow-voice-enable",
     "allow-voice-disable",
     "allow-voice-execute-text",
-    "allow-voice-cancel",
-    "allow-voice-decide"
+    "allow-voice-cancel"
   ]
 }

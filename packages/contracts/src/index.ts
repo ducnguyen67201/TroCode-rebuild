@@ -12,11 +12,7 @@ export type {
   WorkspaceMember,
   WorkspaceMemberList,
 } from './generated-workspace';
-export type {
-  VoiceConfirmation,
-  VoicePermissions,
-  VoiceStatus,
-} from './generated-voice';
+export type { VoicePermissions, VoiceStatus } from './generated-voice';
 export {
   parseAuthStatus,
   parseMessage,

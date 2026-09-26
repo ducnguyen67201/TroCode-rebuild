@@ -107,7 +107,7 @@ describe('wire conformance', () => {
       phase: 'idle',
       revision: 2,
       utteranceId: null,
-      runId: null,
+      guidanceId: null,
       partialTranscript: '',
       finalTranscript: '',
       targetTitle: null,
@@ -119,11 +119,15 @@ describe('wire conformance', () => {
         ready: true,
         recovery: '',
       },
-      confirmation: null,
-      actionsUsed: 0,
     };
     expect(parseVoiceStatus(value)).toEqual(value);
     expect(() => parseVoiceStatus({ ...value, audio: 'bytes' })).toThrow(
+      'Invalid voice status',
+    );
+    expect(() =>
+      parseVoiceStatus({ ...value, confirmation: { id: 'old' } }),
+    ).toThrow('Invalid voice status');
+    expect(() => parseVoiceStatus({ ...value, actionsUsed: 1 })).toThrow(
       'Invalid voice status',
     );
   });

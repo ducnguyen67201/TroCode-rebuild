@@ -79,6 +79,14 @@ fn position_voice_hud(app: &tauri::AppHandle, hud: &tauri::WebviewWindow) {
 }
 
 pub fn hide(app: &tauri::AppHandle) {
+    hide_windows(app, true);
+}
+
+fn hide_guidance(app: &tauri::AppHandle) {
+    hide_windows(app, false);
+}
+
+fn hide_windows(app: &tauri::AppHandle, include_voice: bool) {
     app.state::<OverlayState>()
         .epoch
         .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
@@ -88,7 +96,7 @@ pub fn hide(app: &tauri::AppHandle) {
             values.clear();
         }
         for (label, window) in handle.webview_windows() {
-            if label.starts_with("teaching-overlay-") || label == "voice-hud" {
+            if label.starts_with("teaching-overlay-") || (include_voice && label == "voice-hud") {
                 let _ = window.hide();
             }
         }
@@ -100,7 +108,7 @@ pub fn show_voice(app: &tauri::AppHandle, status: &crate::voice::VoiceStatus) {
     let status = status.clone();
     let _ = app.run_on_main_thread(move || {
         let Some(window) = handle.get_webview_window("voice-hud") else { return; };
-        let visible = matches!(status.phase.as_str(), "listening" | "transcribing" | "dispatching" | "executing" | "confirmation" | "failed");
+        let visible = matches!(status.phase.as_str(), "listening" | "transcribing" | "dispatching" | "planning" | "guiding" | "failed");
         if visible {
             position_voice_hud(&handle, &window);
             let _ = window.emit("voice-hud-status", serde_json::json!({"phase":status.phase,"revision":status.revision,"message":status.message}));
@@ -299,6 +307,10 @@ pub fn track(
                         hide(&app);
                         break;
                     }
+                    if state["journey"]["status"].as_str() == Some("completed") {
+                        app.state::<std::sync::Arc<crate::voice::VoiceManager>>()
+                            .guidance_completed(state["journey"]["id"].as_str());
+                    }
                     if !should_track(&state) {
                         break;
                     }
@@ -310,4 +322,19 @@ pub fn track(
             }
         }
     });
+}
+
+/// Present a validated teaching projection from any input path, then keep it fresh.
+pub async fn present_guidance(
+    app: &tauri::AppHandle,
+    manager: std::sync::Arc<crate::manager::RuntimeManager>,
+    state: &Value,
+) -> Result<(), WorkerError> {
+    hide_guidance(app);
+    let expected_epoch = epoch(app);
+    present(app, state, expected_epoch).await?;
+    if should_track(state) {
+        track(app.clone(), manager, expected_epoch);
+    }
+    Ok(())
 }

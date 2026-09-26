@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
 from collections import deque
-from collections.abc import Awaitable, Callable
 from dataclasses import asdict, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
@@ -24,11 +22,7 @@ if TYPE_CHECKING:
 
 
 class TeachingSession:
-    def __init__(
-        self,
-        source: ObservationSource | None = None,
-        event_sink: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
-    ) -> None:
+    def __init__(self, source: ObservationSource | None = None) -> None:
         self.source = source
         self.agent: GuidanceAgent | None = None
         self.model_config: dict[str, str] | None = None
@@ -52,13 +46,7 @@ class TeachingSession:
             "reason": "none",
         }
         self.timings: deque[dict[str, Any]] = deque(maxlen=200)
-        self.event_sink = event_sink
         self.prepared: dict[str, Any] | None = None
-        self.action_task: asyncio.Task[None] | None = None
-        self.action_cancelled: asyncio.Event | None = None
-        self.action_guard: Any | None = None
-        self.action_run_id: str | None = None
-        self.action_revision = 0
 
     def measure(self, phase: str, started: float) -> None:
         self.timings.append(
@@ -122,8 +110,6 @@ class TeachingSession:
             self.store.append(str(uuid4()), self.session_id, kind, metadata)
 
     async def prepare_instruction(self, request: dict[str, Any]) -> dict[str, Any]:
-        if self.action_task is not None and not self.action_task.done():
-            raise ValueError("An action is already running.")
         if self.source is None:
             self.source = CuaObservationSource()
         if not isinstance(self.source, CuaObservationSource):
@@ -145,125 +131,67 @@ class TeachingSession:
             "preparationId": preparation_id,
             "utteranceId": request["utteranceId"],
             "target": asdict(observation.target),
-            "expiresAt": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+            "expiresAt": (datetime.now(UTC) + timedelta(seconds=90))
+            .isoformat()
+            .replace("+00:00", "Z"),
         }
 
-    async def execute_instruction(self, request: dict[str, Any]) -> str:
+    async def start_guidance(self, request: dict[str, Any]) -> None:
+        """Consume one preparation and replace the current visual teaching plan."""
         prepared = self.prepared
+        self.prepared = None  # Preparations are single-use even when planning fails.
         if (
             prepared is None
             or prepared["preparationId"] != request["preparationId"]
             or prepared["utteranceId"] != request["utteranceId"]
             or prepared["expires"] <= time.monotonic()
-            or self.action_task is not None
+            or not request["instruction"].strip()
         ):
             raise ValueError("Instruction preparation is no longer current.")
-        if not request["instruction"].strip():
-            raise ValueError("Instruction is empty.")
-        from tro_runtime.action_agent import ComputerActionAgent
-        from tro_runtime.action_run import ActionGuard
-        from tro_runtime.computer import SelectedWindowComputer
+
+        from tro_runtime.agent import GuidanceAgent
         from tro_runtime.model_client import create_model
 
-        if not isinstance(self.source, CuaObservationSource):
-            raise ValueError("Direct computer control requires the native CUA source.")
-
-        run_id = str(uuid4())
-        self.action_run_id = run_id
-        self.action_revision = 0
-        cancelled = asyncio.Event()
-        self.action_cancelled = cancelled
-
-        async def event(partial: dict[str, object]) -> None:
-            self.action_revision += 1
-            if self.event_sink is not None:
-                await self.event_sink(
-                    {
-                        "protocolVersion": request["protocolVersion"],
-                        "generationId": request["generationId"],
-                        "kind": "runtime.actionStatus",
-                        "eventId": str(uuid4()),
-                        "runId": run_id,
-                        "revision": self.action_revision,
-                        "phase": partial["phase"],
-                        "summary": partial.get("summary", ""),
-                        "actionsUsed": partial.get("actionsUsed", 0),
-                        "confirmationId": partial.get("confirmationId"),
-                        "confirmationReason": partial.get("confirmationReason"),
-                    }
-                )
-
-        guard = ActionGuard(run_id, event)
-        self.action_guard = guard
-        computer = SelectedWindowComputer(self.source, prepared["target"], guard.confirm, cancelled)
         config = request["modelConfig"]
-        agent = ComputerActionAgent(
-            create_model(config["origin"], config["grant"], config["model"]), computer, guard
-        )
+        observation = await self.observe(prepared["target"])
+        previous_agent = self.agent
+        self.agent = GuidanceAgent(create_model(config["origin"], config["grant"], config["model"]))
+        if not await self._replace_guidance(observation, request["instruction"], request["locale"]):
+            self.agent = previous_agent
+            raise GuidanceError("invalid_plan")
 
-        async def run() -> None:
-            await event({"phase": "executing", "summary": "Working in the selected window."})
-            outcome = "failed"
-            try:
-                await agent.run(request["instruction"])
-                outcome = "completed"
-                await event(
-                    {
-                        "phase": "completed",
-                        "summary": "Instruction completed.",
-                        "actionsUsed": computer.actions_used,
-                    }
+    async def _replace_guidance(
+        self,
+        observation: Observation,
+        question: str,
+        locale: Literal["en", "vi"],
+    ) -> bool:
+        """Atomically replace the plan while preserving prior progress on failure."""
+        previous = self.progress
+        previous_objective = self.objective
+        previous_replans = self.replans_remaining
+        self.cue = None
+        if previous is not None:
+            previous.pause("Preparing replacement guidance.")
+        try:
+            plan = await self.plan(observation, question, locale)
+        except Exception as error:
+            if previous is not None:
+                previous.pause(
+                    str(error)
+                    if isinstance(error, GuidanceError)
+                    else "Planning failed. Your progress is preserved. Retry explicitly."
                 )
-            except asyncio.CancelledError:
-                outcome = "cancelled"
-                await event(
-                    {
-                        "phase": "cancelled",
-                        "summary": "Instruction cancelled.",
-                        "actionsUsed": computer.actions_used,
-                    }
-                )
-            except Exception:
-                await event(
-                    {
-                        "phase": "failed",
-                        "summary": "The selected-window instruction could not be completed.",
-                        "actionsUsed": computer.actions_used,
-                    }
-                )
-            finally:
-                self.record("action_outcome", run_id=run_id, outcome=outcome)
-                self.prepared = None
-                self.action_guard = None
-                self.action_cancelled = None
-                self.action_run_id = None
-                self.action_task = None
-
-        self.action_task = asyncio.create_task(run())
-        return run_id
-
-    def decide_action(self, run_id: str, confirmation_id: str, approved: bool) -> bool:
-        if self.action_run_id != run_id or self.action_guard is None:
+            self.progress = previous
+            self.objective = previous_objective
+            self.replans_remaining = previous_replans
             return False
-        accepted = bool(self.action_guard.decide(confirmation_id, approved))
-        if accepted:
-            self.record(
-                "action_decision",
-                run_id=run_id,
-                confirmation_id=confirmation_id,
-                decision="approved" if approved else "rejected",
-            )
-        return accepted
-
-    async def cancel_action(self, run_id: str | None = None) -> bool:
-        if self.action_task is None or (run_id is not None and self.action_run_id != run_id):
-            return False
-        if self.action_cancelled is not None:
-            self.action_cancelled.set()
-        if self.action_guard is not None:
-            self.action_guard.cancel()
-        self.action_task.cancel()
-        await asyncio.gather(self.action_task, return_exceptions=True)
+        self.objective = question
+        self.replans_remaining = 1
+        self.progress = PlanProgress(plan, locale, observation)
+        self.observation = observation
+        self.target = observation.target
+        await self.refresh_plan()
         return True
 
     def projection(self, session_id: str | None) -> dict[str, Any]:
@@ -373,27 +301,16 @@ class TeachingSession:
                 self.agent = GuidanceAgent(
                     create_model(config["origin"], config["grant"], config["model"])
                 )
-            self.cue = None
-            if self.progress is not None:
-                self.progress.pause("Preparing replacement guidance.")
             if self.agent is None:
                 self.readiness.update(model="unconfigured", reason="connect_model")
                 return "askResult"
             try:
                 observation = await self.observe(self.target)
-                plan = await self.plan(observation, request["question"], request["locale"])
-            except Exception as error:
+            except Exception:
                 if self.progress is not None:
-                    self.progress.pause(
-                        str(error)
-                        if isinstance(error, GuidanceError)
-                        else "Planning failed. Your progress is preserved. Retry explicitly."
-                    )
+                    self.progress.pause("Observation failed. Your progress is preserved.")
                 return "askResult"
-            self.objective = request["question"]
-            self.replans_remaining = 1
-            self.progress = PlanProgress(plan, request["locale"], observation)
-            await self.refresh_plan()
+            await self._replace_guidance(observation, request["question"], request["locale"])
             return "askResult"
         if kind in ("runtime.observe", "runtime.explain", "runtime.check"):
             previous = self.observation
@@ -503,7 +420,6 @@ class TeachingSession:
             )
 
     async def close(self) -> None:
-        await self.cancel_action()
         self.progress = None
         self.objective = ""
         self.replans_remaining = 0
@@ -515,6 +431,7 @@ class TeachingSession:
         self.check = None
         self.agent = None
         self.model_config = None
+        self.prepared = None
         self.readiness.update(
             observation="unknown",
             screen="unknown",

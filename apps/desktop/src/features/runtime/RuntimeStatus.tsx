@@ -109,8 +109,8 @@ export function RuntimeStatus({ client }: { client: DesktopClient }) {
         </p>
       )}
       <p className="fine-print">
-        A diagnostic session checks the process connection. Teaching and
-        computer actions arrive in the next milestone.
+        A diagnostic session checks the process connection. Teaching guidance
+        observes a selected window and never performs computer input.
       </p>
     </section>
   );

@@ -2,8 +2,8 @@
 
 This directory explains the implementation. [The master specification](../rebuild-architecture.md)
 remains authoritative for requirements, product decisions and P0–P9 acceptance.
-F10 guided teaching is observation-only; F11 is a separate, explicit,
-selected-window voice/text control mode with bounded actions and confirmation.
+F10 guided teaching and F11 voice/text guidance are observation-only. Both use
+one selected-window teaching session and the same Instructor Cursor plan surface.
 
 ## Read in this order
 
@@ -24,14 +24,17 @@ flowchart TB
     Worker[Python transport]
     Session[TeachingSession]
     Planner[GuidanceAgent / local Agents SDK]
+    Cursor[InstructorCursor / fixed visual tools]
     Progress[PlanProgress / local deterministic checks]
-    CUA[Bounded selected-window CUA]
+    CUA[Read-only selected-window CUA]
     DB[(SQLite evidence)]
     Overlay[Click-through visual overlay]
     UI <--> Host
     Host <--> Worker
     Worker --> Session
     Session --> Planner
+    Planner --> Cursor
+    Cursor --> Session
     Session --> Progress
     Session --> CUA
     Session --> DB
@@ -47,7 +50,7 @@ flowchart TB
 
 The agent loop runs locally and model inference is remote. F10 guidance remains
 visual: no real pointer motion, input injection, app launch or focus control is
-exposed. F11 exposes only a Python-owned selected-window ComputerTool adapter;
+exposed. F11 exposes only Python-owned Instructor Cursor presentation tools;
 React never receives raw input tools, audio or provider credentials.
 
 See [Reliable native lesson](reliable-lesson.md) for recovery, proof provisioning,

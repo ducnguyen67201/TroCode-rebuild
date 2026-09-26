@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from dataclasses import replace
 from types import SimpleNamespace
@@ -103,10 +104,27 @@ def test_visual_drag_maps_both_regions_and_projection_omits_image():
 
 def test_sdk_can_propose_visual_guidance_for_an_unlabelled_canvas(monkeypatch):
     async def run(agent, *args, **kwargs):
-        assert agent.tools == []
+        assert [tool.name for tool in agent.tools] == [
+            "show_student_where",
+            "show_student_click",
+            "show_student_drag",
+            "show_student_type",
+            "show_student_scroll",
+        ]
         if isinstance(args[0], list):
             assert args[0][0]["content"][1]["type"] == "input_image"
-        return SimpleNamespace(final_output={"steps": [visual_step().model_dump()]})
+        tool = agent.tools[1]
+        await tool.on_invoke_tool(
+            SimpleNamespace(tool_name=tool.name),
+            json.dumps(
+                {
+                    "target": visual_step().target.model_dump(),
+                    "caption": "Click the shape yourself.",
+                    "expected": None,
+                }
+            ),
+        )
+        return SimpleNamespace(final_output="staged")
 
     monkeypatch.setattr("tro_runtime.agent.Runner.run", run)
     result = asyncio.run(GuidanceAgent("unused").plan(screenshot(), "Select a shape", "en"))

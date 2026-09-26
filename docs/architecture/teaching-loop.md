@@ -1,24 +1,29 @@
 # Planned guidance and local progress
 
+The learner experience follows a Playcode-style interaction principle: show the
+next idea immediately, explain it in ordinary language and keep the learner in
+control. Tro's cursor is an instructor rendered as pixels, not an input device.
+
 This implements the first bounded P2 planning/progression slice, using P1's native
 foundation. It does not establish full P1 platform acceptance or complete P2.
 
 ## Plan once, guide locally
 
-`runtime.ask` observes the selected window and calls the local Agents SDK to
-prepare one to three steps. Each step contains an accessibility selector or normalized
+`runtime.ask` observes the selected window and calls the local Agents SDK. The
+agent stages one to three steps through the fixed Instructor Cursor function-tool
+list. Each step contains an accessibility selector or normalized
 screenshot region, caption, visual gesture, optional drag destination/scroll direction, and
 an optional expected accessibility value. The first target must uniquely exist
 in the planning observation. Future targets may appear after earlier steps.
 Plans never contain executable native actions. Visual regions are bound to their
 planning screenshot; see [visual targeting](visual-targeting.md) for freshness rules.
 
-F11 is a separate path, not an executable teaching plan. Chord-down pins and
-observes one frontmost window while Rust captures rolling completed audio files.
-Release freezes the final transcript once, then starts one bounded ComputerTool
-run. Partial transcripts never enter the agent. Consequential work suspends the
-same live task for a one-shot main-window decision; it is never converted into a
-durable plan or replayed after failure.
+F11 is an input method for the same teaching plan. Chord-down pins and observes
+one frontmost window while Rust captures rolling completed audio files. Release
+freezes the final transcript once, then starts one bounded guidance-planning run.
+Partial transcripts never enter the agent. Typed fallback skips transcription but
+uses the identical plan, overlay, pacing and cancellation path. No cursor tool can
+dispatch native input, and interrupted guidance is never replayed.
 
 The controller takes a fresh observation before presenting. Every later cue is
 resolved again against the selected window. Duplicate or missing semantic targets

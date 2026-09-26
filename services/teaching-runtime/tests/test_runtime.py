@@ -29,7 +29,9 @@ def initialize(runtime):
 def test_lifecycle():
     runtime = Runtime()
     assert runtime.handle(request("health"))["code"] == "NOT_READY"
-    assert initialize(runtime)["kind"] == "runtime.ready"
+    ready = initialize(runtime)
+    assert ready["kind"] == "runtime.ready"
+    assert ready["capabilities"] == ["diagnostic", "instructor_cursor"]
     assert initialize(runtime)["code"] == "BUSY"
     session = str(uuid4())
     assert runtime.handle(request("start", sessionId=session))["kind"] == "runtime.started"

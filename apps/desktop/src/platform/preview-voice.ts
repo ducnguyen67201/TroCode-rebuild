@@ -2,19 +2,18 @@ import type { VoiceStatus } from '@tro/contracts';
 import type { VoiceClient } from './voice-client';
 
 const utteranceId = '00000000-0000-0000-0000-000000000010';
-const runId = '00000000-0000-0000-0000-000000000011';
-const confirmationId = '00000000-0000-0000-0000-000000000012';
+const guidanceId = '00000000-0000-0000-0000-000000000011';
 
 export function createPreviewVoice(): VoiceClient {
   let status: VoiceStatus = {
     phase: 'idle',
     revision: 0,
     utteranceId: null,
-    runId: null,
+    guidanceId: null,
     partialTranscript: '',
     finalTranscript: '',
     targetTitle: null,
-    message: `Hold ${previewShortcut()} to speak.`,
+    message: `Hold ${previewShortcut()} to ask for help.`,
     shortcut: previewShortcut(),
     permissions: {
       microphone: 'granted',
@@ -22,8 +21,6 @@ export function createPreviewVoice(): VoiceClient {
       ready: true,
       recovery: '',
     },
-    confirmation: null,
-    actionsUsed: 0,
   };
   const listeners = new Set<(value: VoiceStatus) => void>();
   const publish = (next: Partial<VoiceStatus>) => {
@@ -36,7 +33,7 @@ export function createPreviewVoice(): VoiceClient {
     enable: async () =>
       publish({
         phase: 'idle',
-        message: `Hold ${status.shortcut} to speak.`,
+        message: `Hold ${status.shortcut} to ask for help.`,
         permissions: {
           microphone: 'granted',
           keyboardMonitoring: 'granted',
@@ -48,62 +45,35 @@ export function createPreviewVoice(): VoiceClient {
       publish({
         phase: 'disabled',
         utteranceId: null,
-        runId: null,
+        guidanceId: null,
         partialTranscript: '',
         finalTranscript: '',
-        confirmation: null,
-        message: 'Voice control is disabled.',
+        message: 'Voice guidance is disabled.',
       }),
     executeText: async (instruction) => {
       publish({
         phase: 'dispatching',
         utteranceId,
+        guidanceId: null,
         finalTranscript: instruction,
         message: 'Preparing the selected window…',
       });
-      if (/send|delete|purchase|upload/i.test(instruction)) {
-        return publish({
-          phase: 'confirmation',
-          runId,
-          targetTitle: 'Preview browser',
-          message: 'Approval is required before this action.',
-          confirmation: {
-            confirmationId,
-            summary: 'Perform a consequential preview action',
-          },
-        });
-      }
       publish({
-        phase: 'executing',
-        runId,
-        targetTitle: 'Preview browser',
-        message: 'Working in the selected window…',
+        phase: 'planning',
+        message: 'Preparing a simple walkthrough…',
       });
       return publish({
-        phase: 'completed',
-        message: 'Instruction completed.',
-        actionsUsed: 1,
+        phase: 'guiding',
+        guidanceId,
+        targetTitle: 'Preview browser',
+        message: 'Follow the cursor in the selected window.',
       });
     },
     cancel: async () =>
       publish({
         phase: 'cancelled',
-        confirmation: null,
-        message: 'Voice instruction cancelled.',
+        message: 'Voice guidance cancelled.',
       }),
-    decide: async (_runId, _confirmationId, approve) =>
-      approve
-        ? publish({
-            phase: 'completed',
-            confirmation: null,
-            message: 'Instruction completed.',
-            actionsUsed: 1,
-          })
-        : publish({
-            phase: 'cancelled',
-            confirmation: null,
-            message: 'Instruction cancelled.',
-          }),
     subscribe: async (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);

@@ -75,13 +75,13 @@ that runtime capability and continue to require HTTPS.
 Daily use is exactly Command+Control on macOS or physical Left Control+Left Alt
 on Windows. Hold to record and release either key to finalize. Windows AltGr and
 extra modifiers do not activate. The frontmost eligible window at chord-down is
-the entire action scope. Use Command-or-Control+Shift+Escape if capture or action
+the entire observation scope. Use Command-or-Control+Shift+Escape if capture or guidance
 work must stop immediately.
 
 Transcription uses overlapping completed WAV files rather than a live session.
 Provider/network failure, an incomplete chunk sequence, silence, target change or
-queue pressure fails closed. Consequential actions pause in the main window;
-voice cannot approve itself. Diagnose with IDs, phases, durations and counts only—
+queue pressure fails closed. Tro stages only click-through visual demonstrations;
+the learner performs every real action. Diagnose with IDs, phases, durations and counts only—
 never record audio, transcripts, screenshots, accessibility labels or typed text.
-Complete `tests/acceptance/push-to-talk-computer-control.md` on both packaged
+Complete `tests/acceptance/push-to-talk-guidance.md` on both packaged
 platforms before claiming F11/P7-A/P8 acceptance.

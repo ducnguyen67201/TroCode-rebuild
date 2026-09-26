@@ -41,7 +41,7 @@ class Kind1(Enum):
 
 class Capability(Enum):
     diagnostic = 'diagnostic'
-    selected_window_actions = 'selected_window_actions'
+    instructor_cursor = 'instructor_cursor'
 
 
 class RuntimeReady(BaseModel):
@@ -849,7 +849,7 @@ class RuntimeInstructionPrepared(BaseModel):
 
 
 class Kind33(Enum):
-    runtime_executeInstruction = 'runtime.executeInstruction'
+    runtime_startGuidance = 'runtime.startGuidance'
 
 
 class ModelConfig1(BaseModel):
@@ -861,7 +861,7 @@ class ModelConfig1(BaseModel):
     model: constr(min_length=1, max_length=128)
 
 
-class RuntimeExecuteInstruction(BaseModel):
+class RuntimeStartGuidance(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
@@ -883,175 +883,12 @@ class RuntimeExecuteInstruction(BaseModel):
         pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
     )
     instruction: constr(min_length=1, max_length=2000)
+    locale: Locale
     modelConfig: ModelConfig1
 
 
 class Kind34(Enum):
-    runtime_instructionAccepted = 'runtime.instructionAccepted'
-
-
-class RuntimeInstructionAccepted(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind34
-    runId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-
-
-class Kind35(Enum):
-    runtime_actionDecision = 'runtime.actionDecision'
-
-
-class Decision(Enum):
-    approve = 'approve'
-    reject = 'reject'
-
-
-class RuntimeActionDecision(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind35
-    runId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    confirmationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    decision: Decision
-
-
-class Kind36(Enum):
-    runtime_actionDecisionResult = 'runtime.actionDecisionResult'
-
-
-class RuntimeActionDecisionResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind36
-    accepted: bool
-
-
-class Kind37(Enum):
-    runtime_cancelAction = 'runtime.cancelAction'
-
-
-class RuntimeCancelAction(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind37
-    runId: (
-        constr(
-            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-        )
-        | None
-    )
-
-
-class Kind38(Enum):
-    runtime_actionCancelResult = 'runtime.actionCancelResult'
-
-
-class RuntimeActionCancelResult(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    requestId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    correlationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind38
-    cancelled: bool
-
-
-class Kind39(Enum):
-    runtime_actionStatus = 'runtime.actionStatus'
-
-
-class Phase1(Enum):
-    executing = 'executing'
-    confirmation = 'confirmation'
-    completed = 'completed'
-    failed = 'failed'
-    cancelled = 'cancelled'
-
-
-class RuntimeActionStatus(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    protocolVersion: ProtocolVersion
-    generationId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    kind: Kind39
-    eventId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    runId: constr(
-        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-    )
-    revision: conint(ge=1, le=9007199254740991)
-    phase: Phase1
-    summary: constr(max_length=256)
-    actionsUsed: conint(ge=0, le=12)
-    confirmationId: (
-        constr(
-            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-        )
-        | None
-    )
-    confirmationReason: constr(max_length=256) | None
+    runtime_guidanceStarted = 'runtime.guidanceStarted'
 
 
 class TeachingState(BaseModel):
@@ -1237,6 +1074,24 @@ class RuntimePlanControlResult(BaseModel):
     state: TeachingState
 
 
+class RuntimeGuidanceStarted(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind34
+    state: TeachingState
+
+
 class RuntimeMessage(
     RootModel[
         RuntimeInitialize
@@ -1272,13 +1127,8 @@ class RuntimeMessage(
         | RuntimePlanControlResult
         | RuntimePrepareInstruction
         | RuntimeInstructionPrepared
-        | RuntimeExecuteInstruction
-        | RuntimeInstructionAccepted
-        | RuntimeActionDecision
-        | RuntimeActionDecisionResult
-        | RuntimeCancelAction
-        | RuntimeActionCancelResult
-        | RuntimeActionStatus
+        | RuntimeStartGuidance
+        | RuntimeGuidanceStarted
     ]
 ):
     root: (
@@ -1315,11 +1165,6 @@ class RuntimeMessage(
         | RuntimePlanControlResult
         | RuntimePrepareInstruction
         | RuntimeInstructionPrepared
-        | RuntimeExecuteInstruction
-        | RuntimeInstructionAccepted
-        | RuntimeActionDecision
-        | RuntimeActionDecisionResult
-        | RuntimeCancelAction
-        | RuntimeActionCancelResult
-        | RuntimeActionStatus
+        | RuntimeStartGuidance
+        | RuntimeGuidanceStarted
     ) = Field(..., title='RuntimeMessage')

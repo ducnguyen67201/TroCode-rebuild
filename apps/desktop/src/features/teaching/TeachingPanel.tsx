@@ -93,7 +93,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
   if (!teaching) return null;
   return (
     <section className="teaching-panel" aria-label="Visual teaching">
-      <h2>See where. Try it yourself.</h2>
+      <h2>Follow the cursor. Try it yourself.</h2>
       <button
         onClick={() => {
           void teaching
@@ -105,8 +105,8 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
         Observation permissions
       </button>
       <p>
-        Tro shows visual guidance. You perform every click, drag, keystroke and
-        scroll.
+        Tro's instructor cursor points, circles and demonstrates the path. You
+        perform every real click, drag, keystroke and scroll.
       </p>
       <button
         disabled={busy}
@@ -134,7 +134,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
         disabled={busy || !state?.target || !question.trim()}
         onClick={() => void run(() => teaching.ask(question, locale))}
       >
-        Plan guidance / replan
+        Show me how / show another way
       </button>
       <button
         disabled={busy}
@@ -215,6 +215,16 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
             ))}
           </ol>
           <p role="status">{state.journey.message}</p>
+          {client.preview && state.cue && (
+            <div className="cue-preview">
+              <TeachingOverlay
+                cue={state.cue}
+                origin={state.target?.bounds}
+                stepIndex={state.journey.index}
+                stepTotal={state.journey.steps.length}
+              />
+            </div>
+          )}
           {teaching.planControl && state.journey.status !== 'completed' && (
             <button
               disabled={busy}
@@ -243,7 +253,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
         </section>
       )}
       <details>
-        <summary>Manual guidance tools</summary>
+        <summary>Try one visual demonstration</summary>
         {state?.observation && (
           <fieldset disabled={busy}>
             <legend>Visual guidance</legend>

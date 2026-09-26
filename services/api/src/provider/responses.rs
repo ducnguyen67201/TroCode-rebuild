@@ -1,7 +1,7 @@
-use super::{bounded_body, grants};
+use super::{bounded_body, cursor_tools::valid_cursor_tools, grants};
 use crate::{error::ApiError, hosted::HostedState};
 use axum::{Extension, Json, extract::State, http::HeaderMap};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use uuid::Uuid;
 
 const MAX_PROVIDER_RESPONSE: usize = 2 * 1024 * 1024;
@@ -12,7 +12,7 @@ pub async fn responses(
     headers: HeaderMap,
     Json(request): Json<Value>,
 ) -> Result<Json<Value>, ApiError> {
-    validate_request(&request, state.providers.action_model.as_ref())
+    validate_request(&request, state.providers.guidance_model.as_ref())
         .map_err(|_| ApiError::provider_invalid(correlation))?;
     let token = grants::grant_bearer(&headers, correlation)?;
     grants::consume(&state.providers, token, "agent", None, None, correlation).await?;
@@ -78,12 +78,15 @@ fn validate_request(value: &Value, model: &str) -> Result<(), ()> {
         || object
             .get("max_output_tokens")
             .and_then(Value::as_u64)
-            .is_some_and(|value| value > 2_048)
+            .is_none_or(|value| value == 0 || value > 1_024)
+        || object
+            .get("parallel_tool_calls")
+            .is_some_and(|value| value != &Value::Bool(false))
+        || object
+            .get("tool_choice")
+            .is_some_and(|value| !matches!(value.as_str(), Some("auto" | "none")))
+        || !valid_cursor_tools(object.get("tools"))
     {
-        return Err(());
-    }
-    let tools = object.get("tools").and_then(Value::as_array).ok_or(())?;
-    if tools.len() != 1 || !valid_computer_tool(tools[0].as_object().ok_or(())?) {
         return Err(());
     }
     let input = object.get("input").ok_or(())?;
@@ -97,27 +100,6 @@ fn validate_request(value: &Value, model: &str) -> Result<(), ()> {
         return Err(());
     }
     Ok(())
-}
-
-fn valid_computer_tool(tool: &Map<String, Value>) -> bool {
-    let allowed = ["type", "display_width", "display_height", "environment"];
-    tool.keys().all(|key| allowed.contains(&key.as_str()))
-        && tool
-            .get("type")
-            .and_then(Value::as_str)
-            .is_some_and(|value| matches!(value, "computer" | "computer_use_preview"))
-        && tool
-            .get("display_width")
-            .and_then(Value::as_u64)
-            .is_none_or(|value| (1..=8_192).contains(&value))
-        && tool
-            .get("display_height")
-            .and_then(Value::as_u64)
-            .is_none_or(|value| (1..=8_192).contains(&value))
-        && tool
-            .get("environment")
-            .and_then(Value::as_str)
-            .is_none_or(|value| matches!(value, "mac" | "windows"))
 }
 
 fn inspect_input(value: &Value, images: &mut usize) -> Result<(), ()> {
@@ -154,11 +136,40 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn accepts_only_one_computer_tool() {
-        let valid = json!({"model":"action","input":"click settings","tools":[{"type":"computer","display_width":800,"display_height":600,"environment":"mac"}],"store":false});
-        assert!(validate_request(&valid, "action").is_ok());
-        let mut invalid = valid.clone();
-        invalid["tools"] = json!([{"type":"shell"}]);
-        assert!(validate_request(&invalid, "action").is_err());
+    fn rejects_computer_shell_and_unknown_function_tools() {
+        let base = json!({"model":"guidance","input":"show me","store":false,"max_output_tokens":1024,"parallel_tool_calls":false,"tools":crate::provider::cursor_tools::test_cursor_tools(),"tool_choice":"auto"});
+        assert!(validate_request(&base, "guidance").is_ok());
+        for tools in [
+            json!([{"type":"computer"}]),
+            json!([{"type":"computer_use_preview"}]),
+            json!([{"type":"shell"}]),
+            json!([{"type":"function","name":"delete_file"}]),
+        ] {
+            let mut invalid = base.clone();
+            invalid["tools"] = tools;
+            assert!(validate_request(&invalid, "guidance").is_err());
+        }
+        for (key, value) in [
+            ("model", json!("other")),
+            ("store", json!(true)),
+            ("stream", json!(true)),
+            ("background", json!(true)),
+            ("max_output_tokens", json!(1025)),
+            ("parallel_tool_calls", json!(true)),
+            ("tool_choice", json!("required")),
+        ] {
+            let mut invalid = base.clone();
+            invalid[key] = value;
+            assert!(validate_request(&invalid, "guidance").is_err());
+        }
+    }
+
+    #[test]
+    fn rejects_oversized_or_remote_input_before_upstream_dispatch() {
+        let mut request = json!({"model":"guidance","input":"show me","store":false,"max_output_tokens":1024,"parallel_tool_calls":false,"tools":crate::provider::cursor_tools::test_cursor_tools()});
+        request["input"] = json!("x".repeat(1_500_001));
+        assert!(validate_request(&request, "guidance").is_err());
+        request["input"] = json!("https://example.com/private-image");
+        assert!(validate_request(&request, "guidance").is_err());
     }
 }

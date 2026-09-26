@@ -6,6 +6,8 @@ from uuid import uuid4
 import pytest
 from test_guidance import observation
 
+from tro_runtime.errors import GuidanceError
+from tro_runtime.planning import PlannedStep, PlanProgress, TeachingPlan
 from tro_runtime.teaching import TeachingSession
 
 
@@ -108,6 +110,134 @@ def test_refresh_hides_changed_control_but_preserves_the_learner_check():
         assert session.check["outcome"] == "confirmed"
         session.observation = replace(session.observation, image="private-image")
         assert "image" not in session.projection(str(uuid4()))["observation"]
+        await session.close()
+
+    asyncio.run(scenario())
+
+
+def test_prepared_text_or_voice_instruction_starts_the_same_visual_journey(monkeypatch):
+    async def plan(self, observation, question, locale, completed=()):
+        assert question == "Show me how to use the counter"
+        assert locale == "en"
+        return TeachingPlan(
+            steps=[
+                PlannedStep.model_validate(
+                    {
+                        "target": {"role": "button", "label": "Counter"},
+                        "gesture": "click",
+                        "caption": "Click the counter yourself.",
+                        "destination": None,
+                        "direction": None,
+                        "expected": None,
+                    }
+                )
+            ]
+        )
+
+    monkeypatch.setattr("tro_runtime.agent.GuidanceAgent.plan", plan)
+
+    async def scenario():
+        source = Source()
+        session = TeachingSession(source)
+        utterance_id = str(uuid4())
+        prepared = await session.prepare_instruction(
+            {"kind": "runtime.prepareInstruction", "utteranceId": utterance_id}
+        )
+        await session.start_guidance(
+            {
+                "kind": "runtime.startGuidance",
+                "utteranceId": utterance_id,
+                "preparationId": prepared["preparationId"],
+                "instruction": "Show me how to use the counter",
+                "locale": "en",
+                "modelConfig": {
+                    "origin": "https://api.example.com",
+                    "grant": "a" * 64,
+                    "model": "guidance-model",
+                },
+            }
+        )
+        assert session.progress is not None
+        assert session.progress.plan.steps[0].gesture == "click"
+        assert session.cue is not None
+        assert source.value == "0"
+        assert session.prepared is None
+        await session.close()
+
+    asyncio.run(scenario())
+
+
+def test_instruction_preparation_is_single_use_even_when_stale():
+    async def scenario():
+        session = TeachingSession(Source())
+        utterance_id = str(uuid4())
+        prepared = await session.prepare_instruction(
+            {"kind": "runtime.prepareInstruction", "utteranceId": utterance_id}
+        )
+        assert session.prepared is not None
+        session.prepared["expires"] = time.monotonic() - 1
+        with pytest.raises(ValueError, match="no longer current"):
+            await session.start_guidance(
+                {
+                    "utteranceId": utterance_id,
+                    "preparationId": prepared["preparationId"],
+                    "instruction": "Show me",
+                    "locale": "en",
+                    "modelConfig": {},
+                }
+            )
+        assert session.prepared is None
+        await session.close()
+
+    asyncio.run(scenario())
+
+
+def test_failed_prepared_guidance_keeps_prior_journey_and_target(monkeypatch):
+    async def fail(*args, **kwargs):
+        raise RuntimeError("private screen detail")
+
+    monkeypatch.setattr("tro_runtime.agent.GuidanceAgent.plan", fail)
+
+    async def scenario():
+        session = TeachingSession(Source())
+        old_target = replace(observation().target, pid=99)
+        session.target = old_target
+        session.progress = prior = PlanProgress(
+            TeachingPlan(
+                steps=[
+                    PlannedStep.model_validate(
+                        {
+                            "target": {"role": "button", "label": "Counter"},
+                            "gesture": "click",
+                            "caption": "Click it yourself.",
+                            "destination": None,
+                            "direction": None,
+                            "expected": None,
+                        }
+                    )
+                ]
+            ),
+            "en",
+            replace(observation(), target=old_target),
+        )
+        utterance_id = str(uuid4())
+        prepared = await session.prepare_instruction({"utteranceId": utterance_id})
+        with pytest.raises(GuidanceError, match="could not be grounded"):
+            await session.start_guidance(
+                {
+                    "utteranceId": utterance_id,
+                    "preparationId": prepared["preparationId"],
+                    "instruction": "Show me",
+                    "locale": "en",
+                    "modelConfig": {
+                        "origin": "https://api.example.com",
+                        "grant": "a" * 64,
+                        "model": "guidance-model",
+                    },
+                }
+            )
+        assert session.progress is prior and session.target == old_target
+        assert session.prepared is None
         await session.close()
 
     asyncio.run(scenario())
