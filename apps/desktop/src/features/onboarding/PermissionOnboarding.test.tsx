@@ -9,6 +9,7 @@ import {
 import { createPreviewClient } from '../../platform/preview-client';
 import { DeviceOnboardingGate } from './PermissionOnboarding';
 import { ONBOARDING_MARKER_KEY } from './onboarding-state';
+import { LanguageProvider } from '../../i18n';
 
 afterEach(() => {
   cleanup();
@@ -132,5 +133,42 @@ it('routes Windows microphone recovery to its exact settings page', async () => 
   await waitFor(() => expect(openSettings).toHaveBeenCalledWith('microphone'));
   expect(
     await screen.findByText(/Let desktop apps access your microphone/),
+  ).toBeTruthy();
+});
+
+it('localizes the complete device setup surface in Vietnamese', async () => {
+  const client = createPreviewClient({ permissionScenario: 'fresh' });
+  render(
+    <LanguageProvider initialLocale="vi">
+      <DeviceOnboardingGate client={client.device}>
+        <p>Learn surface</p>
+      </DeviceOnboardingGate>
+    </LanguageProvider>,
+  );
+
+  expect(
+    await screen.findByRole('heading', { name: 'Thiết lập thiết bị này' }),
+  ).toBeTruthy();
+  expect(screen.getByText('Màn hình và điều khiển')).toBeTruthy();
+  expect(
+    screen.getByText(
+      (_, element) =>
+        element?.tagName === 'STRONG' &&
+        element.textContent === 'Micrô: Chưa kiểm tra',
+    ),
+  ).toBeTruthy();
+
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Mở cài đặt Ghi màn hình' }),
+  );
+
+  expect(await screen.findByText('Cài đặt Ghi màn hình đang mở')).toBeTruthy();
+  expect(
+    screen.getByText(/Bạn cũng có thể kéo Tro\.app từ thư mục Ứng dụng/),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      'Hướng dẫn nổi của Tro chỉ trỏ vị trí. Bạn tự thực hiện mọi thay đổi.',
+    ),
   ).toBeTruthy();
 });

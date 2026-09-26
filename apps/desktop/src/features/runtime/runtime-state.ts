@@ -1,22 +1,23 @@
 import type { RuntimeStatus } from '@tro/contracts';
+import type { TranslationKey } from '../../i18n';
 export function latestStatus(
   current: RuntimeStatus,
   incoming: RuntimeStatus,
 ): RuntimeStatus {
   return incoming.revision >= current.revision ? incoming : current;
 }
-export function publicError(error: unknown): string {
+export function publicErrorKey(error: unknown): TranslationKey {
   if (typeof error === 'object' && error !== null && 'code' in error) {
     switch (error.code) {
       case 'UNAUTHORIZED':
-        return 'The development profile could not be authenticated.';
+        return 'runtime.unauthorized';
       case 'NOT_READY':
-        return 'Runtime unavailable. Check setup and the local API.';
+        return 'runtime.notReady';
       case 'TIMEOUT':
-        return 'The runtime timed out. Stop it, then retry.';
+        return 'runtime.timeout';
       case 'PROTOCOL_MISMATCH':
-        return 'Runtime versions differ. Run setup again.';
+        return 'runtime.protocolMismatch';
     }
   }
-  return 'The request failed. Check the local runtime and retry.';
+  return 'runtime.requestError';
 }

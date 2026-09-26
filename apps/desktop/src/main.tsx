@@ -13,6 +13,7 @@ import { tauriClient } from './platform/tauri-client';
 import { createNativePermissionQaClient } from './platform/native-permission-qa-client';
 import './styles.css';
 import { VoiceHud } from './features/voice/VoiceHud';
+import { LanguageProvider } from './i18n';
 // Preview is explicitly requested by the dev:ui command, never a bridge fallback.
 const search = new URLSearchParams(location.search);
 if (search.has('voiceHud') || search.has('overlay'))
@@ -47,34 +48,37 @@ const client =
     : tauriClient;
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {search.has('voiceHud') ? (
-      <VoiceHud />
-    ) : search.has('permissionGuide') ? (
-      <PermissionSettingsGuideWindow />
-    ) : search.has('overlay') ? (
-      <OverlayWindow />
-    ) : nativePermissionQa ? (
-      <DeviceOnboardingGate client={nativePermissionQaClient!.device}>
-        <AuthGate auth={nativePermissionQaClient!.auth} preview>
+    <LanguageProvider>
+      {search.has('voiceHud') ? (
+        <VoiceHud />
+      ) : search.has('permissionGuide') ? (
+        <PermissionSettingsGuideWindow />
+      ) : search.has('overlay') ? (
+        <OverlayWindow />
+      ) : nativePermissionQa ? (
+        <DeviceOnboardingGate client={nativePermissionQaClient!.device}>
+          <AuthGate auth={nativePermissionQaClient!.auth} preview>
+            {(session) => (
+              <App client={nativePermissionQaClient!} session={session} />
+            )}
+          </AuthGate>
+        </DeviceOnboardingGate>
+      ) : (
+        <AuthGate auth={client.auth} preview={client.preview}>
           {(session) => (
-            <App client={nativePermissionQaClient!} session={session} />
+            <DeviceOnboardingGate
+              client={client.device}
+              skipIntro={
+                client.preview &&
+                !isPreviewPermissionScenario(previewPermissions)
+              }
+            >
+              <App client={client} session={session} />
+            </DeviceOnboardingGate>
           )}
         </AuthGate>
-      </DeviceOnboardingGate>
-    ) : (
-      <AuthGate auth={client.auth} preview={client.preview}>
-        {(session) => (
-          <DeviceOnboardingGate
-            client={client.device}
-            skipIntro={
-              client.preview && !isPreviewPermissionScenario(previewPermissions)
-            }
-          >
-            <App client={client} session={session} />
-          </DeviceOnboardingGate>
-        )}
-      </AuthGate>
-    )}
+      )}
+    </LanguageProvider>
   </React.StrictMode>,
 );
 

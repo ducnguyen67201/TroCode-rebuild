@@ -10,6 +10,7 @@ import {
 import type { VoiceStatus } from '@tro/contracts';
 import { createPreviewVoice } from '../../platform/preview-voice';
 import { VoiceLanguageSetting } from './VoiceLanguageSetting';
+import { LanguageProvider } from '../../i18n';
 
 afterEach(cleanup);
 
@@ -136,4 +137,28 @@ it('ignores a status response after unmount', async () => {
       actionsUsed: 0,
     });
   });
+});
+
+it('localizes the independent transcription setting in Vietnamese', async () => {
+  const client = createPreviewVoice();
+  render(
+    <LanguageProvider initialLocale="vi">
+      <VoiceLanguageSetting client={client} />
+    </LanguageProvider>,
+  );
+
+  const select = (await screen.findByLabelText(
+    'Ngôn ngữ nhận dạng giọng nói',
+  )) as HTMLSelectElement;
+  await waitFor(() => expect(select.disabled).toBe(false));
+  expect(
+    Array.from(select.options).map((option) => [option.text, option.value]),
+  ).toEqual([
+    ['Tiếng Việt', 'vi'],
+    ['Tiếng Anh', 'en'],
+    ['Tự động', 'auto'],
+  ]);
+  expect(
+    screen.getByText(/Thay đổi áp dụng cho chỉ dẫn bằng giọng nói tiếp theo/),
+  ).toBeTruthy();
 });

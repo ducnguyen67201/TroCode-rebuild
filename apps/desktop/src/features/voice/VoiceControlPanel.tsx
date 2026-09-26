@@ -2,6 +2,7 @@ import type { FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { VoiceStatus } from '@tro/contracts';
 import type { VoiceClient } from '../../platform/voice-client';
+import { localeKey, useLanguage } from '../../i18n';
 
 const busyPhases = new Set([
   'listening',
@@ -12,6 +13,7 @@ const busyPhases = new Set([
 ]);
 
 export function VoiceControlPanel({ client }: { client: VoiceClient }) {
+  const { localizeMessage, t } = useLanguage();
   const [status, setStatus] = useState<VoiceStatus | null>(null);
   const [instruction, setInstruction] = useState('');
   const [error, setError] = useState('');
@@ -30,10 +32,10 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
     void client
       .status()
       .then(accept)
-      .catch(() => setError('Voice status is unavailable.'));
+      .catch(() => setError(t('voice.statusUnavailable')));
     let unsubscribe: (() => void) | undefined;
     void client
-      .subscribe(accept, () => setError('Voice status could not be verified.'))
+      .subscribe(accept, () => setError(t('voice.statusUnverified')))
       .then((value) => {
         unsubscribe = value;
       });
@@ -52,7 +54,7 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
         setStatus(next);
       }
     } catch {
-      setError('Voice control could not complete that request.');
+      setError(t('voice.requestFailed'));
     }
   }
 
@@ -67,7 +69,7 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
   if (!status)
     return (
       <section className="voice-panel" aria-busy="true">
-        <p>Loading voice control…</p>
+        <p>{t('voice.loading')}</p>
       </section>
     );
   const busy = busyPhases.has(status.phase);
@@ -80,25 +82,35 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
       : status.finalTranscript || status.partialTranscript;
   const showQueue =
     (busy && Boolean(status.runId)) || status.queuedInstructions.length > 0;
+  const phaseKey = localeKey('voice.phase', status.phase);
   return (
-    <section className="voice-panel" aria-labelledby="voice-heading">
+    <section
+      className="voice-panel"
+      aria-label={t('voice.aria')}
+      aria-labelledby="voice-heading"
+    >
       <div className="voice-heading-row">
         <div>
-          <p className="eyebrow">Fast computer control</p>
-          <h2 id="voice-heading">Hold two keys. Speak. Release.</h2>
+          <p className="eyebrow">{t('voice.eyebrow')}</p>
+          <h2 id="voice-heading">{t('voice.heading')}</h2>
         </div>
         <span className={`voice-phase voice-phase-${status.phase}`}>
-          {status.phase}
+          {phaseKey ? t(phaseKey) : status.phase}
         </span>
       </div>
       <p className="voice-shortcut">
         <kbd>{status.shortcut}</kbd>
       </p>
       <p role="status" aria-live="polite">
-        {status.message}
+        {localizeMessage(status.message, 'voice.status.fallback')}
       </p>
       {!status.permissions.ready && status.phase !== 'disabled' && (
-        <p className="voice-recovery">{status.permissions.recovery}</p>
+        <p className="voice-recovery">
+          {localizeMessage(
+            status.permissions.recovery,
+            'voice.permissionRecovery',
+          )}
+        </p>
       )}
       {error && (
         <p role="alert" className="voice-error">
@@ -108,14 +120,16 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
       <div className="voice-actions">
         {status.phase === 'disabled' || !status.permissions.ready ? (
           <button onClick={() => void run(() => client.enable())}>
-            {status.phase === 'disabled' ? 'Enable voice' : 'Check permissions'}
+            {status.phase === 'disabled'
+              ? t('voice.enable')
+              : t('voice.permissions')}
           </button>
         ) : (
           <button
             disabled={busy}
             onClick={() => void run(() => client.disable())}
           >
-            Disable voice
+            {t('voice.disable')}
           </button>
         )}
         {busy && (
@@ -123,22 +137,22 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
             className="secondary"
             onClick={() => void run(() => client.cancel())}
           >
-            Cancel instruction
+            {t('voice.cancel')}
           </button>
         )}
       </div>
       <form onSubmit={submit} className="voice-text-fallback">
-        <label htmlFor="voice-instruction">Type instead of speaking</label>
+        <label htmlFor="voice-instruction">{t('voice.textLabel')}</label>
         <div>
           <input
             id="voice-instruction"
             maxLength={2000}
             value={instruction}
             onChange={(event) => setInstruction(event.target.value)}
-            placeholder="e.g. Open the settings panel"
+            placeholder={t('voice.textPlaceholder')}
           />
           <button disabled={!instruction.trim() || busy} type="submit">
-            Run instruction
+            {t('voice.run')}
           </button>
         </div>
       </form>
@@ -146,13 +160,13 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
         <div className="voice-transcript">
           <span>
             {status.finalTranscript
-              ? 'Final instruction'
-              : 'Listening transcript'}
+              ? t('voice.finalInstruction')
+              : t('voice.listeningTranscript')}
           </span>
           <p>{transcript}</p>
           {!busy && (
             <button className="link-button" onClick={() => setCleared(true)}>
-              Clear transcript
+              {t('voice.clearTranscript')}
             </button>
           )}
         </div>
@@ -160,8 +174,12 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
       {showQueue && (
         <section className="voice-queue" aria-labelledby="voice-queue-heading">
           <div className="voice-queue-heading">
-            <h3 id="voice-queue-heading">Follow-up queue</h3>
-            <span aria-label={`${status.queuedInstructions.length} queued`}>
+            <h3 id="voice-queue-heading">{t('voice.queue')}</h3>
+            <span
+              aria-label={t('voice.queued', {
+                count: status.queuedInstructions.length,
+              })}
+            >
               {status.queuedInstructions.length}
             </span>
           </div>
@@ -174,20 +192,20 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
           ) : (
             <p>
               {status.phase === 'listening' || status.phase === 'transcribing'
-                ? 'Your follow-up will appear here after transcription.'
-                : `Hold ${status.shortcut} again to add a follow-up.`}
+                ? t('voice.followUpPending')
+                : t('voice.followUpHint', { shortcut: status.shortcut })}
             </p>
           )}
         </section>
       )}
       {status.targetTitle && (
         <p className="voice-target">
-          Selected window: <strong>{status.targetTitle}</strong>
+          {t('voice.selectedWindow')} <strong>{status.targetTitle}</strong>
         </p>
       )}
       {status.confirmation && status.runId && (
         <div className="voice-confirmation" role="alert">
-          <h3>Approval required</h3>
+          <h3>{t('voice.approvalRequired')}</h3>
           <p>{status.confirmation.summary}</p>
           <button
             onClick={() =>
@@ -200,7 +218,7 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
               )
             }
           >
-            Approve action
+            {t('voice.approve')}
           </button>
           <button
             className="secondary"
@@ -214,7 +232,7 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
               )
             }
           >
-            Reject action
+            {t('voice.reject')}
           </button>
         </div>
       )}

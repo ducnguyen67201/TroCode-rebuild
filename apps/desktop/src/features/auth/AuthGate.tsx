@@ -7,6 +7,7 @@ import {
   hasWorkspaceAccess,
   latestAuthStatus,
 } from './auth-state';
+import { useLanguage, type TranslationKey } from '../../i18n';
 
 export interface AuthenticatedContext {
   user: AuthUser;
@@ -21,10 +22,8 @@ interface AuthGateProps {
   children: (context: AuthenticatedContext) => ReactNode;
 }
 
-const boundaryMessage =
-  'Tro could not verify the secure session response. Try again in a moment.';
-
 export function AuthGate({ auth, preview, children }: AuthGateProps) {
+  const { localizeMessage, t } = useLanguage();
   const [status, setStatus] = useState<AuthStatus>(checkingStatus);
   const [busy, setBusy] = useState(false);
   const [boundaryFailed, setBoundaryFailed] = useState(false);
@@ -90,7 +89,7 @@ export function AuthGate({ auth, preview, children }: AuthGateProps) {
     return (
       <AuthThreshold
         busy={busy}
-        message={boundaryMessage}
+        message={t('auth.boundaryError')}
         preview={preview}
         state="error"
         onPrimary={() => void perform(() => auth.retry())}
@@ -112,10 +111,10 @@ export function AuthGate({ auth, preview, children }: AuthGateProps) {
       ? 'error'
       : status.state;
   const publicMessage = !status.configured
-    ? 'Google sign-in is not configured for this build.'
+    ? t('auth.notConfigured')
     : status.state === 'authenticated'
-      ? boundaryMessage
-      : status.message;
+      ? t('auth.boundaryError')
+      : localizeMessage(status.message, authFallback[publicState]);
   const canRestartSignIn =
     status.configured &&
     status.state === 'error' &&
@@ -142,3 +141,15 @@ export function AuthGate({ auth, preview, children }: AuthGateProps) {
     />
   );
 }
+
+const authFallback: Record<
+  Exclude<AuthStatus['state'], 'authenticated'>,
+  TranslationKey
+> = {
+  checking: 'auth.status.checking',
+  signedOut: 'auth.status.signedOut',
+  signingIn: 'auth.status.signingIn',
+  membershipRequired: 'auth.status.membershipRequired',
+  offline: 'auth.status.offline',
+  error: 'auth.status.error',
+};

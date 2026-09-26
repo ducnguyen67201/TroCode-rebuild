@@ -1,4 +1,5 @@
 import type { AuthStatus, AuthUser } from '@tro/contracts';
+import { LanguageSelect, useLanguage, type TranslationKey } from '../../i18n';
 
 type PublicAuthState = Exclude<AuthStatus['state'], 'authenticated'>;
 
@@ -15,51 +16,51 @@ interface AuthThresholdProps {
 const stateContent: Record<
   PublicAuthState,
   {
-    eyebrow: string;
-    title: string;
-    note: string;
-    action?: string;
+    eyebrow: TranslationKey;
+    title: TranslationKey;
+    note: TranslationKey;
+    action?: TranslationKey;
     waypoint: number;
   }
 > = {
   checking: {
-    eyebrow: 'Finding your place',
-    title: 'Picking up\nwhere you left off.',
-    note: 'Tro is checking the secure session kept by this device.',
+    eyebrow: 'auth.checking.eyebrow',
+    title: 'auth.checking.title',
+    note: 'auth.checking.note',
     waypoint: 0,
   },
   signedOut: {
-    eyebrow: 'Your learning space',
-    title: 'Begin with\nwho you are.',
-    note: 'Use the Google account your workspace owner added to Tro.',
-    action: 'Continue with Google',
+    eyebrow: 'auth.signedOut.eyebrow',
+    title: 'auth.signedOut.title',
+    note: 'auth.signedOut.note',
+    action: 'auth.signedOut.action',
     waypoint: 0,
   },
   signingIn: {
-    eyebrow: 'One small detour',
-    title: 'Your browser has\nthe next step.',
-    note: 'Finish signing in there. This window will continue on its own.',
+    eyebrow: 'auth.signingIn.eyebrow',
+    title: 'auth.signingIn.title',
+    note: 'auth.signingIn.note',
     waypoint: 1,
   },
   membershipRequired: {
-    eyebrow: 'Account confirmed',
-    title: 'Your place is\nalmost ready.',
-    note: 'Ask a workspace owner to add this exact Google email, then try again.',
-    action: 'Check for access',
+    eyebrow: 'auth.membershipRequired.eyebrow',
+    title: 'auth.membershipRequired.title',
+    note: 'auth.membershipRequired.note',
+    action: 'auth.membershipRequired.action',
     waypoint: 1,
   },
   offline: {
-    eyebrow: 'Path interrupted',
-    title: 'We lost the\nconnection.',
-    note: 'Your secure device session is still here. Reconnect and try again.',
-    action: 'Try again',
+    eyebrow: 'auth.offline.eyebrow',
+    title: 'auth.offline.title',
+    note: 'auth.offline.note',
+    action: 'auth.offline.action',
     waypoint: 1,
   },
   error: {
-    eyebrow: 'Sign-in needs attention',
-    title: 'This path is not\nready just yet.',
-    note: 'Nothing private was shared. Ask your Tro administrator if this continues.',
-    action: 'Try again',
+    eyebrow: 'auth.error.eyebrow',
+    title: 'auth.error.title',
+    note: 'auth.error.note',
+    action: 'auth.error.action',
     waypoint: 0,
   },
 };
@@ -73,6 +74,7 @@ export function AuthThreshold({
   onPrimary,
   onSignOut,
 }: AuthThresholdProps) {
+  const { t } = useLanguage();
   const content = stateContent[state];
   const isAlert = state === 'error';
 
@@ -82,26 +84,31 @@ export function AuthThreshold({
         <span className="auth-wordmark" aria-label="Tro">
           tro<span className="auth-wordmark-dot">.</span>
         </span>
-        <span className="auth-device-note">
-          <span className="auth-device-dot" aria-hidden="true" />
-          Secure device session
-        </span>
+        <div className="auth-masthead-actions">
+          <LanguageSelect compact />
+          <span className="auth-device-note">
+            <span className="auth-device-dot" aria-hidden="true" />
+            {t('auth.secureSession')}
+          </span>
+        </div>
       </header>
 
       <main className="auth-layout">
         <section className="auth-copy" aria-labelledby="auth-title">
-          <p className="auth-eyebrow">{content.eyebrow}</p>
+          <p className="auth-eyebrow">{t(content.eyebrow)}</p>
           <h1 id="auth-title">
-            {content.title.split('\n').map((line) => (
-              <span key={line}>{line}</span>
-            ))}
+            {t(content.title)
+              .split('\n')
+              .map((line) => (
+                <span key={line}>{line}</span>
+              ))}
           </h1>
-          <p className="auth-intro">{content.note}</p>
+          <p className="auth-intro">{t(content.note)}</p>
 
           {user && state === 'membershipRequired' && (
             <div
               className="auth-identity"
-              aria-label="Signed-in Google account"
+              aria-label={t('auth.signedInAccount')}
             >
               <span className="auth-avatar" aria-hidden="true">
                 {initials(user.displayName)}
@@ -132,7 +139,13 @@ export function AuthThreshold({
                 <span className="auth-action-icon" aria-hidden="true">
                   {state === 'signedOut' && <GoogleMark />}
                 </span>
-                <span>{busy ? 'Please wait…' : content.action}</span>
+                <span>
+                  {busy
+                    ? t('common.pleaseWait')
+                    : content.action
+                      ? t(content.action)
+                      : ''}
+                </span>
                 <span className="auth-action-arrow" aria-hidden="true">
                   ↗
                 </span>
@@ -144,23 +157,21 @@ export function AuthThreshold({
                 disabled={busy}
                 onClick={onSignOut}
               >
-                Sign out
+                {t('common.signOut')}
               </button>
             )}
           </div>
 
-          {preview && (
-            <p className="auth-preview-note">Preview · simulated sign-in</p>
-          )}
+          {preview && <p className="auth-preview-note">{t('auth.preview')}</p>}
         </section>
 
         <Wayfinding state={state} waypoint={content.waypoint} />
       </main>
 
       <footer className="auth-footer">
-        <span>Private by design</span>
+        <span>{t('common.privateByDesign')}</span>
         <span aria-hidden="true">—</span>
-        <span>Ready when you are</span>
+        <span>{t('auth.ready')}</span>
       </footer>
     </div>
   );
@@ -173,9 +184,10 @@ function Wayfinding({
   state: PublicAuthState;
   waypoint: number;
 }) {
+  const { t } = useLanguage();
   return (
-    <aside className="auth-wayfinding" aria-label="Sign-in progress">
-      <span className="auth-map-caption">A path into the lesson</span>
+    <aside className="auth-wayfinding" aria-label={t('auth.progress')}>
+      <span className="auth-map-caption">{t('auth.pathCaption')}</span>
       <svg
         className="auth-map"
         viewBox="0 0 520 600"
@@ -219,22 +231,22 @@ function Wayfinding({
       <ol className="auth-waypoints">
         <li className={waypoint === 0 ? 'is-current' : ''}>
           <span>01</span>
-          <strong>Identify</strong>
-          <small>Your trusted account</small>
+          <strong>{t('auth.identify')}</strong>
+          <small>{t('auth.trustedAccount')}</small>
         </li>
         <li className={waypoint === 1 ? 'is-current' : ''}>
           <span>02</span>
-          <strong>Find your studio</strong>
+          <strong>{t('auth.findStudio')}</strong>
           <small>
             {state === 'membershipRequired'
-              ? 'Waiting for access'
-              : 'Your shared workspace'}
+              ? t('auth.waitingAccess')
+              : t('auth.sharedWorkspace')}
           </small>
         </li>
         <li>
           <span>03</span>
-          <strong>Keep learning</strong>
-          <small>Return to your work</small>
+          <strong>{t('auth.keepLearning')}</strong>
+          <small>{t('auth.returnToWork')}</small>
         </li>
       </ol>
     </aside>

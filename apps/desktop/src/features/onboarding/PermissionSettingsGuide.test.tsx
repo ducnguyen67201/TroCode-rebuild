@@ -1,6 +1,7 @@
 import { afterEach, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { PermissionSettingsGuideView } from './PermissionSettingsGuide';
+import { LanguageProvider } from '../../i18n';
 
 afterEach(cleanup);
 
@@ -39,5 +40,22 @@ it('shows the shared Windows desktop-app microphone toggle', () => {
   expect(screen.getByText('Privacy & security → Microphone')).toBeTruthy();
   expect(
     screen.getByText(/Let desktop apps access your microphone/),
+  ).toBeTruthy();
+});
+
+it('renders the auxiliary permission guide in the selected app language', () => {
+  render(
+    <LanguageProvider initialLocale="vi">
+      <PermissionSettingsGuideView
+        guide={{ platform: 'macos', target: 'accessibility' }}
+      />
+    </LanguageProvider>,
+  );
+
+  expect(screen.getByLabelText('Hướng dẫn cấp quyền Tro')).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Trợ năng' })).toBeTruthy();
+  expect(screen.getByText('Tìm Tro trong danh sách này')).toBeTruthy();
+  expect(
+    screen.getByText('Bạn tự thực hiện mọi thay đổi. Tro chỉ chỉ ra vị trí.'),
   ).toBeTruthy();
 });

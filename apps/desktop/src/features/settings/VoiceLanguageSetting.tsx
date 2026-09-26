@@ -5,17 +5,19 @@ import {
   type TranscriptionLanguage,
 } from '@tro/contracts';
 import type { VoiceClient } from '../../platform/voice-client';
+import { useLanguage, type TranslationKey } from '../../i18n';
 
-const LANGUAGE_LABELS = {
-  vi: 'Vietnamese',
-  en: 'English',
-  auto: 'Auto',
-} satisfies Record<TranscriptionLanguage, string>;
+const LANGUAGE_KEYS = {
+  vi: 'voiceLanguage.vietnamese',
+  en: 'voiceLanguage.english',
+  auto: 'voiceLanguage.auto',
+} satisfies Record<TranscriptionLanguage, TranslationKey>;
 
 export function VoiceLanguageSetting({ client }: { client: VoiceClient }) {
+  const { t } = useLanguage();
   const [language, setLanguage] = useState<TranscriptionLanguage | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<TranslationKey | null>(null);
   const mounted = useRef(false);
 
   useEffect(() => {
@@ -26,8 +28,7 @@ export function VoiceLanguageSetting({ client }: { client: VoiceClient }) {
         if (mounted.current) setLanguage(status.transcriptionLanguage);
       })
       .catch(() => {
-        if (mounted.current)
-          setError('Transcription language is unavailable. Try again.');
+        if (mounted.current) setError('voiceLanguage.unavailable');
       });
     return () => {
       mounted.current = false;
@@ -38,14 +39,14 @@ export function VoiceLanguageSetting({ client }: { client: VoiceClient }) {
     const previous = language;
     setLanguage(next);
     setSaving(true);
-    setError('');
+    setError(null);
     try {
       const status = await client.setTranscriptionLanguage(next);
       if (mounted.current) setLanguage(status.transcriptionLanguage);
     } catch {
       if (mounted.current) {
         setLanguage(previous);
-        setError('Transcription language could not be saved. Try again.');
+        setError('voiceLanguage.saveError');
       }
     } finally {
       if (mounted.current) setSaving(false);
@@ -55,13 +56,11 @@ export function VoiceLanguageSetting({ client }: { client: VoiceClient }) {
   return (
     <article className="voice-language-setting" aria-busy={language === null}>
       <div>
-        <p className="settings-label">Voice</p>
-        <label htmlFor="transcription-language">Transcription language</label>
-        <p>
-          Choose the language you expect to speak. English and Vietnamese focus
-          recognition; Auto detects the input language. Changes apply to your
-          next voice instruction and do not translate it.
-        </p>
+        <p className="settings-label">{t('voiceLanguage.category')}</p>
+        <label htmlFor="transcription-language">
+          {t('voiceLanguage.label')}
+        </label>
+        <p>{t('voiceLanguage.description')}</p>
       </div>
       <select
         id="transcription-language"
@@ -73,14 +72,18 @@ export function VoiceLanguageSetting({ client }: { client: VoiceClient }) {
       >
         {TRANSCRIPTION_LANGUAGES.map((value) => (
           <option key={value} value={value}>
-            {LANGUAGE_LABELS[value]}
+            {t(LANGUAGE_KEYS[value])}
           </option>
         ))}
       </select>
-      {saving && <span className="voice-language-saving">Saving…</span>}
+      {saving && (
+        <span className="voice-language-saving">
+          {t('voiceLanguage.saving')}
+        </span>
+      )}
       {error && (
         <p className="voice-language-error" role="alert">
-          {error}
+          {t(error)}
         </p>
       )}
     </article>

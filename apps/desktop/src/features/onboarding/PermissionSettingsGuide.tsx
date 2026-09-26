@@ -6,6 +6,12 @@ import type {
   PermissionSettingsGuide,
   PermissionSettingsTarget,
 } from '@tro/contracts';
+import {
+  translate,
+  useLanguage,
+  type AppLocale,
+  type TranslationKey,
+} from '../../i18n';
 
 interface GuideCopy {
   title: string;
@@ -16,36 +22,32 @@ interface GuideCopy {
 export function permissionSettingsCopy(
   platform: PermissionSettingsGuide['platform'],
   target: PermissionSettingsTarget,
+  locale: AppLocale = 'en',
 ): GuideCopy {
   if (platform === 'windows') {
-    return {
-      title: 'Microphone access',
-      path: 'Privacy & security → Microphone',
-      instruction:
-        'Turn on Microphone access, then turn on “Let desktop apps access your microphone.” Windows uses this shared switch for Tro.',
-    };
+    return guideCopy(locale, 'permissionGuide.windowsMicrophone');
   }
   if (target === 'accessibility') {
-    return {
-      title: 'Accessibility',
-      path: 'Privacy & Security → Accessibility',
-      instruction:
-        'Find Tro and turn it on. If Tro is missing, click +, then choose Applications → Tro.app → Open. Drag Tro.app from Applications into the app list also works.',
-    };
+    return guideCopy(locale, 'permissionGuide.accessibility');
   }
   if (target === 'microphone') {
-    return {
-      title: 'Microphone',
-      path: 'Privacy & Security → Microphone',
-      instruction:
-        'Find Tro and turn it on. If Tro is missing, click +, then choose Applications → Tro.app → Open.',
-    };
+    return guideCopy(locale, 'permissionGuide.microphone');
   }
+  return guideCopy(locale, 'permissionGuide.screenCapture');
+}
+
+function guideCopy(
+  locale: AppLocale,
+  prefix:
+    | 'permissionGuide.windowsMicrophone'
+    | 'permissionGuide.accessibility'
+    | 'permissionGuide.microphone'
+    | 'permissionGuide.screenCapture',
+): GuideCopy {
   return {
-    title: 'Screen Recording',
-    path: 'Privacy & Security → Screen & System Audio Recording',
-    instruction:
-      'Find Tro and turn it on. If Tro is missing, click +, then choose Applications → Tro.app → Open. Drag Tro.app from Applications into the app list also works.',
+    title: translate(locale, `${prefix}.title` as TranslationKey),
+    path: translate(locale, `${prefix}.path` as TranslationKey),
+    instruction: translate(locale, `${prefix}.instruction` as TranslationKey),
   };
 }
 
@@ -54,16 +56,21 @@ export function PermissionSettingsGuideView({
 }: {
   guide: PermissionSettingsGuide;
 }) {
-  const copy = permissionSettingsCopy(guide.platform, guide.target);
+  const { locale, t } = useLanguage();
+  const copy = permissionSettingsCopy(guide.platform, guide.target, locale);
   return (
-    <aside className="permission-guide" aria-label="Tro permission guide">
-      <div className="permission-guide-kicker">Look in System Settings</div>
-      <div className="permission-guide-target">Find Tro in this list</div>
+    <aside className="permission-guide" aria-label={t('permissionGuide.aria')}>
+      <div className="permission-guide-kicker">
+        {t('permissionGuide.kicker')}
+      </div>
+      <div className="permission-guide-target">
+        {t('permissionGuide.target')}
+      </div>
       <h1>{copy.title}</h1>
       <p className="permission-guide-path">{copy.path}</p>
       <p>{copy.instruction}</p>
       <div className="permission-guide-boundary">
-        You make every change. Tro only points out where.
+        {t('permissionGuide.boundary')}
       </div>
       <svg
         className="permission-guide-pointer"
