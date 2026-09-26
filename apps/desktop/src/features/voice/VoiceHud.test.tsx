@@ -17,3 +17,27 @@ it('renders a compact non-interactive waveform pill with an accessible status', 
   expect(container.querySelectorAll('button,input,a')).toHaveLength(0);
   expect(container.textContent).toBe('');
 });
+
+it('projects planning and guiding without exposing controls', () => {
+  const { container, rerender } = render(
+    <VoiceHudPresentation
+      status={{
+        phase: 'planning',
+        revision: 2,
+        message: 'Preparing a simple walkthrough…',
+      }}
+    />,
+  );
+  expect(container.querySelector('.voice-hud-planning')).not.toBeNull();
+  rerender(
+    <VoiceHudPresentation
+      status={{
+        phase: 'guiding',
+        revision: 3,
+        message: 'Follow the cursor in the selected window.',
+      }}
+    />,
+  );
+  expect(container.querySelector('.voice-hud-guiding')).not.toBeNull();
+  expect(container.querySelectorAll('button,input,a')).toHaveLength(0);
+});

@@ -12,7 +12,7 @@ flowchart LR
   Screen[Selected native window] --> CUA[Read-only CUA observation]
   CUA --> Session
   Session --> SDK[Local Agents SDK]
-  SDK --> Gateway[Backend bounded model gateway]
+  SDK --> Gateway[Backend credential and accounting relay]
   Gateway --> SDK
   SDK --> Session
   Session --> Overlay[Click-through visual overlay]
@@ -25,6 +25,12 @@ Python retains the current plan and completed index while preparing a replacemen
 React receives a revisioned projection, never provider credentials or screenshot bytes. Observation readiness reflects the worker's last successful read; it is not a promise that both screenshot and accessibility data were complete. Native consent preflight is advisory and belongs to the host process. Unknown Windows consent is represented as null rather than true. Actual installed worker attribution still needs manual proof.
 
 Model readiness is unconfigured, ready after a successful plan, or unavailable after failure. A generic upstream authorization failure cannot distinguish expiry from exhausted budget, so the UI suggests reconnecting without claiming a specific cause. A connection alone does not prove inference works.
+
+The relay authenticates and reserves the short-lived Tro grant, fixes the provider
+origin/model and privacy/cost settings, attaches the server-side provider key, and
+bounds the request, response and timeout. It does not mirror or recursively validate
+the Agents SDK's input, image, function-tool or tool-result schema. The local Python
+runtime remains the sole owner of the agent loop and Instructor Cursor tool catalog.
 
 ## Proof account administration
 

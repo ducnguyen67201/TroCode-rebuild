@@ -1,8 +1,8 @@
 # P1 native acceptance
 
 Historical P1/F10 acceptance: Tro renders pixels and the tester performs every
-external-app gesture manually. This file does not establish F11 direct-control
-acceptance; see `push-to-talk-computer-control.md`.
+external-app gesture manually. F11 now uses the same observation-only ceiling;
+see `push-to-talk-guidance.md` for voice and typed instruction acceptance.
 Build/source checks cannot substitute for this record. Current status: **pending**.
 
 For each macOS arm64 and Windows x64 installation record:

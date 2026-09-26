@@ -20,7 +20,19 @@ pub fn run() {
     use std::sync::Arc;
     use tauri::{Emitter, Manager};
 
-    let app = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(debug_assertions)]
+    let builder = builder.plugin(
+        tauri_plugin_log::Builder::new()
+            .clear_targets()
+            .target(tauri_plugin_log::Target::new(
+                tauri_plugin_log::TargetKind::Stdout,
+            ))
+            .level(log::LevelFilter::Warn)
+            .level_for("tro::guidance", log::LevelFilter::Debug)
+            .build(),
+    );
+    let app = builder
         .plugin(
             tauri_plugin_opener::Builder::new()
                 .open_js_links_on_click(false)
@@ -60,8 +72,8 @@ pub fn run() {
             commands::voice_disable,
             commands::voice_execute_text,
             commands::voice_cancel,
-            commands::voice_decide,
             overlay::overlay_current,
+            overlay::cursor_companion_current,
             permission_guide::permission_settings_guide_current,
             permissions::device_readiness,
             permissions::device_permission_request,
@@ -96,21 +108,6 @@ pub fn run() {
                     let _ = handle.emit_to("main", "runtime-status", value);
                 }
             });
-            let mut action_events = runtime.subscribe_action_events();
-            let action_voice = voice.clone();
-            let action_runtime = runtime.clone();
-            let action_auth = auth.clone();
-            tauri::async_runtime::spawn(async move {
-                while let Ok(event) = action_events.recv().await {
-                    action_voice
-                        .apply_action_event(
-                            &event,
-                            action_runtime.clone(),
-                            action_auth.clone(),
-                        )
-                        .await;
-                }
-            });
             let handle = app.handle().clone();
             let mut voice_status = voice.subscribe();
             tauri::async_runtime::spawn(async move {
@@ -130,7 +127,7 @@ pub fn run() {
                             modifier_chord::ChordEdge::Pressed(_) => {
                                 let runtime = handle.state::<Arc<manager::RuntimeManager>>().inner().clone();
                                 let auth = handle.state::<Arc<auth::AuthManager>>().inner().clone();
-                                if let Err(error) = voice.begin_capture(runtime, auth).await {
+                                if let Err(error) = voice.begin_capture(handle.clone(), runtime, auth).await {
                                     #[cfg(debug_assertions)]
                                     eprintln!("tro diagnostic: voice_capture_start_failed code={}", error.code);
                                 }

@@ -1,28 +1,55 @@
 # Planned guidance and local progress
 
+The learner experience follows a Playcode-style interaction principle: show the
+next idea immediately, explain it in ordinary language and keep the learner in
+control. Tro's cursor is an instructor rendered as pixels, not an input device.
+While the desktop app is running, a small Tro companion icon follows beside the
+learner's physical pointer to make Tro's presence obvious. The demonstration cursor
+can move away from that companion to the target, circle it or show a ghost trajectory;
+neither overlay cursor intercepts or produces input. Presentation stays minimal: one
+small fixed-radius orbit establishes the target, then only the requested click, drag,
+type or scroll cue moves. Large target rectangles never enlarge the orbit.
+
 This implements the first bounded P2 planning/progression slice, using P1's native
 foundation. It does not establish full P1 platform acceptance or complete P2.
 
 ## Plan once, guide locally
 
-`runtime.ask` observes the selected window and calls the local Agents SDK to
-prepare one to three steps. Each step contains an accessibility selector or normalized
+`runtime.ask` observes the selected window and calls the local Agents SDK. The
+agent stages exactly one immediately useful step through the fixed Instructor Cursor
+function-tool list and stops on that first tool result. This keeps initial planning
+to one model round-trip; later guidance starts from fresh screen context. Each step contains an accessibility selector or normalized
 screenshot region, caption, visual gesture, optional drag destination/scroll direction, and
 an optional expected accessibility value. The first target must uniquely exist
 in the planning observation. Future targets may appear after earlier steps.
 Plans never contain executable native actions. Visual regions are bound to their
 planning screenshot; see [visual targeting](visual-targeting.md) for freshness rules.
+The model receives only non-empty role/label pairs that are unique in the current
+accessibility snapshot; duplicate and blank entries are omitted. It must use the
+screenshot path when no listed selector fits, and one Instructor Cursor tool call is
+required for a successful response.
 
-F11 is a separate path, not an executable teaching plan. Chord-down pins and
-observes one frontmost window while Rust captures rolling completed audio files.
-Release freezes the final transcript once, then starts one bounded ComputerTool
-run. Partial transcripts never enter the agent. Consequential work suspends the
-same live task for a one-shot main-window decision; it is never converted into a
-durable plan or replayed after failure.
+Debug builds log only the model exchange's structure: bounded byte/item counts,
+image presence, offered/selected cursor tool names, argument field names, target
+kind, timing and safe validation category. They never log instruction text,
+transcripts, screenshots, accessibility labels/values, arguments, reasoning,
+provider bodies, grants or credentials.
+
+F11 is an input method for the same teaching plan. Chord-down pins and observes
+one frontmost window while Rust captures rolling completed audio files. Release
+freezes the final transcript once, then starts one bounded guidance-planning run.
+Partial transcripts never enter the agent. Typed fallback skips transcription but
+uses the identical plan, overlay, pacing and cancellation path. No cursor tool can
+dispatch native input, and interrupted guidance is never replayed.
 
 The controller takes a fresh observation before presenting. Every later cue is
 resolved again against the selected window. Duplicate or missing semantic targets
 never become guessed coordinates.
+
+Voice/text status treats native presentation as an explicit boundary: Planning may
+have a journey without a visible cue, while Guiding begins only after Rust accepts
+and shows a fresh grounded overlay. Silent rejection, expiry or unsupported display
+geometry becomes a visible failure instead of a false Guiding state.
 
 ```mermaid
 stateDiagram-v2

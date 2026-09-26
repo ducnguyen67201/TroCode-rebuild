@@ -38,7 +38,7 @@ it('shows prepared steps, applies only fresh session updates, and clears on stop
   fireEvent.change(screen.getByLabelText('What would you like help with?'), {
     target: { value: 'Teach me' },
   });
-  fireEvent.click(screen.getByText('Plan guidance / replan'));
+  fireEvent.click(screen.getByText('Show me how / show another way'));
   await screen.findByText('Your steps');
   fireEvent.click(screen.getByText('Pause guidance'));
   await screen.findByText('Resume guidance');
@@ -114,7 +114,7 @@ it('keeps Vietnamese app copy independent from the lesson language', async () =>
       false,
     ),
   );
-  fireEvent.click(screen.getByText('Lập / lập lại hướng dẫn'));
+  fireEvent.click(screen.getByText('Chỉ tôi cách làm / cách khác'));
 
   await waitFor(() => expect(ask).toHaveBeenCalled());
   expect(ask.mock.calls[0]?.[1]).toBe('en');

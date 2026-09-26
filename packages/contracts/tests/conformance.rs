@@ -23,12 +23,11 @@ fn bounds() {
 #[test]
 fn voice_projection_is_closed() {
     let value = serde_json::json!({
-        "phase":"idle","revision":1,"utteranceId":null,"runId":null,
-        "partialTranscript":"","finalTranscript":"","queuedInstructions":[],"targetTitle":null,
+        "phase":"idle","revision":1,"utteranceId":null,"guidanceId":null,
+        "partialTranscript":"","finalTranscript":"","targetTitle":null,
         "message":"Ready.","shortcut":"Command+Control",
         "transcriptionLanguage":"vi",
-        "permissions":{"microphone":"granted","keyboardMonitoring":"granted","ready":true,"recovery":""},
-        "confirmation":null,"actionsUsed":0
+        "permissions":{"microphone":"granted","keyboardMonitoring":"granted","ready":true,"recovery":""}
     });
     assert!(tro_contracts::parse_voice_status(&value).is_ok());
     let mut missing_language = value.clone();
@@ -42,5 +41,11 @@ fn voice_projection_is_closed() {
     assert!(tro_contracts::parse_voice_status(&invalid_language).is_err());
     let mut private = value;
     private["audio"] = serde_json::json!("bytes");
+    assert!(tro_contracts::parse_voice_status(&private).is_err());
+    private.as_object_mut().unwrap().remove("audio");
+    private["confirmation"] = serde_json::json!({"id":"old"});
+    assert!(tro_contracts::parse_voice_status(&private).is_err());
+    private.as_object_mut().unwrap().remove("confirmation");
+    private["actionsUsed"] = serde_json::json!(1);
     assert!(tro_contracts::parse_voice_status(&private).is_err());
 }

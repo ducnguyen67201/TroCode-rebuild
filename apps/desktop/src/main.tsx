@@ -1,4 +1,5 @@
 import { OverlayWindow } from './features/teaching/OverlayWindow';
+import { CursorCompanion } from './features/teaching/CursorCompanion';
 import { AuthGate } from './features/auth/AuthGate';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -16,7 +17,11 @@ import { VoiceHud } from './features/voice/VoiceHud';
 import { LanguageProvider } from './i18n';
 // Preview is explicitly requested by the dev:ui command, never a bridge fallback.
 const search = new URLSearchParams(location.search);
-if (search.has('voiceHud') || search.has('overlay'))
+if (
+  search.has('voiceHud') ||
+  search.has('overlay') ||
+  search.has('cursorCompanion')
+)
   document.documentElement.classList.add('transparent-window');
 const previewScenario = search.get('auth');
 const previewWorkspaceRole = search.get('workspaceRole');
@@ -49,7 +54,9 @@ const client =
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <LanguageProvider>
-      {search.has('voiceHud') ? (
+      {search.has('cursorCompanion') ? (
+        <CursorCompanion />
+      ) : search.has('voiceHud') ? (
         <VoiceHud />
       ) : search.has('permissionGuide') ? (
         <PermissionSettingsGuideWindow />

@@ -1,10 +1,11 @@
 import asyncio
+import json
 from types import SimpleNamespace
 
 import pytest
 from test_guidance import observation
 
-from tro_runtime.agent import GuidanceAgent
+from tro_runtime.agent import GuidanceAgent, unique_accessibility_evidence
 from tro_runtime.model_client import create_model
 
 
@@ -37,14 +38,85 @@ def test_private_model_allows_exact_loopback_http_only_when_native_debug_enables
 
 
 def test_planner_is_bounded_structured_and_observation_only(monkeypatch):
-    from test_planning import step
-
     async def run(agent, *args, **kwargs):
-        assert agent.tools == []
+        assert [tool.name for tool in agent.tools] == [
+            "show_student_where",
+            "show_student_click",
+            "show_student_drag",
+            "show_student_type",
+            "show_student_scroll",
+        ]
         assert agent.model_settings.max_tokens == 1024
+        assert agent.model_settings.parallel_tool_calls is False
+        assert agent.model_settings.tool_choice == "required"
+        assert agent.tool_use_behavior == "stop_on_first_tool"
+        assert kwargs["max_turns"] == 1
         assert kwargs["run_config"].tracing_disabled
-        return SimpleNamespace(final_output={"steps": [step().model_dump()]})
+        tool = agent.tools[1]
+        await tool.on_invoke_tool(
+            SimpleNamespace(tool_name=tool.name),
+            json.dumps(
+                {
+                    "target": {"role": "button", "label": "Counter"},
+                    "caption": "Click the counter yourself.",
+                    "expected": None,
+                }
+            ),
+        )
+        return SimpleNamespace(final_output="Done")
 
     monkeypatch.setattr("tro_runtime.agent.Runner.run", run)
     result = asyncio.run(GuidanceAgent("unused").plan(observation(), "Help me", "en"))
     assert len(result.steps) == 1
+
+
+def test_model_sees_only_nonempty_unique_accessibility_selectors():
+    frame = observation()
+    counter = frame.elements[0]
+    duplicate = counter.__class__(
+        id="duplicate",
+        role=counter.role,
+        label=counter.label,
+        value=counter.value,
+        bounds=counter.bounds,
+    )
+    blank = counter.__class__(
+        id="blank",
+        role=counter.role,
+        label="",
+        value="",
+        bounds=counter.bounds,
+    )
+    frame = frame.__class__(
+        id=frame.id,
+        target=frame.target,
+        captured_at=frame.captured_at,
+        elements=(counter, duplicate, blank),
+        complete=False,
+        image=frame.image,
+    )
+
+    assert unique_accessibility_evidence(frame) == []
+
+
+def test_planner_rejects_a_model_run_without_cursor_calls(monkeypatch):
+    from tro_runtime.errors import GuidanceError
+
+    async def run(*args, **kwargs):
+        return SimpleNamespace(final_output="No tool calls")
+
+    monkeypatch.setattr("tro_runtime.agent.Runner.run", run)
+    with pytest.raises(GuidanceError, match="did not return a cursor step"):
+        asyncio.run(GuidanceAgent("unused").plan(observation(), "Help me", "en"))
+
+
+def test_planner_closes_sdk_behavior_errors(monkeypatch):
+    from tro_runtime.errors import GuidanceError
+
+    async def run(*args, **kwargs):
+        raise RuntimeError("provider details and screen text")
+
+    monkeypatch.setattr("tro_runtime.agent.Runner.run", run)
+    with pytest.raises(GuidanceError, match="invalid cursor tool call") as failure:
+        asyncio.run(GuidanceAgent("unused").plan(observation(), "Help me", "en"))
+    assert "provider details" not in str(failure.value)

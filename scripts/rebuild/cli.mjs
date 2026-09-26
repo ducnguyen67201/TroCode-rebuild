@@ -14,6 +14,7 @@ import {
   waitForReady,
 } from './local-auth.mjs';
 import { verify } from './verify.mjs';
+import { startApiDevServer } from './api-dev.mjs';
 const action = process.argv[2];
 const pythonProject = resolve(root, 'services/teaching-runtime');
 const vite = resolve(root, 'node_modules/vite/bin/vite.js');
@@ -71,7 +72,12 @@ async function desktop() {
   });
   const tauri = start(
     node,
-    [resolve(root, 'node_modules/@tauri-apps/cli/tauri.js'), 'dev'],
+    [
+      resolve(root, 'node_modules/@tauri-apps/cli/tauri.js'),
+      'dev',
+      '--additional-watch-folders',
+      resolve(pythonProject, 'src'),
+    ],
     { cwd: resolve(root, 'apps/desktop') },
   );
   try {
@@ -118,26 +124,16 @@ try {
           [localDevelopmentWorkspace.email, localDevelopmentWorkspace.name],
         );
       }
-      const apis = [
-        start('cargo', ['run', '--locked', '-p', 'tro-api', '--', 'serve'], {
-          cwd: root,
-          env,
-        }),
-      ];
-      if (localAuth) {
-        const authApi = start(
-          'cargo',
-          ['run', '--locked', '-p', 'tro-api', '--', 'serve'],
-          { cwd: root, env: localAuth.environment },
-        );
-        apis.push(authApi);
-        await waitForReady(localAuth.origin, authApi.done);
-      }
+      const api = await startApiDevServer(env, localAuth);
+      if (localAuth) await waitForReady(localAuth.origin, api.done);
+      console.log(
+        '[dev] Hot reload ready: React/CSS, desktop Rust, teaching runtime, and API.',
+      );
       try {
-        await Promise.race([...apis.map((api) => api.done), desktop()]);
+        await Promise.race([api.done, desktop()]);
       } finally {
+        await api.stop();
         stopOwned();
-        await Promise.allSettled(apis.map((api) => api.done));
       }
       break;
     }

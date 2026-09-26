@@ -15,7 +15,7 @@ import { LanguageProvider } from '../../i18n';
 
 afterEach(cleanup);
 
-it('auto-enables voice, supports consequential confirmation, and filters stale state', async () => {
+it('starts observation-only guidance and filters stale state', async () => {
   const client = createPreviewVoice();
   let publish: ((status: VoiceStatus) => void) | undefined;
   client.subscribe = async (listener) => {
@@ -23,14 +23,13 @@ it('auto-enables voice, supports consequential confirmation, and filters stale s
     return () => {};
   };
   render(<VoiceControlPanel client={client} />);
-  await screen.findByText(/Hold .* to speak/);
+  await screen.findByText(/Hold .* to ask/);
   fireEvent.change(screen.getByLabelText('Type instead of speaking'), {
-    target: { value: 'send the message' },
+    target: { value: 'show me how to search' },
   });
-  fireEvent.click(screen.getByText('Run instruction'));
-  await screen.findByText('Approval required');
-  fireEvent.click(screen.getByText('Reject action'));
-  await screen.findByText('Instruction cancelled.');
+  fireEvent.click(screen.getByText('Show me how'));
+  await screen.findByText('Follow the cursor in the selected window.');
+  expect(screen.queryByText('Approval required')).toBeNull();
   const current = await client.status();
   await act(async () =>
     publish!({ ...current, revision: 100, message: 'Fresh voice state' }),
@@ -47,39 +46,12 @@ it('keeps text fallback available after automatic voice startup', async () => {
   render(<VoiceControlPanel client={client} />);
   const input = await screen.findByLabelText('Type instead of speaking');
   fireEvent.change(input, { target: { value: 'open settings' } });
-  fireEvent.click(screen.getByText('Run instruction'));
+  fireEvent.click(screen.getByText('Show me how'));
   await waitFor(() =>
-    expect(screen.getByText('Instruction completed.')).toBeTruthy(),
+    expect(
+      screen.getByText('Follow the cursor in the selected window.'),
+    ).toBeTruthy(),
   );
-});
-
-it('shows queued follow-ups in FIFO order while an instruction executes', async () => {
-  const client = createPreviewVoice();
-  let publish: ((status: VoiceStatus) => void) | undefined;
-  client.subscribe = async (listener) => {
-    publish = listener;
-    return () => {};
-  };
-  render(<VoiceControlPanel client={client} />);
-  await screen.findByText(/Hold .* to speak/);
-  const current = await client.status();
-  await act(async () =>
-    publish!({
-      ...current,
-      revision: 10,
-      phase: 'executing',
-      runId: '00000000-0000-0000-0000-000000000011',
-      finalTranscript: 'Third instruction',
-      queuedInstructions: ['Second instruction', 'Third instruction'],
-      message: 'Working on the current instruction. 2 follow-ups queued.',
-    }),
-  );
-
-  expect(screen.getByText('Follow-up queue')).toBeTruthy();
-  expect(screen.getByLabelText('2 queued')).toBeTruthy();
-  expect(
-    screen.getAllByRole('listitem').map((item) => item.textContent),
-  ).toEqual(['Second instruction', 'Third instruction']);
 });
 
 it('localizes voice chrome without changing the transcript', async () => {
@@ -90,12 +62,12 @@ it('localizes voice chrome without changing the transcript', async () => {
     </LanguageProvider>,
   );
 
-  await screen.findByText('Giữ hai phím. Nói. Thả ra.');
+  await screen.findByText('Giữ hai phím. Hỏi. Thả ra.');
   fireEvent.change(screen.getByLabelText('Nhập văn bản thay vì nói'), {
     target: { value: 'open settings' },
   });
-  fireEvent.click(screen.getByText('Chạy chỉ dẫn'));
+  fireEvent.click(screen.getByText('Chỉ tôi cách làm'));
 
   await screen.findByText('open settings');
-  expect(screen.getAllByText('Hoàn tất')).toHaveLength(2);
+  expect(screen.getAllByText('Đang hướng dẫn')).toHaveLength(2);
 });

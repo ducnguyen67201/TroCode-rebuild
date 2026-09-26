@@ -11,6 +11,25 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from tro_runtime.guidance import Cue, make_cue
 from tro_runtime.observations import Element, Observation, Rect
 
+Grounding = Literal[
+    "pending",
+    "cue_ready",
+    "observation_not_fresh",
+    "window_changed",
+    "screen_unavailable",
+    "screen_changed",
+    "target_missing",
+    "target_ambiguous",
+    "destination_missing",
+    "destination_ambiguous",
+    "observation_unavailable",
+    "replacement_pending",
+    "planning_unavailable",
+    "replanning_unavailable",
+    "user_paused",
+    "completed",
+]
+
 
 class Selector(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -20,6 +39,15 @@ class Selector(BaseModel):
     def resolve(self, observation: Observation) -> Element | None:
         matches = [e for e in observation.elements if (e.role, e.label) == (self.role, self.label)]
         return matches[0] if len(matches) == 1 else None
+
+    def resolution(self, observation: Observation) -> Literal["ready", "missing", "ambiguous"]:
+        matches = sum(
+            (element.role, element.label) == (self.role, self.label)
+            for element in observation.elements
+        )
+        if matches == 0:
+            return "missing"
+        return "ready" if matches == 1 else "ambiguous"
 
 
 class VisualTarget(BaseModel):
@@ -102,6 +130,7 @@ class PlanProgress:
         self.window = (observation.target.pid, observation.target.window_id)
         self.index = 0
         self.status = "running"
+        self.grounding: Grounding = "pending"
         self.message = "Follow the guidance. Tro checks visible progress automatically."
         self.armed = False
         self.matches = 0
@@ -123,12 +152,18 @@ class PlanProgress:
             "id": self.id,
             "index": self.index,
             "status": self.status,
+            "grounding": self.grounding,
             "message": self.message,
             "steps": [s.caption for s in self.plan.steps],
         }
 
-    def pause(self, message: str = "Paused. Resume when ready or request a revised plan.") -> None:
+    def pause(
+        self,
+        message: str = "Paused. Resume when ready or request a revised plan.",
+        grounding: Grounding = "user_paused",
+    ) -> None:
         self.status = "paused"
+        self.grounding = grounding
         self.message = message
         self.matches = 0
 
@@ -137,6 +172,7 @@ class PlanProgress:
             self.pause()
         elif action == "resume" and self.status == "paused":
             self.status = "running"
+            self.grounding = "pending"
             self.armed = False
             self.shown = False
             self.started = time.monotonic()
@@ -154,6 +190,7 @@ class PlanProgress:
         self.shown = False
         self.started = time.monotonic()
         self.status = "completed" if self.index == len(self.plan.steps) else "running"
+        self.grounding = "completed" if self.status == "completed" else "pending"
         self.message = (
             "Prepared steps finished. This does not establish mastery."
             if self.status == "completed"
@@ -164,15 +201,15 @@ class PlanProgress:
         if self.status in ("paused", "completed"):
             return None
         if (observation.target.pid, observation.target.window_id) != self.window:
-            self.pause("The selected window changed. Request a revised plan.")
+            self.pause("The selected window changed. Request a revised plan.", "window_changed")
             return None
         if (
-            (not observation.complete and not self.needs_image)
-            or observation.id == self.last_id
+            observation.id == self.last_id
             or observation.captured_at <= self.last_time
             or not 0 <= time.time() - observation.captured_at <= 1
         ):
             self.matches = 0
+            self.grounding = "observation_not_fresh"
             return None
         self.last_id, self.last_time = observation.id, observation.captured_at
         step = self.plan.steps[self.index]
@@ -190,7 +227,10 @@ class PlanProgress:
                 step = self.plan.steps[self.index]
         visual = isinstance(step.target, VisualTarget) or isinstance(step.destination, VisualTarget)
         if visual and observation.image is None:
-            self.pause("Screen capture is unavailable. Check observation access and resume.")
+            self.pause(
+                "Screen capture is unavailable. Check observation access and resume.",
+                "screen_unavailable",
+            )
             return None
         if visual and (
             self.image_fingerprint is None
@@ -201,15 +241,40 @@ class PlanProgress:
                 # Keep pixels hidden while the second local postcondition sample arrives.
                 # A successful learner action often changes the screenshot itself.
                 return None
-            self.pause("The screen changed. Visual guidance needs a fresh location.")
+            self.pause(
+                "The screen changed. Visual guidance needs a fresh location.",
+                "screen_changed",
+            )
             self.needs_replan = True
             return None
         source = step.target.resolve(observation)
         destination = step.destination.resolve(observation) if step.destination else None
         if source is None or (step.destination is not None and destination is None):
+            if source is None:
+                resolution = (
+                    step.target.resolution(observation)
+                    if isinstance(step.target, Selector)
+                    else "missing"
+                )
+                self.grounding = (
+                    "target_ambiguous" if resolution == "ambiguous" else "target_missing"
+                )
+            else:
+                resolution = (
+                    step.destination.resolution(observation)
+                    if isinstance(step.destination, Selector)
+                    else "missing"
+                )
+                self.grounding = (
+                    "destination_ambiguous" if resolution == "ambiguous" else "destination_missing"
+                )
             self.message = "Waiting for the expected control to become visible."
             if time.monotonic() - self.started > 10:
-                self.pause("The expected control is unavailable. Request a revised plan.")
+                diagnostic = self.grounding
+                self.pause(
+                    "The expected control is unavailable. Request a revised plan.",
+                    diagnostic,
+                )
                 self.needs_replan = True
             return None
         if not self.shown:
@@ -236,4 +301,5 @@ class PlanProgress:
             (source.bounds, destination.bounds if destination else None) if visual else None,
         )
         self.shown = True
+        self.grounding = "cue_ready"
         return replace(cue, id=self.cue_id)

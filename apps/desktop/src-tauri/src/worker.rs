@@ -4,7 +4,7 @@ use std::{collections::HashMap, path::PathBuf, time::Duration};
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     process::{Child, Command},
-    sync::{broadcast, mpsc, oneshot, watch},
+    sync::{mpsc, oneshot, watch},
     time::{Instant, timeout},
 };
 use tro_contracts::{MAX_FRAME_BYTES, SCHEMA_DIGEST, parse_message};
@@ -53,6 +53,32 @@ fn runtime_error(value: &Value) -> WorkerError {
                 "The selected-window action could not start.",
             )
         }
+        (
+            Some("NOT_READY"),
+            Some("The proposed guidance could not be grounded. Observe again, then replan."),
+        ) => WorkerError::new(
+            "GUIDANCE_UNAVAILABLE",
+            "The proposed guidance could not be grounded. Observe again, then try again.",
+        ),
+        (Some("NOT_READY"), Some("The model did not return a cursor step. Try again.")) => {
+            WorkerError::new(
+                "GUIDANCE_NO_TOOL",
+                "The model did not return a cursor step. Try again.",
+            )
+        }
+        (Some("NOT_READY"), Some("The model returned an invalid cursor tool call. Try again.")) => {
+            WorkerError::new(
+                "GUIDANCE_TOOL_INVALID",
+                "The model returned an invalid cursor tool call. Try again.",
+            )
+        }
+        (
+            Some("NOT_READY"),
+            Some("The model chose a target that is not uniquely visible. Try again."),
+        ) => WorkerError::new(
+            "GUIDANCE_TARGET_UNAVAILABLE",
+            "The model chose a target that is not uniquely visible. Try again.",
+        ),
         _ => WorkerError::new("NOT_READY", "Runtime refused the request."),
     }
 }
@@ -62,7 +88,6 @@ pub struct Worker {
     control: mpsc::Sender<Request>,
     pub generation: Uuid,
     ended: watch::Receiver<bool>,
-    events: broadcast::Sender<Value>,
 }
 #[derive(Clone)]
 pub struct WorkerProgram {
@@ -118,22 +143,13 @@ impl Worker {
         let (ordinary, rx) = mpsc::channel(32);
         let (control, controls) = mpsc::channel(4);
         let (end_tx, ended) = watch::channel(false);
-        let (events, _) = broadcast::channel(32);
         let generation = Uuid::new_v4();
-        tokio::spawn(drive(
-            child,
-            rx,
-            controls,
-            end_tx,
-            events.clone(),
-            generation,
-        ));
+        tokio::spawn(drive(child, rx, controls, end_tx, generation));
         let worker = Self {
             ordinary,
             control,
             generation,
             ended,
-            events,
         };
         let result = worker
             .request(
@@ -145,8 +161,7 @@ impl Worker {
         match result {
             Ok(value)
                 if value["schemaDigest"] == SCHEMA_DIGEST
-                    && value["capabilities"]
-                        == json!(["diagnostic", "selected_window_actions"]) =>
+                    && value["capabilities"] == json!(["diagnostic", "instructor_cursor"]) =>
             {
                 Ok(worker)
             }
@@ -164,9 +179,6 @@ impl Worker {
     }
     pub fn has_ended(&self) -> bool {
         *self.ended.borrow()
-    }
-    pub fn subscribe_events(&self) -> broadcast::Receiver<Value> {
-        self.events.subscribe()
     }
     pub async fn request(&self, kind: &str, payload: Value, duration: Duration) -> Reply {
         if self.has_ended() {
@@ -190,7 +202,7 @@ impl Worker {
         parse_message(&serde_json::to_vec(&value).map_err(|_| WorkerError::exited())?)
             .map_err(|_| WorkerError::new("INVALID_MESSAGE", "Invalid runtime request."))?;
         let (reply, result) = oneshot::channel();
-        let channel = if matches!(kind, "stop" | "shutdown" | "cancelAction") {
+        let channel = if matches!(kind, "stop" | "shutdown") {
             &self.control
         } else {
             &self.ordinary
@@ -267,9 +279,7 @@ fn expected_response(kind: &str) -> Option<&'static str> {
         "runtime.planControl" => Some("runtime.planControlResult"),
         "runtime.refreshCue" => Some("runtime.cueRefreshResult"),
         "runtime.prepareInstruction" => Some("runtime.instructionPrepared"),
-        "runtime.executeInstruction" => Some("runtime.instructionAccepted"),
-        "runtime.actionDecision" => Some("runtime.actionDecisionResult"),
-        "runtime.cancelAction" => Some("runtime.actionCancelResult"),
+        "runtime.startGuidance" => Some("runtime.guidanceStarted"),
         _ => None,
     }
 }
@@ -279,7 +289,6 @@ async fn drive(
     mut ordinary: mpsc::Receiver<Request>,
     mut control: mpsc::Receiver<Request>,
     ended: watch::Sender<bool>,
-    events: broadcast::Sender<Value>,
     generation: Uuid,
 ) {
     let mut input = child.stdin.take().expect("piped stdin");
@@ -311,10 +320,6 @@ async fn drive(
                 let Some(Ok(frame)) = frame else { break; };
                 let Ok(value) = parse_message(&frame) else { break; };
                 if value["generationId"] != generation.to_string() { continue; }
-                if value["kind"] == "runtime.actionStatus" {
-                    if events.send(value).is_err() && events.receiver_count() > 0 { break; }
-                    continue;
-                }
                 let Some(id) = value["requestId"].as_str() else { break; };
                 if let Some(waiter) = pending.remove(id) {
                     if waiter.correlation != value["correlationId"] || (value["kind"] != waiter.expected && value["kind"] != "runtime.error") {
@@ -406,6 +411,11 @@ mod tests {
             "message":"Selected-window observation is unavailable. Check observation permissions."
         }));
         assert_eq!(observation.code, "OBSERVATION_UNAVAILABLE");
+        let invalid_tool = runtime_error(&json!({
+            "code":"NOT_READY",
+            "message":"The model returned an invalid cursor tool call. Try again."
+        }));
+        assert_eq!(invalid_tool.code, "GUIDANCE_TOOL_INVALID");
         let unknown = runtime_error(&json!({
             "code":"UPSTREAM_SECRET",
             "message":"must not cross the boundary"

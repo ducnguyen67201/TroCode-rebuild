@@ -118,7 +118,7 @@ async fn issue(
         model: if kind == "voice" {
             state.providers.transcription_model.to_string()
         } else {
-            state.providers.action_model.to_string()
+            state.providers.guidance_model.to_string()
         },
     })
 }

@@ -2,7 +2,7 @@ use base64::{Engine as _, engine::general_purpose::STANDARD};
 use std::{collections::HashMap, net::SocketAddr, time::Duration};
 use url::Url;
 
-pub const ACTION_MODEL: &str = "gpt-5.6-sol";
+pub const GUIDANCE_MODEL: &str = "gpt-5.6-sol";
 
 #[derive(Clone)]
 pub struct Config {
@@ -27,7 +27,7 @@ pub struct HostedConfig {
     pub refresh_ttl: Duration,
     pub openai_api_key: String,
     pub transcription_model: String,
-    pub action_model: String,
+    pub guidance_model: String,
 }
 
 impl HostedConfig {
@@ -122,7 +122,7 @@ impl HostedConfig {
             refresh_ttl: Duration::from_secs(refresh_seconds),
             openai_api_key,
             transcription_model,
-            action_model: ACTION_MODEL.to_owned(),
+            guidance_model: GUIDANCE_MODEL.to_owned(),
         })
     }
 }
@@ -263,14 +263,14 @@ mod tests {
     fn hosted_config_is_fail_closed_and_bounded() {
         let mut values = hosted_values();
         values.insert(
-            "TRO_ACTION_MODEL".into(),
+            "TRO_GUIDANCE_MODEL".into(),
             "ignored-environment-model".into(),
         );
         let config = HostedConfig::from_values(&values).unwrap();
         assert_eq!(config.access_ttl, Duration::from_secs(900));
         assert_eq!(config.refresh_ttl, Duration::from_secs(30 * 24 * 60 * 60));
         assert!(config.google_client_secret.is_none());
-        assert_eq!(config.action_model, ACTION_MODEL);
+        assert_eq!(config.guidance_model, GUIDANCE_MODEL);
 
         let mut values_with_secret = values.clone();
         values_with_secret.insert(

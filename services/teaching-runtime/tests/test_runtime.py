@@ -29,7 +29,9 @@ def initialize(runtime):
 def test_lifecycle():
     runtime = Runtime()
     assert runtime.handle(request("health"))["code"] == "NOT_READY"
-    assert initialize(runtime)["kind"] == "runtime.ready"
+    ready = initialize(runtime)
+    assert ready["kind"] == "runtime.ready"
+    assert ready["capabilities"] == ["diagnostic", "instructor_cursor"]
     assert initialize(runtime)["code"] == "BUSY"
     session = str(uuid4())
     assert runtime.handle(request("start", sessionId=session))["kind"] == "runtime.started"
@@ -53,6 +55,8 @@ def test_mismatch_and_generation():
 
 
 def test_failure_diagnostics_use_protocol_code_and_identify_safe_runtime_stage():
+    from tro_runtime.errors import GuidanceError
+
     assert safe_failure_details("runtime.prepareInstruction") == (
         "NOT_READY",
         "Selected-window observation is unavailable. Check observation permissions.",
@@ -62,6 +66,10 @@ def test_failure_diagnostics_use_protocol_code_and_identify_safe_runtime_stage()
         "The selected-window action could not start.",
     )
     assert safe_failure_details("runtime.ask")[0] == "NOT_READY"
+    assert safe_failure_details("runtime.startGuidance", GuidanceError("invalid_plan")) == (
+        "NOT_READY",
+        "The proposed guidance could not be grounded. Observe again, then replan.",
+    )
 
 
 def test_real_process_and_eof():

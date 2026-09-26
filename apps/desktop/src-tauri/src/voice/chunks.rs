@@ -58,16 +58,8 @@ impl ChunkAssembler {
         Ok(Some(self.encode(self.next_start, end, true)?))
     }
 
-    pub fn has_speech(&self) -> bool {
-        if self.samples.len() < self.samples_for_ms(120) {
-            return false;
-        }
-        let energy = self
-            .samples
-            .iter()
-            .map(|sample| i64::from(*sample).abs())
-            .sum::<i64>();
-        energy / self.samples.len() as i64 >= 96
+    pub fn has_recording(&self) -> bool {
+        self.samples.len() >= self.samples_for_ms(120)
     }
 
     pub fn clear(&mut self) {
@@ -140,14 +132,21 @@ mod tests {
         let tail = assembler.finish().unwrap().unwrap();
         assert_eq!(tail.duration_ms, 420);
         assert!(tail.final_chunk);
-        assert!(assembler.has_speech());
+        assert!(assembler.has_recording());
     }
 
     #[test]
-    fn rejects_silence_and_overlong_capture() {
+    fn accepts_valid_duration_for_provider_transcription_and_rejects_overlong_capture() {
         let mut assembler = ChunkAssembler::new(16_000).unwrap();
         assembler.push(&vec![0; 16_000]).unwrap();
-        assert!(!assembler.has_speech());
+        assert!(assembler.has_recording());
         assert!(assembler.push(&vec![0; 16_000 * 30]).is_err());
+    }
+
+    #[test]
+    fn rejects_a_capture_too_short_for_transcription() {
+        let mut assembler = ChunkAssembler::new(16_000).unwrap();
+        assembler.push(&vec![500; 16_000 / 20]).unwrap();
+        assert!(!assembler.has_recording());
     }
 }

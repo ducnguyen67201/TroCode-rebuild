@@ -11,7 +11,7 @@ use tro_api::{
         PendingWorkspaceMembershipStore, google::VerifiedGoogleIdentity, jwt::JwtService,
         sessions::SessionService,
     },
-    config::{ACTION_MODEL, HostedConfig},
+    config::{GUIDANCE_MODEL, HostedConfig},
     entities::account,
     hosted::{HostedState, router},
     workspace::WorkspaceService,
@@ -31,7 +31,7 @@ fn config() -> HostedConfig {
         refresh_ttl: Duration::from_secs(30 * 24 * 60 * 60),
         openai_api_key: "test-provider-key".to_owned(),
         transcription_model: "gpt-transcribe".to_owned(),
-        action_model: ACTION_MODEL.to_owned(),
+        guidance_model: GUIDANCE_MODEL.to_owned(),
     }
 }
 

@@ -1,6 +1,6 @@
 # Foundation navigation and clean architecture
 
-The [master specification](rebuild-architecture.md) owns product decisions and phase acceptance. P0 implements F07/F08 and C08 groundwork. P1 adds F10 visual teaching; P7-A adds the distinct F11 bounded voice/text control path. Installed acceptance remains open.
+The [master specification](rebuild-architecture.md) owns product decisions and phase acceptance. P0 implements F07/F08 and C08 groundwork. P1 adds F10 visual teaching; P7-A adds F11 push-to-talk and text-to-guidance through the same observation-only teaching path. Installed acceptance remains open.
 
 | Surface                    | Owner/entry                                                    | Dependency direction                                                                 |
 | -------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
@@ -30,7 +30,7 @@ Use meaningful names, bounded functions, early error returns and public errors t
 5. Extend the narrow desktop adapter and consuming UI if needed.
 6. Add boundary/lifecycle tests, review the complete milestone, then run the applicable verification batch.
 
-Do not import legacy orchestration or share active state with it. Do not export arbitrary process spawning, raw CUA, account tokens or model keys to React. P1/F10 keeps visual teaching read-only. P7-A/F11 may call only the closed selected-window ComputerTool adapter from Python; it cannot expose a generic native dispatcher, shell, clipboard, app launch or cross-window focus. Consequential actions require an explicit host confirmation and all interrupted work is cancelled without replay.
+Do not import legacy orchestration or share active state with it. Do not export arbitrary process spawning, raw CUA, account tokens or model keys to React. F10 and F11 are observation-only. Python exposes a closed Instructor Cursor tool list that stages validated teaching steps; it has no native input adapter. Voice/text requests converge on the same plan and overlay lifecycle. All interrupted work is cancelled without replay.
 
 Use a single npm lockfile, Cargo lockfile and Python project lockfile. Scope changed packages in CI. Generated files are committed and never hand-edited. Native worker tests also run without the desktop feature, avoiding WebView dependencies in Linux source gates.
 

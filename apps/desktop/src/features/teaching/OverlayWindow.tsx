@@ -8,6 +8,8 @@ interface Presentation {
   cue: TeachingCue;
   origin: { x: number; y: number };
   units: number;
+  stepIndex: number;
+  stepTotal: number;
 }
 function parse(value: unknown): Presentation | null {
   if (!value || typeof value !== 'object') return null;
@@ -31,6 +33,8 @@ function parse(value: unknown): Presentation | null {
     cue: state.cue,
     origin: { x: origin.x, y: origin.y },
     units: data.units,
+    stepIndex: state.journey?.index ?? 0,
+    stepTotal: state.journey?.steps.length ?? 1,
   };
 }
 export function OverlayWindow() {
@@ -38,7 +42,7 @@ export function OverlayWindow() {
   useEffect(() => {
     document.body.classList.add('overlay-page');
     let disposed = false;
-    let cleanup: (() => void) | undefined;
+    const cleanups: Array<() => void> = [];
     let expiry: ReturnType<typeof setTimeout>;
     function update(value: unknown) {
       if (disposed) return;
@@ -59,14 +63,14 @@ export function OverlayWindow() {
       (unlisten) => {
         if (disposed) unlisten();
         else {
-          cleanup = unlisten;
+          cleanups.push(unlisten);
           void invoke('overlay_current').then(update);
         }
       },
     );
     return () => {
       disposed = true;
-      cleanup?.();
+      for (const cleanup of cleanups.splice(0)) cleanup();
       clearTimeout(expiry);
     };
   }, []);
@@ -82,7 +86,12 @@ export function OverlayWindow() {
         height: `${presentation.units * 100}%`,
       }}
     >
-      <TeachingOverlay cue={presentation.cue} origin={presentation.origin} />
+      <TeachingOverlay
+        cue={presentation.cue}
+        origin={presentation.origin}
+        stepIndex={presentation.stepIndex}
+        stepTotal={presentation.stepTotal}
+      />
     </div>
   );
 }

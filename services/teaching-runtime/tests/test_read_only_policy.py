@@ -2,6 +2,7 @@ import asyncio
 import json
 import sys
 from importlib.resources import files
+from pathlib import Path
 
 import pytest
 
@@ -15,8 +16,38 @@ def test_product_ceiling_has_only_observation():
     assert manifest["resources"] == {"desktop": {"display": True}}
     assert not any(
         hasattr(CuaObservationSource, name)
-        for name in ["click", "drag", "type", "scroll", "call_tool", "launch_app", "focus_window"]
+        for name in [
+            "click",
+            "drag",
+            "type",
+            "scroll",
+            "call_tool",
+            "launch_app",
+            "focus_window",
+            "action_driver",
+        ]
     )
+
+
+def test_runtime_source_and_resources_contain_no_native_mutation_authority():
+    root = Path(__file__).parents[1] / "src" / "tro_runtime"
+    forbidden = (
+        "ComputerTool",
+        "AsyncComputer",
+        "ClickInput",
+        "DragInput",
+        "TypeTextInput",
+        "ScrollInput",
+        "PressKeyInput",
+        "MoveCursorInput",
+        "action_driver",
+        "window-control.json",
+    )
+    for path in root.rglob("*"):
+        if path.is_file() and path.suffix in {".py", ".json"}:
+            content = path.read_text(encoding="utf-8")
+            assert not any(token in content for token in forbidden), path
+    assert not (root / "resources" / "window-control.json").exists()
 
 
 @pytest.mark.skipif(

@@ -119,10 +119,9 @@ it('ignores a status response after unmount', async () => {
       phase: 'idle',
       revision: 0,
       utteranceId: null,
-      runId: null,
+      guidanceId: null,
       partialTranscript: '',
       finalTranscript: '',
-      queuedInstructions: [],
       targetTitle: null,
       message: 'Ready.',
       shortcut: 'Command+Control',
@@ -133,8 +132,6 @@ it('ignores a status response after unmount', async () => {
         ready: true,
         recovery: '',
       },
-      confirmation: null,
-      actionsUsed: 0,
     });
   });
 });

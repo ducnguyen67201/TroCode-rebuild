@@ -225,215 +225,6 @@ impl ::std::default::Default for TranscriptionLanguage {
         TranscriptionLanguage::Vi
     }
 }
-///`VoiceConfirmation`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "VoiceConfirmation",
-///  "type": "object",
-///  "required": [
-///    "confirmationId",
-///    "summary"
-///  ],
-///  "properties": {
-///    "confirmationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "summary": {
-///      "type": "string",
-///      "maxLength": 256,
-///      "minLength": 1
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct VoiceConfirmation {
-    #[serde(rename = "confirmationId")]
-    pub confirmation_id: VoiceConfirmationConfirmationId,
-    pub summary: VoiceConfirmationSummary,
-}
-impl ::std::convert::From<&VoiceConfirmation> for VoiceConfirmation {
-    fn from(value: &VoiceConfirmation) -> Self {
-        value.clone()
-    }
-}
-///`VoiceConfirmationConfirmationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct VoiceConfirmationConfirmationId(::std::string::String);
-impl ::std::ops::Deref for VoiceConfirmationConfirmationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<VoiceConfirmationConfirmationId> for ::std::string::String {
-    fn from(value: VoiceConfirmationConfirmationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&VoiceConfirmationConfirmationId>
-for VoiceConfirmationConfirmationId {
-    fn from(value: &VoiceConfirmationConfirmationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for VoiceConfirmationConfirmationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for VoiceConfirmationConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for VoiceConfirmationConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for VoiceConfirmationConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for VoiceConfirmationConfirmationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`VoiceConfirmationSummary`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "maxLength": 256,
-///  "minLength": 1
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct VoiceConfirmationSummary(::std::string::String);
-impl ::std::ops::Deref for VoiceConfirmationSummary {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<VoiceConfirmationSummary> for ::std::string::String {
-    fn from(value: VoiceConfirmationSummary) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&VoiceConfirmationSummary> for VoiceConfirmationSummary {
-    fn from(value: &VoiceConfirmationSummary) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for VoiceConfirmationSummary {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if value.chars().count() > 256usize {
-            return Err("longer than 256 characters".into());
-        }
-        if value.chars().count() < 1usize {
-            return Err("shorter than 1 characters".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for VoiceConfirmationSummary {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for VoiceConfirmationSummary {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for VoiceConfirmationSummary {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for VoiceConfirmationSummary {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
 ///`VoicePermissions`
 ///
 /// <details><summary>JSON schema</summary>
@@ -567,40 +358,29 @@ impl<'de> ::serde::Deserialize<'de> for VoicePermissionsRecovery {
 ///  "title": "VoiceStatus",
 ///  "type": "object",
 ///  "required": [
-///    "actionsUsed",
-///    "confirmation",
 ///    "finalTranscript",
+///    "guidanceId",
 ///    "message",
 ///    "partialTranscript",
 ///    "permissions",
 ///    "phase",
-///    "queuedInstructions",
 ///    "revision",
-///    "runId",
 ///    "shortcut",
 ///    "targetTitle",
 ///    "transcriptionLanguage",
 ///    "utteranceId"
 ///  ],
 ///  "properties": {
-///    "actionsUsed": {
-///      "type": "integer",
-///      "maximum": 12.0,
-///      "minimum": 0.0
-///    },
-///    "confirmation": {
-///      "anyOf": [
-///        {
-///          "$ref": "#/definitions/VoiceConfirmation"
-///        },
-///        {
-///          "type": "null"
-///        }
-///      ]
-///    },
 ///    "finalTranscript": {
 ///      "type": "string",
 ///      "maxLength": 2000
+///    },
+///    "guidanceId": {
+///      "type": [
+///        "string",
+///        "null"
+///      ],
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 ///    },
 ///    "message": {
 ///      "type": "string",
@@ -621,33 +401,17 @@ impl<'de> ::serde::Deserialize<'de> for VoicePermissionsRecovery {
 ///        "listening",
 ///        "transcribing",
 ///        "dispatching",
-///        "executing",
-///        "confirmation",
+///        "planning",
+///        "guiding",
 ///        "completed",
 ///        "cancelled",
 ///        "failed"
 ///      ]
 ///    },
-///    "queuedInstructions": {
-///      "type": "array",
-///      "items": {
-///        "type": "string",
-///        "maxLength": 2000,
-///        "minLength": 1
-///      },
-///      "maxItems": 4
-///    },
 ///    "revision": {
 ///      "type": "integer",
 ///      "maximum": 9007199254740991.0,
 ///      "minimum": 0.0
-///    },
-///    "runId": {
-///      "type": [
-///        "string",
-///        "null"
-///      ],
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 ///    },
 ///    "shortcut": {
 ///      "type": "string",
@@ -682,21 +446,16 @@ impl<'de> ::serde::Deserialize<'de> for VoicePermissionsRecovery {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct VoiceStatus {
-    #[serde(rename = "actionsUsed")]
-    pub actions_used: i64,
-    pub confirmation: ::std::option::Option<VoiceConfirmation>,
     #[serde(rename = "finalTranscript")]
     pub final_transcript: VoiceStatusFinalTranscript,
+    #[serde(rename = "guidanceId")]
+    pub guidance_id: ::std::option::Option<VoiceStatusGuidanceId>,
     pub message: VoiceStatusMessage,
     #[serde(rename = "partialTranscript")]
     pub partial_transcript: VoiceStatusPartialTranscript,
     pub permissions: VoicePermissions,
     pub phase: VoiceStatusPhase,
-    #[serde(rename = "queuedInstructions")]
-    pub queued_instructions: ::std::vec::Vec<VoiceStatusQueuedInstructionsItem>,
     pub revision: i64,
-    #[serde(rename = "runId")]
-    pub run_id: ::std::option::Option<VoiceStatusRunId>,
     pub shortcut: VoiceStatusShortcut,
     #[serde(rename = "targetTitle")]
     pub target_title: ::std::option::Option<VoiceStatusTargetTitle>,
@@ -776,6 +535,93 @@ impl ::std::convert::TryFrom<::std::string::String> for VoiceStatusFinalTranscri
     }
 }
 impl<'de> ::serde::Deserialize<'de> for VoiceStatusFinalTranscript {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`VoiceStatusGuidanceId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct VoiceStatusGuidanceId(::std::string::String);
+impl ::std::ops::Deref for VoiceStatusGuidanceId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<VoiceStatusGuidanceId> for ::std::string::String {
+    fn from(value: VoiceStatusGuidanceId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&VoiceStatusGuidanceId> for VoiceStatusGuidanceId {
+    fn from(value: &VoiceStatusGuidanceId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for VoiceStatusGuidanceId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for VoiceStatusGuidanceId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for VoiceStatusGuidanceId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for VoiceStatusGuidanceId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for VoiceStatusGuidanceId {
     fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
     where
         D: ::serde::Deserializer<'de>,
@@ -955,8 +801,8 @@ impl<'de> ::serde::Deserialize<'de> for VoiceStatusPartialTranscript {
 ///    "listening",
 ///    "transcribing",
 ///    "dispatching",
-///    "executing",
-///    "confirmation",
+///    "planning",
+///    "guiding",
 ///    "completed",
 ///    "cancelled",
 ///    "failed"
@@ -987,10 +833,10 @@ pub enum VoiceStatusPhase {
     Transcribing,
     #[serde(rename = "dispatching")]
     Dispatching,
-    #[serde(rename = "executing")]
-    Executing,
-    #[serde(rename = "confirmation")]
-    Confirmation,
+    #[serde(rename = "planning")]
+    Planning,
+    #[serde(rename = "guiding")]
+    Guiding,
     #[serde(rename = "completed")]
     Completed,
     #[serde(rename = "cancelled")]
@@ -1011,8 +857,8 @@ impl ::std::fmt::Display for VoiceStatusPhase {
             Self::Listening => f.write_str("listening"),
             Self::Transcribing => f.write_str("transcribing"),
             Self::Dispatching => f.write_str("dispatching"),
-            Self::Executing => f.write_str("executing"),
-            Self::Confirmation => f.write_str("confirmation"),
+            Self::Planning => f.write_str("planning"),
+            Self::Guiding => f.write_str("guiding"),
             Self::Completed => f.write_str("completed"),
             Self::Cancelled => f.write_str("cancelled"),
             Self::Failed => f.write_str("failed"),
@@ -1030,8 +876,8 @@ impl ::std::str::FromStr for VoiceStatusPhase {
             "listening" => Ok(Self::Listening),
             "transcribing" => Ok(Self::Transcribing),
             "dispatching" => Ok(Self::Dispatching),
-            "executing" => Ok(Self::Executing),
-            "confirmation" => Ok(Self::Confirmation),
+            "planning" => Ok(Self::Planning),
+            "guiding" => Ok(Self::Guiding),
             "completed" => Ok(Self::Completed),
             "cancelled" => Ok(Self::Cancelled),
             "failed" => Ok(Self::Failed),
@@ -1061,177 +907,6 @@ impl ::std::convert::TryFrom<::std::string::String> for VoiceStatusPhase {
         value: ::std::string::String,
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
-    }
-}
-///`VoiceStatusQueuedInstructionsItem`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "maxLength": 2000,
-///  "minLength": 1
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct VoiceStatusQueuedInstructionsItem(::std::string::String);
-impl ::std::ops::Deref for VoiceStatusQueuedInstructionsItem {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<VoiceStatusQueuedInstructionsItem> for ::std::string::String {
-    fn from(value: VoiceStatusQueuedInstructionsItem) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&VoiceStatusQueuedInstructionsItem>
-for VoiceStatusQueuedInstructionsItem {
-    fn from(value: &VoiceStatusQueuedInstructionsItem) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for VoiceStatusQueuedInstructionsItem {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if value.chars().count() > 2000usize {
-            return Err("longer than 2000 characters".into());
-        }
-        if value.chars().count() < 1usize {
-            return Err("shorter than 1 characters".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for VoiceStatusQueuedInstructionsItem {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for VoiceStatusQueuedInstructionsItem {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for VoiceStatusQueuedInstructionsItem {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for VoiceStatusQueuedInstructionsItem {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`VoiceStatusRunId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct VoiceStatusRunId(::std::string::String);
-impl ::std::ops::Deref for VoiceStatusRunId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<VoiceStatusRunId> for ::std::string::String {
-    fn from(value: VoiceStatusRunId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&VoiceStatusRunId> for VoiceStatusRunId {
-    fn from(value: &VoiceStatusRunId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for VoiceStatusRunId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for VoiceStatusRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for VoiceStatusRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for VoiceStatusRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for VoiceStatusRunId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
     }
 }
 ///`VoiceStatusShortcut`

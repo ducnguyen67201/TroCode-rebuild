@@ -1,5 +1,6 @@
 pub mod grants;
 pub mod responses;
+pub(crate) mod responses_relay;
 pub mod transcription;
 
 use reqwest::Client;
@@ -12,7 +13,8 @@ pub struct ProviderService {
     pub client: Client,
     pub api_key: Arc<str>,
     pub transcription_model: Arc<str>,
-    pub action_model: Arc<str>,
+    pub guidance_model: Arc<str>,
+    pub(crate) responses: responses_relay::ResponsesRelay,
 }
 
 impl ProviderService {
@@ -20,19 +22,26 @@ impl ProviderService {
         database: DatabaseConnection,
         api_key: String,
         transcription_model: String,
-        action_model: String,
+        guidance_model: String,
     ) -> Result<Self, &'static str> {
         let client = Client::builder()
             .timeout(Duration::from_secs(20))
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .map_err(|_| "Provider client unavailable.")?;
+        let api_key: Arc<str> = api_key.into();
+        let guidance_model: Arc<str> = guidance_model.into();
         Ok(Self {
             database,
+            responses: responses_relay::ResponsesRelay::new(
+                client.clone(),
+                api_key.clone(),
+                guidance_model.clone(),
+            ),
             client,
-            api_key: api_key.into(),
+            api_key,
             transcription_model: transcription_model.into(),
-            action_model: action_model.into(),
+            guidance_model,
         })
     }
 }

@@ -23,9 +23,9 @@
     "allow-voice-status",
     "allow-voice-enable",
     "allow-voice-disable",
+    "allow-voice-set-transcription-language",
     "allow-voice-execute-text",
     "allow-voice-cancel",
-    "allow-voice-decide",
     "allow-device-readiness",
     "allow-device-permission-request",
     "allow-device-permission-settings"

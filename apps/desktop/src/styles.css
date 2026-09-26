@@ -1613,56 +1613,11 @@ select {
   padding: 0.65rem;
   font: inherit;
 }
-.voice-transcript,
-.voice-confirmation {
+.voice-transcript {
   margin-top: 1rem;
   padding: 0.9rem;
   border-left: 4px solid #147f68;
   background: white;
-}
-.voice-queue {
-  margin-top: 1rem;
-  padding: 0.9rem;
-  border: 1px solid #bfd2c5;
-  border-radius: 12px;
-  background: #f1f8f3;
-}
-.voice-queue-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-.voice-queue-heading h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-.voice-queue-heading span {
-  min-width: 1.75rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: #163b2e;
-  color: white;
-  text-align: center;
-  font-weight: 700;
-}
-.voice-queue p {
-  margin: 0.65rem 0 0;
-  color: #466253;
-}
-.voice-queue ol {
-  margin: 0.75rem 0 0;
-  padding-left: 1.5rem;
-}
-.voice-queue li {
-  padding: 0.55rem 0.25rem;
-  border-top: 1px solid #d7e5da;
-}
-.voice-queue li:first-child {
-  border-top: 0;
-}
-.voice-confirmation {
-  border-left-color: #b16900;
 }
 .voice-error {
   color: #9b1c1c;
@@ -1810,8 +1765,11 @@ select {
 }
 .cue-target {
   stroke: #147f68;
-  stroke-width: 4px;
-  fill: #baffdd33;
+  stroke-width: 3px;
+  fill: #baffdd1f;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cue-target-reveal 240ms ease-out both;
 }
 .cue-destination {
   stroke: #147f68;
@@ -1821,14 +1779,85 @@ select {
 }
 .cue-path {
   stroke: #147f68;
-  stroke-width: 5px;
-  stroke-dasharray: 10 6;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-dasharray: 12 8;
   fill: none;
 }
-.cue-pointer {
-  fill: #fcdb66;
-  stroke: #163b2e;
-  stroke-width: 3px;
+.cue-cursor {
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+.cue-cursor-glyph {
+  fill: #7ff0bd;
+  stroke: #102c23;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px #0b2d2352);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.cursor-companion-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+.instructor-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+  filter: drop-shadow(0 3px 5px #0b2d236b);
+}
+.instructor-pointer svg {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+.instructor-pointer-glyph {
+  fill: #7ff0bd;
+  stroke: #102c23;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}
+.instructor-pointer-spark {
+  fill: #f8c748;
+  stroke: #fffdf5;
+  stroke-width: 1.5px;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: companion-spark 1.5s ease-in-out infinite;
+}
+@keyframes companion-spark {
+  50% {
+    transform: scale(1.3);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .instructor-pointer-spark {
+    animation: none;
+  }
+}
+.cue-callout rect {
+  fill: #102c23f2;
+  stroke: #eafff4;
+  stroke-width: 2px;
+  filter: drop-shadow(0 8px 14px #0006);
+}
+.cue-step-label {
+  fill: #7ff0bd;
+  font: 700 15px/1.2 system-ui;
+  letter-spacing: 0.02em;
+}
+.cue-caption {
+  fill: white;
+  font: 600 17px/1.3 system-ui;
 }
 .cue-symbol {
   font: bold 32px system-ui;
@@ -1836,8 +1865,22 @@ select {
   stroke: white;
   stroke-width: 0.5px;
 }
-.cue-pulse {
-  animation: cue-pulse 0.6s ease-in-out infinite alternate;
+.cue-symbol-demonstration {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cue-symbol-demonstration 420ms ease-out 1.65s both;
+}
+.cue-click-ripple {
+  fill: none;
+  stroke: #fcbd3f;
+  stroke-width: 3px;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cue-click-ripple 2.2s ease-out 1.65s infinite;
+}
+.cue-cursor-click {
+  animation: cue-cursor-click 2.2s ease-in-out 1.65s infinite;
 }
 .cue-preview {
   height: 320px;
@@ -1893,10 +1936,11 @@ body.voice-hud-page #root {
   animation: voice-wave 620ms ease-in-out infinite alternate;
 }
 .voice-hud-transcribing .voice-wave,
-.voice-hud-dispatching .voice-wave {
+.voice-hud-dispatching .voice-wave,
+.voice-hud-planning .voice-wave,
+.voice-hud-guiding .voice-wave {
   animation: voice-breathe 900ms ease-in-out infinite;
 }
-.voice-hud-confirmation .voice-wave i,
 .voice-hud-failed .voice-wave i {
   background: #ffc35c;
 }
@@ -2025,16 +2069,96 @@ body.permission-guide-page #root {
     transform: translate(-6px, 0);
   }
 }
-@keyframes cue-pulse {
+@keyframes cue-target-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.84);
+  }
   to {
-    opacity: 0.45;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes cue-pointer-tour {
+  0% {
+    opacity: 0.35;
+    transform: translate(0, -20px);
+  }
+  10% {
+    opacity: 1;
+  }
+  12.5% {
+    transform: translate(14px, -14px);
+  }
+  25% {
+    transform: translate(20px, 0);
+  }
+  37.5% {
+    transform: translate(14px, 14px);
+  }
+  50% {
+    transform: translate(0, 20px);
+  }
+  62.5% {
+    transform: translate(-14px, 14px);
+  }
+  75% {
+    transform: translate(-20px, 0);
+  }
+  87.5% {
+    transform: translate(-14px, -14px);
+  }
+  94% {
+    transform: translate(0, -20px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.cue-pointer-tour {
+  animation: cue-pointer-tour 1.65s linear both;
+}
+@keyframes cue-click-ripple {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.5);
+  }
+  28% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+  29%,
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+@keyframes cue-cursor-click {
+  0%,
+  20%,
+  100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(0.82);
+  }
+}
+@keyframes cue-symbol-demonstration {
+  to {
+    transform: translateY(-5px) scale(1.08);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cue-pulse,
+  .cue-pointer-tour,
+  .cue-click-ripple,
+  .cue-cursor-click,
+  .cue-symbol-demonstration,
+  .cue-target,
   .voice-hud-listening .voice-wave i,
   .voice-hud-transcribing .voice-wave,
-  .voice-hud-dispatching .voice-wave {
+  .voice-hud-dispatching .voice-wave,
+  .voice-hud-planning .voice-wave,
+  .voice-hud-guiding .voice-wave {
     animation: none;
   }
 
@@ -2044,12 +2168,42 @@ body.permission-guide-page #root {
 }
 
 .cue-drag {
-  animation: cue-drag 1.2s ease-in-out infinite;
+  animation: cue-drag 3s linear infinite;
 }
 @keyframes cue-drag {
-  70%,
-  100% {
+  0% {
+    transform: translate(0, -18px);
+  }
+  7% {
+    transform: translate(13px, -13px);
+  }
+  14% {
+    transform: translate(18px, 0);
+  }
+  21% {
+    transform: translate(13px, 13px);
+  }
+  28% {
+    transform: translate(0, 18px);
+  }
+  35% {
+    transform: translate(-13px, 13px);
+  }
+  42% {
+    transform: translate(-18px, 0);
+  }
+  49% {
+    transform: translate(-13px, -13px);
+  }
+  56% {
+    transform: translate(0, 0);
+  }
+  78%,
+  86% {
     transform: translate(var(--drag-x), var(--drag-y));
+  }
+  100% {
+    transform: translate(0, 0);
   }
 }
 @media (prefers-reduced-motion: reduce) {

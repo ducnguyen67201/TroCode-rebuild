@@ -4,7 +4,7 @@ use crate::{
 };
 use serde_json::json;
 use std::time::Duration;
-use tokio::sync::{Mutex, broadcast, watch};
+use tokio::sync::{Mutex, watch};
 use uuid::Uuid;
 
 pub struct RuntimeManager {
@@ -17,12 +17,10 @@ pub struct RuntimeManager {
     proof: std::sync::atomic::AtomicBool,
     epoch: std::sync::atomic::AtomicU64,
     bootstrap: Mutex<()>,
-    action_events: broadcast::Sender<serde_json::Value>,
 }
 impl RuntimeManager {
     pub fn new(program: WorkerProgram) -> Self {
         let (status, _) = watch::channel(Status::default());
-        let (action_events, _) = broadcast::channel(32);
         Self {
             lifecycle: Mutex::new(None),
             program,
@@ -32,7 +30,6 @@ impl RuntimeManager {
             proof: std::sync::atomic::AtomicBool::new(false),
             epoch: std::sync::atomic::AtomicU64::new(0),
             bootstrap: Mutex::new(()),
-            action_events,
         }
     }
     pub fn subscribe(&self) -> watch::Receiver<Status> {
@@ -40,9 +37,6 @@ impl RuntimeManager {
     }
     pub fn status(&self) -> Status {
         self.status.borrow().clone()
-    }
-    pub fn subscribe_action_events(&self) -> broadcast::Receiver<serde_json::Value> {
-        self.action_events.subscribe()
     }
     fn update(&self, state: &'static str, generation: Option<String>, message: &'static str) {
         self.status
@@ -76,49 +70,6 @@ impl RuntimeManager {
                     ));
                 }
                 let generation = worker.generation.to_string();
-                let mut action_events = worker.subscribe_events();
-                let event_output = self.action_events.clone();
-                let event_worker = worker.clone();
-                let event_generation = generation.clone();
-                tokio::spawn(async move {
-                    let mut revisions = std::collections::HashMap::<String, u64>::new();
-                    let mut event_ids = std::collections::HashSet::<String>::new();
-                    loop {
-                        let event = match action_events.recv().await {
-                            Ok(event) => event,
-                            Err(broadcast::error::RecvError::Closed) => break,
-                            Err(broadcast::error::RecvError::Lagged(_)) => {
-                                let _ = event_worker
-                                    .request(
-                                        "cancelAction",
-                                        json!({"runId":null}),
-                                        Duration::from_secs(1),
-                                    )
-                                    .await;
-                                break;
-                            }
-                        };
-                        let Some(run_id) = event["runId"].as_str() else {
-                            continue;
-                        };
-                        let Some(event_id) = event["eventId"].as_str() else {
-                            continue;
-                        };
-                        let Some(revision) = event["revision"].as_u64() else {
-                            continue;
-                        };
-                        if event["generationId"] != event_generation
-                            || Uuid::parse_str(run_id).is_err()
-                            || Uuid::parse_str(event_id).is_err()
-                            || !event_ids.insert(event_id.to_owned())
-                            || revisions.get(run_id).is_some_and(|seen| revision <= *seen)
-                        {
-                            continue;
-                        }
-                        revisions.insert(run_id.to_owned(), revision);
-                        let _ = event_output.send(event);
-                    }
-                });
                 let session = Uuid::new_v4().to_string();
                 if let Err(error) = worker
                     .request(
@@ -245,7 +196,7 @@ impl RuntimeManager {
         }
         Ok(result["state"].clone())
     }
-    async fn action_request(
+    async fn guidance_request(
         &self,
         kind: &str,
         payload: serde_json::Value,
@@ -262,7 +213,10 @@ impl RuntimeManager {
         if self.status().generation_id.as_deref() != Some(&generation)
             || self.status().state != "running"
         {
-            return Err(WorkerError::new("NOT_READY", "Action session was stopped."));
+            return Err(WorkerError::new(
+                "NOT_READY",
+                "Teaching session was stopped.",
+            ));
         }
         Ok(value)
     }
@@ -272,7 +226,7 @@ impl RuntimeManager {
         utterance_id: Uuid,
     ) -> Result<serde_json::Value, WorkerError> {
         let value = self
-            .action_request(
+            .guidance_request(
                 "prepareInstruction",
                 json!({"utteranceId": utterance_id}),
                 Duration::from_secs(15),
@@ -281,62 +235,44 @@ impl RuntimeManager {
         Ok(value["prepared"].clone())
     }
 
-    pub async fn execute_instruction(
+    pub async fn start_guidance(
         &self,
         utterance_id: Uuid,
         preparation_id: Uuid,
         instruction: &str,
+        locale: &str,
         model_config: serde_json::Value,
-    ) -> Result<Uuid, WorkerError> {
-        if instruction.trim().is_empty() || instruction.len() > 2_000 {
+    ) -> Result<serde_json::Value, WorkerError> {
+        if instruction.trim().is_empty()
+            || instruction.len() > 2_000
+            || !matches!(locale, "en" | "vi")
+        {
             return Err(WorkerError::new(
                 "INVALID_MESSAGE",
-                "A short instruction is required.",
+                "A short supported guidance request is required.",
             ));
         }
-        let value = self.action_request(
-            "executeInstruction",
-            json!({"utteranceId":utterance_id,"preparationId":preparation_id,"instruction":instruction,"modelConfig":model_config}),
-            Duration::from_secs(5),
-        ).await?;
-        value["runId"]
-            .as_str()
-            .and_then(|value| Uuid::parse_str(value).ok())
-            .ok_or(WorkerError::new(
-                "INVALID_MESSAGE",
-                "Runtime returned an invalid action run.",
-            ))
-    }
-
-    pub async fn decide_action(
-        &self,
-        run_id: Uuid,
-        confirmation_id: Uuid,
-        approve: bool,
-    ) -> Result<bool, WorkerError> {
-        let value = self.action_request(
-            "actionDecision",
-            json!({"runId":run_id,"confirmationId":confirmation_id,"decision":if approve {"approve"} else {"reject"}}),
-            Duration::from_secs(2),
-        ).await?;
-        value["accepted"].as_bool().ok_or(WorkerError::new(
-            "INVALID_MESSAGE",
-            "Runtime returned an invalid decision result.",
-        ))
-    }
-
-    pub async fn cancel_action(&self, run_id: Option<Uuid>) -> Result<bool, WorkerError> {
         let value = self
-            .action_request(
-                "cancelAction",
-                json!({"runId":run_id}),
-                Duration::from_secs(2),
+            .guidance_request(
+                "startGuidance",
+                json!({
+                    "utteranceId": utterance_id,
+                    "preparationId": preparation_id,
+                    "instruction": instruction,
+                    "locale": locale,
+                    "modelConfig": model_config
+                }),
+                Duration::from_secs(50),
             )
             .await?;
-        value["cancelled"].as_bool().ok_or(WorkerError::new(
-            "INVALID_MESSAGE",
-            "Runtime returned an invalid cancellation result.",
-        ))
+        let state = value["state"].clone();
+        if !state.is_object() {
+            return Err(WorkerError::new(
+                "INVALID_MESSAGE",
+                "Runtime returned an invalid teaching state.",
+            ));
+        }
+        Ok(state)
     }
     pub async fn health(&self) -> Result<Status, WorkerError> {
         let worker = self

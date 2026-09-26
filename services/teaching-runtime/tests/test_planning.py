@@ -68,6 +68,17 @@ def test_stale_partial_and_duplicate_evidence_cannot_advance():
     assert progress.status == "completed"
 
 
+def test_partial_accessibility_can_present_but_never_confirm_progress():
+    progress = PlanProgress(TeachingPlan(steps=[step()]), "en", fresh())
+
+    assert progress.observe(fresh(complete=False)) is not None
+    assert progress.status == "awaiting_confirmation"
+    assert progress.observe(fresh("1", complete=False)) is not None
+    assert progress.observe(fresh("1", complete=False)) is not None
+    assert progress.index == 0
+    assert progress.status == "awaiting_confirmation"
+
+
 def test_rebinds_semantic_target_and_rejects_ambiguity_or_wrong_window():
     progress = PlanProgress(TeachingPlan(steps=[step()]), "en", fresh())
     item = fresh()
@@ -75,9 +86,11 @@ def test_rebinds_semantic_target_and_rejects_ambiguity_or_wrong_window():
     assert progress.observe(renamed).element_id == "new-id"
     duplicate = fresh()
     assert progress.observe(replace(duplicate, elements=duplicate.elements * 2)) is None
+    assert progress.grounding == "target_ambiguous"
     wrong = fresh()
     assert progress.observe(replace(wrong, target=replace(wrong.target, pid=99))) is None
     assert progress.status == "paused"
+    assert progress.grounding == "window_changed"
 
 
 def test_pause_resume_and_missing_target_do_not_skip_steps():
@@ -91,6 +104,7 @@ def test_pause_resume_and_missing_target_do_not_skip_steps():
     progress.started -= 11
     progress.observe(replace(fresh(), elements=()))
     assert progress.status == "paused"
+    assert progress.grounding == "target_missing"
 
 
 @pytest.mark.parametrize(

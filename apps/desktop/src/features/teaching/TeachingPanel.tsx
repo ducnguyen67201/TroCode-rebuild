@@ -203,6 +203,16 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
             ))}
           </ol>
           <p role="status">{state.journey.message}</p>
+          {client.preview && state.cue && (
+            <div className="cue-preview">
+              <TeachingOverlay
+                cue={state.cue}
+                origin={state.target?.bounds}
+                stepIndex={state.journey.index}
+                stepTotal={state.journey.steps.length}
+              />
+            </div>
+          )}
           {teaching.planControl && state.journey.status !== 'completed' && (
             <button
               disabled={busy}

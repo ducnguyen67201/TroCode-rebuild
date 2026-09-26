@@ -169,10 +169,9 @@ describe('wire conformance', () => {
       phase: 'idle',
       revision: 2,
       utteranceId: null,
-      runId: null,
+      guidanceId: null,
       partialTranscript: '',
       finalTranscript: '',
-      queuedInstructions: [],
       targetTitle: null,
       message: 'Ready.',
       shortcut: 'Command+Control',
@@ -183,8 +182,6 @@ describe('wire conformance', () => {
         ready: true,
         recovery: '',
       },
-      confirmation: null,
-      actionsUsed: 0,
     };
     expect(parseVoiceStatus(value)).toEqual(value);
     const missingLanguage: Record<string, unknown> = { ...value };
@@ -196,6 +193,12 @@ describe('wire conformance', () => {
       parseVoiceStatus({ ...value, transcriptionLanguage: 'fr' }),
     ).toThrow('Invalid voice status');
     expect(() => parseVoiceStatus({ ...value, audio: 'bytes' })).toThrow(
+      'Invalid voice status',
+    );
+    expect(() =>
+      parseVoiceStatus({ ...value, confirmation: { id: 'old' } }),
+    ).toThrow('Invalid voice status');
+    expect(() => parseVoiceStatus({ ...value, actionsUsed: 1 })).toThrow(
       'Invalid voice status',
     );
   });
