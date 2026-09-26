@@ -5,7 +5,9 @@ use time::OffsetDateTime;
 use tro_api::{
     auth::WorkspaceMembershipStore,
     entities::{account, workspace, workspace_audit_event, workspace_membership},
-    workspace::WorkspaceService,
+    workspace::{
+        LocalDevelopmentWorkspaceSeed, WorkspaceService, seed_local_development_workspace,
+    },
 };
 use uuid::Uuid;
 
@@ -209,6 +211,110 @@ async fn owner_add_claim_remove_is_exact_idempotent_and_audited() {
         .unwrap();
     account::Entity::delete_many()
         .filter(account::Column::Id.is_in([owner_id, learner_id]))
+        .exec(&database)
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+#[ignore = "requires the isolated PostgreSQL fixture; npm run test:integration"]
+async fn local_development_seed_is_idempotent_and_claims_after_login() {
+    let fixture = tro_api::config::Config::from_env().unwrap();
+    let database = tro_api::persistence::connect(&fixture.database_url)
+        .await
+        .unwrap();
+    tro_api_migration::migrate(&database).await.unwrap();
+
+    let owner_id = Uuid::new_v4();
+    let owner_membership_id = Uuid::new_v4();
+    let workspace_id = Uuid::new_v4();
+    let member_id = Uuid::new_v4();
+    let member_email = format!("{}@example.com", Uuid::new_v4().simple());
+    let workspace_name = format!("Local workspace {}", workspace_id.simple());
+    let seed = || LocalDevelopmentWorkspaceSeed {
+        owner_account_id: owner_id,
+        owner_membership_id,
+        workspace_id,
+        workspace_name: &workspace_name,
+        member_email: &member_email,
+    };
+
+    seed_local_development_workspace(&database, seed())
+        .await
+        .unwrap();
+    seed_local_development_workspace(&database, seed())
+        .await
+        .unwrap();
+    let pending = workspace_membership::Entity::find()
+        .filter(workspace_membership::Column::WorkspaceId.eq(workspace_id))
+        .filter(workspace_membership::Column::EmailNormalized.eq(&member_email))
+        .one(&database)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(pending.role, "teacher");
+    assert!(pending.account_id.is_none());
+
+    let now = OffsetDateTime::now_utc();
+    account::ActiveModel {
+        id: Set(member_id),
+        display_name: Set("Local Member".to_owned()),
+        verified_email: Set(member_email.clone()),
+        email_normalized: Set(member_email.clone()),
+        status: Set("active".to_owned()),
+        created_at: Set(now),
+        updated_at: Set(now),
+    }
+    .insert(&database)
+    .await
+    .unwrap();
+
+    seed_local_development_workspace(&database, seed())
+        .await
+        .unwrap();
+    seed_local_development_workspace(&database, seed())
+        .await
+        .unwrap();
+    let claimed = workspace_membership::Entity::find_by_id(pending.id)
+        .one(&database)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(claimed.account_id, Some(member_id));
+    assert!(claimed.joined_at.is_some());
+    assert_eq!(
+        workspace_membership::Entity::find()
+            .filter(workspace_membership::Column::WorkspaceId.eq(workspace_id))
+            .count(&database)
+            .await
+            .unwrap(),
+        2,
+    );
+    assert_eq!(
+        workspace_audit_event::Entity::find()
+            .filter(workspace_audit_event::Column::WorkspaceId.eq(workspace_id))
+            .count(&database)
+            .await
+            .unwrap(),
+        2,
+    );
+
+    workspace_audit_event::Entity::delete_many()
+        .filter(workspace_audit_event::Column::WorkspaceId.eq(workspace_id))
+        .exec(&database)
+        .await
+        .unwrap();
+    workspace_membership::Entity::delete_many()
+        .filter(workspace_membership::Column::WorkspaceId.eq(workspace_id))
+        .exec(&database)
+        .await
+        .unwrap();
+    workspace::Entity::delete_by_id(workspace_id)
+        .exec(&database)
+        .await
+        .unwrap();
+    account::Entity::delete_many()
+        .filter(account::Column::Id.is_in([owner_id, member_id]))
         .exec(&database)
         .await
         .unwrap();

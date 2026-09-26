@@ -110,6 +110,7 @@ describe('wire conformance', () => {
       runId: null,
       partialTranscript: '',
       finalTranscript: '',
+      queuedInstructions: [],
       targetTitle: null,
       message: 'Ready.',
       shortcut: 'Command+Control',

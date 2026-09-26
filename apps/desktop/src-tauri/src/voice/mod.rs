@@ -4,6 +4,8 @@ pub mod chunks;
 pub mod transcript;
 
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "desktop")]
+use std::collections::VecDeque;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -38,6 +40,7 @@ pub struct VoiceStatus {
     pub run_id: Option<String>,
     pub partial_transcript: String,
     pub final_transcript: String,
+    pub queued_instructions: Vec<String>,
     pub target_title: Option<String>,
     pub message: String,
     pub shortcut: String,
@@ -55,6 +58,7 @@ impl Default for VoiceStatus {
             run_id: None,
             partial_transcript: String::new(),
             final_transcript: String::new(),
+            queued_instructions: Vec::new(),
             target_title: None,
             message: "Enable voice control to use push-to-talk.".into(),
             shortcut: if cfg!(target_os = "macos") {
@@ -82,6 +86,10 @@ pub struct VoiceManager {
     manual_disable: AtomicBool,
     #[cfg(feature = "desktop")]
     capture: Mutex<Option<ActiveCapture>>,
+    #[cfg(feature = "desktop")]
+    actions: Mutex<ActionState>,
+    #[cfg(feature = "desktop")]
+    dispatch: Mutex<()>,
 }
 
 #[cfg(any(feature = "desktop", test))]
@@ -105,6 +113,73 @@ struct ActiveCapture {
     task: tokio::task::JoinHandle<()>,
 }
 
+#[cfg(feature = "desktop")]
+const MAX_QUEUED_INSTRUCTIONS: usize = 4;
+
+#[cfg(feature = "desktop")]
+struct QueuedInstruction {
+    utterance_id: Uuid,
+    instruction: String,
+    expected_target: Option<TargetIdentity>,
+}
+
+#[cfg(feature = "desktop")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct TargetIdentity {
+    pid: i64,
+    window_id: i64,
+}
+
+#[cfg(feature = "desktop")]
+impl TargetIdentity {
+    fn from_prepared(prepared: &serde_json::Value) -> Option<Self> {
+        Some(Self {
+            pid: prepared["target"]["pid"].as_i64()?,
+            window_id: prepared["target"]["window_id"].as_i64()?,
+        })
+    }
+}
+
+#[cfg(feature = "desktop")]
+#[derive(Default)]
+struct ActionState {
+    run_id: Option<Uuid>,
+    phase: String,
+    target: Option<TargetIdentity>,
+    queued: VecDeque<QueuedInstruction>,
+}
+
+#[cfg(feature = "desktop")]
+impl ActionState {
+    fn enqueue(
+        &mut self,
+        instruction: QueuedInstruction,
+    ) -> Result<usize, crate::worker::WorkerError> {
+        if self.queued.len() >= MAX_QUEUED_INSTRUCTIONS {
+            return Err(crate::worker::WorkerError::new(
+                "BUSY",
+                "The follow-up queue is full. Wait for an instruction to finish.",
+            ));
+        }
+        self.queued.push_back(instruction);
+        Ok(self.queued.len())
+    }
+
+    fn queue_projection(&self) -> Vec<String> {
+        self.queued
+            .iter()
+            .map(|item| item.instruction.clone())
+            .collect()
+    }
+}
+
+#[cfg(feature = "desktop")]
+struct PreparedDispatch {
+    prepared: serde_json::Value,
+    grant: crate::auth::api_client::ProviderGrant,
+    origin: String,
+}
+
 impl Default for VoiceManager {
     fn default() -> Self {
         let (status, _) = watch::channel(VoiceStatus::default());
@@ -113,6 +188,10 @@ impl Default for VoiceManager {
             manual_disable: AtomicBool::new(false),
             #[cfg(feature = "desktop")]
             capture: Mutex::new(None),
+            #[cfg(feature = "desktop")]
+            actions: Mutex::new(ActionState::default()),
+            #[cfg(feature = "desktop")]
+            dispatch: Mutex::new(()),
         }
     }
 }
@@ -162,10 +241,11 @@ impl VoiceManager {
         });
     }
 
-    pub fn begin_listening(&self) -> Result<Uuid, crate::worker::WorkerError> {
+    #[cfg(feature = "desktop")]
+    fn begin_listening(&self, follow_up: bool) -> Result<Uuid, crate::worker::WorkerError> {
         if !matches!(
             self.status.borrow().phase.as_str(),
-            "idle" | "completed" | "cancelled" | "failed"
+            "idle" | "completed" | "cancelled" | "failed" | "executing"
         ) || !self.status.borrow().permissions.ready
         {
             return Err(crate::worker::WorkerError::new(
@@ -178,12 +258,20 @@ impl VoiceManager {
             status.revision += 1;
             status.phase = "listening".into();
             status.utterance_id = Some(id.to_string());
-            status.run_id = None;
+            if !follow_up {
+                status.run_id = None;
+            }
             status.partial_transcript.clear();
             status.final_transcript.clear();
             status.confirmation = None;
-            status.actions_used = 0;
-            status.message = "Listening…".into();
+            if !follow_up {
+                status.actions_used = 0;
+            }
+            status.message = if follow_up {
+                "Listening for a follow-up…".into()
+            } else {
+                "Listening…".into()
+            };
         });
         Ok(id)
     }
@@ -196,13 +284,22 @@ impl VoiceManager {
             }
             active.task.abort();
         }
+        #[cfg(feature = "desktop")]
+        let run_id = {
+            let mut actions = self.actions.lock().await;
+            actions.queued.clear();
+            actions.phase.clear();
+            actions.target = None;
+            actions.run_id.take()
+        };
+        #[cfg(not(feature = "desktop"))]
+        let run_id = self
+            .status
+            .borrow()
+            .run_id
+            .as_deref()
+            .and_then(|value| Uuid::parse_str(value).ok());
         if let Some(runtime) = runtime {
-            let run_id = self
-                .status
-                .borrow()
-                .run_id
-                .as_deref()
-                .and_then(|value| Uuid::parse_str(value).ok());
             let _ = runtime.cancel_action(run_id).await;
         }
         if self.status.borrow().phase != "disabled" {
@@ -211,6 +308,7 @@ impl VoiceManager {
                 status.phase = "cancelled".into();
                 status.message = "Voice instruction cancelled.".into();
                 status.confirmation = None;
+                status.queued_instructions.clear();
             });
         }
         self.status()
@@ -235,6 +333,7 @@ impl VoiceManager {
             status.run_id = None;
             status.partial_transcript.clear();
             status.final_transcript.clear();
+            status.queued_instructions.clear();
             status.target_title = None;
             status.confirmation = None;
             status.message = message.into();
@@ -271,6 +370,7 @@ impl VoiceManager {
             status.utterance_id = Some(utterance_id.to_string());
             status.partial_transcript.clear();
             status.final_transcript = instruction.clone();
+            status.queued_instructions.clear();
             status.message = "Preparing the selected window…".into();
         });
         let (prepared, grant) = tokio::join!(
@@ -287,6 +387,12 @@ impl VoiceManager {
                 "Runtime returned an invalid preparation.",
             ))?;
         let target_title = prepared["target"]["title"].as_str().map(str::to_owned);
+        #[cfg(feature = "desktop")]
+        let target =
+            TargetIdentity::from_prepared(&prepared).ok_or(crate::worker::WorkerError::new(
+                "INVALID_MESSAGE",
+                "Runtime returned an invalid selected window.",
+            ))?;
         let run_id = runtime
             .execute_instruction(
                 utterance_id,
@@ -295,6 +401,13 @@ impl VoiceManager {
                 serde_json::json!({"origin":origin,"grant":grant.grant,"model":grant.model}),
             )
             .await?;
+        #[cfg(feature = "desktop")]
+        {
+            let mut actions = self.actions.lock().await;
+            actions.run_id = Some(run_id);
+            actions.phase = "executing".into();
+            actions.target = Some(target);
+        }
         self.status.send_modify(|status| {
             status.revision += 1;
             status.phase = "executing".into();
@@ -305,33 +418,265 @@ impl VoiceManager {
         Ok(self.status())
     }
 
-    pub fn apply_action_event(&self, event: &serde_json::Value) {
+    #[cfg(feature = "desktop")]
+    async fn dispatch_instruction_locked(
+        &self,
+        queued: QueuedInstruction,
+        prefetched: Option<PreparedDispatch>,
+        runtime: Arc<crate::manager::RuntimeManager>,
+        auth: Arc<crate::auth::AuthManager>,
+    ) -> Result<(), crate::worker::WorkerError> {
+        let queued_projection = self.actions.lock().await.queue_projection();
+        self.status.send_modify(|status| {
+            status.revision += 1;
+            status.phase = "dispatching".into();
+            status.utterance_id = Some(queued.utterance_id.to_string());
+            status.run_id = None;
+            status.partial_transcript.clear();
+            status.final_transcript = queued.instruction.clone();
+            status.queued_instructions = queued_projection.clone();
+            status.target_title = None;
+            status.confirmation = None;
+            status.actions_used = 0;
+            status.message = "Preparing the selected window…".into();
+        });
+        runtime.start().await?;
+        let dispatch = match prefetched {
+            Some(value) => value,
+            None => {
+                let (prepared, grant) = tokio::join!(
+                    runtime.prepare_instruction(queued.utterance_id),
+                    auth.provider_grant(queued.utterance_id, false),
+                );
+                let (grant, origin) = grant?;
+                PreparedDispatch {
+                    prepared: prepared?,
+                    grant,
+                    origin,
+                }
+            }
+        };
+        let preparation_id = dispatch.prepared["preparationId"]
+            .as_str()
+            .and_then(|value| Uuid::parse_str(value).ok())
+            .ok_or(crate::worker::WorkerError::new(
+                "INVALID_MESSAGE",
+                "Runtime returned an invalid preparation.",
+            ))?;
+        let target = TargetIdentity::from_prepared(&dispatch.prepared).ok_or(
+            crate::worker::WorkerError::new(
+                "INVALID_MESSAGE",
+                "Runtime returned an invalid selected window.",
+            ),
+        )?;
+        if queued
+            .expected_target
+            .is_some_and(|expected| expected != target)
+        {
+            return Err(crate::worker::WorkerError::new(
+                "NOT_READY",
+                "The selected window changed. Repeat the follow-up.",
+            ));
+        }
+        let target_title = dispatch.prepared["target"]["title"]
+            .as_str()
+            .map(str::to_owned);
+        let run_id = runtime
+            .execute_instruction(
+                queued.utterance_id,
+                preparation_id,
+                &queued.instruction,
+                serde_json::json!({
+                    "origin": dispatch.origin,
+                    "grant": dispatch.grant.grant,
+                    "model": dispatch.grant.model,
+                }),
+            )
+            .await?;
+        {
+            let mut actions = self.actions.lock().await;
+            actions.run_id = Some(run_id);
+            actions.phase = "executing".into();
+            actions.target = Some(target);
+        }
+        self.status.send_modify(|status| {
+            status.revision += 1;
+            status.phase = "executing".into();
+            status.run_id = Some(run_id.to_string());
+            status.target_title = target_title;
+            status.message = "Working in the selected window…".into();
+        });
+        Ok(())
+    }
+
+    #[cfg(feature = "desktop")]
+    async fn submit_instruction(
+        &self,
+        queued: QueuedInstruction,
+        prefetched: Option<PreparedDispatch>,
+        runtime: Arc<crate::manager::RuntimeManager>,
+        auth: Arc<crate::auth::AuthManager>,
+    ) -> Result<(), crate::worker::WorkerError> {
+        if self.status.borrow().phase == "disabled" {
+            return Err(crate::worker::WorkerError::new(
+                "NOT_READY",
+                "Voice control is disabled.",
+            ));
+        }
+        let _dispatch = self.dispatch.lock().await;
+        let submitted_id = queued.utterance_id;
+        let (active_run, active_phase, queued_projection) = {
+            let mut actions = self.actions.lock().await;
+            actions.enqueue(queued)?;
+            (
+                actions.run_id,
+                actions.phase.clone(),
+                actions.queue_projection(),
+            )
+        };
+        if let Some(run_id) = active_run {
+            let waiting = queued_projection.len();
+            self.status.send_modify(|status| {
+                status.revision += 1;
+                status.phase = if active_phase == "confirmation" {
+                    "confirmation"
+                } else {
+                    "executing"
+                }
+                .into();
+                status.run_id = Some(run_id.to_string());
+                status.queued_instructions = queued_projection.clone();
+                status.message = format!(
+                    "Working on the current instruction. {waiting} follow-up{} queued.",
+                    if waiting == 1 { "" } else { "s" }
+                );
+            });
+            return Ok(());
+        }
+        let next = self
+            .actions
+            .lock()
+            .await
+            .queued
+            .pop_front()
+            .expect("the submitted instruction is queued");
+        let prefetched = (next.utterance_id == submitted_id)
+            .then_some(prefetched)
+            .flatten();
+        self.dispatch_instruction_locked(next, prefetched, runtime, auth)
+            .await
+    }
+
+    #[cfg(feature = "desktop")]
+    async fn fail_dispatch(&self, error: &crate::worker::WorkerError) {
+        let mut actions = self.actions.lock().await;
+        actions.run_id = None;
+        actions.phase.clear();
+        actions.target = None;
+        actions.queued.clear();
+        drop(actions);
+        self.status.send_modify(|status| {
+            status.revision += 1;
+            status.phase = "failed".into();
+            status.run_id = None;
+            status.message = error.message.into();
+            status.confirmation = None;
+            status.queued_instructions.clear();
+        });
+    }
+
+    #[cfg(feature = "desktop")]
+    async fn resume_queue(
+        &self,
+        runtime: Arc<crate::manager::RuntimeManager>,
+        auth: Arc<crate::auth::AuthManager>,
+    ) {
+        let _dispatch = self.dispatch.lock().await;
+        if self.status.borrow().phase == "disabled" {
+            self.actions.lock().await.queued.clear();
+            return;
+        }
+        let next = {
+            let mut actions = self.actions.lock().await;
+            if actions.run_id.is_some() {
+                return;
+            }
+            actions.queued.pop_front()
+        };
+        if let Some(next) = next
+            && let Err(error) = self
+                .dispatch_instruction_locked(next, None, runtime, auth)
+                .await
+        {
+            #[cfg(debug_assertions)]
+            eprintln!(
+                "tro diagnostic: queued_instruction_failed code={} message={}",
+                error.code, error.message
+            );
+            self.fail_dispatch(&error).await;
+        }
+    }
+
+    #[cfg(feature = "desktop")]
+    pub async fn apply_action_event(
+        self: &Arc<Self>,
+        event: &serde_json::Value,
+        runtime: Arc<crate::manager::RuntimeManager>,
+        auth: Arc<crate::auth::AuthManager>,
+    ) {
+        if self.status.borrow().phase == "disabled" {
+            return;
+        }
         let Some(run_id) = event["runId"].as_str() else {
             return;
         };
-        if self.status.borrow().run_id.as_deref() != Some(run_id) {
+        let Ok(parsed_run_id) = Uuid::parse_str(run_id) else {
+            return;
+        };
+        let phase = event["phase"].as_str().unwrap_or("failed");
+        let terminal = matches!(phase, "completed" | "cancelled" | "failed");
+        let _dispatch = if terminal {
+            Some(self.dispatch.lock().await)
+        } else {
+            None
+        };
+        {
+            let mut actions = self.actions.lock().await;
+            if actions.run_id != Some(parsed_run_id) {
+                return;
+            }
+            actions.phase = phase.to_owned();
+            if terminal {
+                actions.run_id = None;
+            }
+        }
+        let capture_active = self.capture.lock().await.is_some();
+        if !capture_active || phase == "confirmation" {
+            self.status.send_modify(|status| {
+                status.revision += 1;
+                status.phase = phase.to_owned();
+                status.actions_used = event["actionsUsed"].as_u64().unwrap_or(0).min(12) as u8;
+                status.message = event["summary"]
+                    .as_str()
+                    .unwrap_or("Action status changed.")
+                    .to_owned();
+                status.confirmation = match (
+                    event["confirmationId"].as_str(),
+                    event["confirmationReason"].as_str(),
+                ) {
+                    (Some(id), Some(summary)) => Some(VoiceConfirmation {
+                        confirmation_id: id.to_owned(),
+                        summary: summary.to_owned(),
+                    }),
+                    _ => None,
+                };
+            });
+        }
+        if !terminal || capture_active {
             return;
         }
-        let phase = event["phase"].as_str().unwrap_or("failed");
-        self.status.send_modify(|status| {
-            status.revision += 1;
-            status.phase = phase.to_owned();
-            status.actions_used = event["actionsUsed"].as_u64().unwrap_or(0).min(12) as u8;
-            status.message = event["summary"]
-                .as_str()
-                .unwrap_or("Action status changed.")
-                .to_owned();
-            status.confirmation = match (
-                event["confirmationId"].as_str(),
-                event["confirmationReason"].as_str(),
-            ) {
-                (Some(id), Some(summary)) => Some(VoiceConfirmation {
-                    confirmation_id: id.to_owned(),
-                    summary: summary.to_owned(),
-                }),
-                _ => None,
-            };
-        });
+        drop(_dispatch);
+        self.resume_queue(runtime, auth).await;
     }
 
     #[cfg(feature = "desktop")]
@@ -343,27 +688,23 @@ impl VoiceManager {
         if self.capture.lock().await.is_some() {
             return Ok(());
         }
-        let utterance_id = self.begin_listening()?;
+        let follow_up_target = {
+            let actions = self.actions.lock().await;
+            actions.run_id.and(actions.target)
+        };
+        let follow_up = follow_up_target.is_some();
+        let utterance_id = self.begin_listening(follow_up)?;
         let mut microphone = audio::MicrophoneCapture::start().map_err(|_| {
             crate::worker::WorkerError::new(
                 "VOICE_PERMISSION_REQUIRED",
                 "Microphone access is required.",
             )
         })?;
-        runtime.start().await?;
         let sample_rate = microphone.sample_rate;
         let (release, mut released) = oneshot::channel();
         let manager = self.clone();
         let task = tokio::spawn(async move {
-            let (prepared, voice_grant, action_grant) = tokio::join!(
-                runtime.prepare_instruction(utterance_id),
-                auth.provider_grant(utterance_id, true),
-                auth.provider_grant(utterance_id, false),
-            );
             let outcome = async {
-                let prepared = prepared?;
-                let (voice_grant, _) = voice_grant?;
-                let (action_grant, origin) = action_grant?;
                 let mut chunks = chunks::ChunkAssembler::new(sample_rate).map_err(|_| crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone format is unavailable."))?;
                 let mut transcript = transcript::TranscriptAssembler::default();
                 let mut expected = 0_u32;
@@ -371,30 +712,75 @@ impl VoiceManager {
                     std::collections::VecDeque::<chunks::WavChunk>::new();
                 let mut uploads = tokio::task::JoinSet::new();
                 let mut release_seen = false;
-                loop {
-                    while uploads.len() < transcript::MAX_IN_FLIGHT
-                        && let Some(chunk) = pending.pop_front()
-                    {
-                        let auth = auth.clone();
-                        let grant = voice_grant.grant.clone();
-                        let prompt = transcript.prompt_tail();
-                        uploads.spawn(async move {
-                            auth.transcribe(
-                                &grant,
-                                chunk.sequence,
-                                chunk.duration_ms,
-                                chunk.final_chunk,
-                                &prompt,
-                                chunk.bytes,
-                            )
-                            .await
-                        });
+                let preparation_runtime = runtime.clone();
+                let preparation_auth = auth.clone();
+                let preparation = async move {
+                    preparation_runtime.start().await?;
+                    if follow_up {
+                        let (voice_grant, _) = preparation_auth
+                            .provider_grant(utterance_id, true)
+                            .await?;
+                        Ok::<_, crate::worker::WorkerError>((voice_grant, None))
+                    } else {
+                        let (prepared, voice_grant, action_grant) = tokio::join!(
+                            preparation_runtime.prepare_instruction(utterance_id),
+                            preparation_auth.provider_grant(utterance_id, true),
+                            preparation_auth.provider_grant(utterance_id, false),
+                        );
+                        let (voice_grant, _) = voice_grant?;
+                        let (action_grant, origin) = action_grant?;
+                        Ok((
+                            voice_grant,
+                            Some(PreparedDispatch {
+                                prepared: prepared?,
+                                grant: action_grant,
+                                origin,
+                            }),
+                        ))
                     }
-                    if release_seen && pending.is_empty() && uploads.is_empty() {
+                };
+                tokio::pin!(preparation);
+                let mut preparation_complete = false;
+                let mut voice_grant: Option<crate::auth::api_client::ProviderGrant> = None;
+                let mut prefetched: Option<PreparedDispatch> = None;
+                loop {
+                    if let Some(voice_grant) = voice_grant.as_ref() {
+                        while uploads.len() < transcript::MAX_IN_FLIGHT
+                            && let Some(chunk) = pending.pop_front()
+                        {
+                            let auth = auth.clone();
+                            let grant = voice_grant.grant.clone();
+                            let prompt = transcript.prompt_tail();
+                            uploads.spawn(async move {
+                                auth.transcribe(
+                                    &grant,
+                                    chunk.sequence,
+                                    chunk.duration_ms,
+                                    chunk.final_chunk,
+                                    &prompt,
+                                    chunk.bytes,
+                                )
+                                .await
+                            });
+                        }
+                    }
+                    if release_seen
+                        && preparation_complete
+                        && pending.is_empty()
+                        && uploads.is_empty()
+                    {
                         break;
                     }
                     tokio::select! {
                         biased;
+                        result = &mut preparation, if !preparation_complete => {
+                            let (voice_grant_value, prefetched_value) = result?;
+                            preparation_complete = true;
+                            voice_grant = Some(voice_grant_value);
+                            prefetched = prefetched_value;
+                            #[cfg(debug_assertions)]
+                            eprintln!("tro diagnostic: voice_preparation_ready follow_up={follow_up} release_seen={release_seen}");
+                        }
                         result = uploads.join_next(), if !uploads.is_empty() => {
                             let Some(result) = result else { continue; };
                             let response = result
@@ -411,43 +797,85 @@ impl VoiceManager {
                                     pending.push_back(chunk);
                                 }
                             }
-                            if microphone.failed.load(std::sync::atomic::Ordering::Acquire) { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone capture stopped.")); }
+                            microphone.stop();
+                            while let Ok(value) = microphone.samples.try_recv() {
+                                for chunk in chunks.push(&value).map_err(|_| crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Voice instruction is too long."))? {
+                                    expected += 1;
+                                    pending.push_back(chunk);
+                                }
+                            }
+                            if let Some(message) = microphone.failure_message() { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", message)); }
                             if !chunks.has_speech() { return Err(crate::worker::WorkerError::new("NO_SPEECH", "No speech was detected.")); }
                             if let Some(chunk) = chunks.finish().map_err(|_| crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription is unavailable."))? {
                                 expected += 1;
                                 pending.push_back(chunk);
                             }
-                            if pending.len() > 1 { return Err(crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription could not keep up. Retry.")); }
                         }
                         value = microphone.samples.recv(), if !release_seen => {
                             let Some(value) = value else { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone capture stopped.")); };
-                            if microphone.failed.load(std::sync::atomic::Ordering::Acquire) { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone capture stopped.")); }
+                            if let Some(message) = microphone.failure_message() { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", message)); }
                             for chunk in chunks.push(&value).map_err(|_| crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Voice instruction is too long."))? {
                                 expected += 1;
                                 pending.push_back(chunk);
                             }
-                            if pending.len() > 1 { return Err(crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription could not keep up. Retry.")); }
                         }
                     }
                 }
                 let final_text = transcript.finish(expected).map_err(|_| crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription is incomplete. Retry."))?;
-                manager.status.send_modify(|status| { status.revision += 1; status.phase = "dispatching".into(); status.final_transcript = final_text.clone(); status.message = "Starting the selected-window action…".into(); });
-                let preparation_id = prepared["preparationId"].as_str().and_then(|value| Uuid::parse_str(value).ok()).ok_or(crate::worker::WorkerError::new("INVALID_MESSAGE", "Runtime returned an invalid preparation."))?;
-                let run_id = runtime.execute_instruction(utterance_id, preparation_id, &final_text, serde_json::json!({"origin":origin,"grant":action_grant.grant,"model":action_grant.model})).await?;
-                manager.status.send_modify(|status| { status.revision += 1; status.phase = "executing".into(); status.run_id = Some(run_id.to_string()); status.target_title = prepared["target"]["title"].as_str().map(str::to_owned); status.message = "Working in the selected window…".into(); });
+                manager.status.send_modify(|status| {
+                    status.revision += 1;
+                    status.final_transcript = final_text.clone();
+                    status.message = if follow_up {
+                        "Adding the follow-up to the queue…".into()
+                    } else {
+                        "Starting the selected-window action…".into()
+                    };
+                });
+                manager
+                    .submit_instruction(
+                        QueuedInstruction {
+                            utterance_id,
+                            instruction: final_text,
+                            expected_target: follow_up_target,
+                        },
+                        prefetched,
+                        runtime.clone(),
+                        auth.clone(),
+                    )
+                    .await?;
                 Ok::<(), crate::worker::WorkerError>(())
             }.await;
             if let Err(error) = outcome {
                 #[cfg(debug_assertions)]
-                eprintln!("tro diagnostic: voice_capture_failed code={}", error.code);
+                eprintln!(
+                    "tro diagnostic: voice_capture_failed code={} message={}",
+                    error.code, error.message
+                );
+                let (active_run, active_phase) = {
+                    let actions = manager.actions.lock().await;
+                    (actions.run_id, actions.phase.clone())
+                };
                 manager.status.send_modify(|status| {
                     status.revision += 1;
-                    status.phase = "failed".into();
-                    status.message = error.message.into();
-                    status.confirmation = None;
+                    if let Some(run_id) = active_run {
+                        status.phase = if active_phase == "confirmation" {
+                            "confirmation"
+                        } else {
+                            "executing"
+                        }
+                        .into();
+                        status.run_id = Some(run_id.to_string());
+                        status.message = format!("Follow-up was not queued: {}", error.message);
+                    } else {
+                        status.phase = "failed".into();
+                        status.run_id = None;
+                        status.message = error.message.into();
+                        status.confirmation = None;
+                    }
                 });
             }
             manager.capture.lock().await.take();
+            manager.resume_queue(runtime, auth).await;
         });
         *self.capture.lock().await = Some(ActiveCapture {
             release: Some(release),
@@ -468,7 +896,11 @@ impl VoiceManager {
 
 #[cfg(test)]
 mod auto_arm_tests {
+    #[cfg(feature = "desktop")]
+    use super::{ActionState, MAX_QUEUED_INSTRUCTIONS, QueuedInstruction};
     use super::{AutoArmGate, VoiceManager, VoicePermissions};
+    #[cfg(feature = "desktop")]
+    use uuid::Uuid;
 
     fn ready_permissions() -> VoicePermissions {
         VoicePermissions {
@@ -516,6 +948,57 @@ mod auto_arm_tests {
         assert_eq!(
             status.message,
             "Voice control is disabled until you sign in again."
+        );
+    }
+
+    #[cfg(feature = "desktop")]
+    #[test]
+    fn listening_for_follow_up_preserves_the_active_run() {
+        let voice = VoiceManager::default();
+        voice.enable(ready_permissions());
+        let run_id = Uuid::new_v4().to_string();
+        voice.status.send_modify(|status| {
+            status.phase = "executing".into();
+            status.run_id = Some(run_id.clone());
+        });
+
+        voice.begin_listening(true).unwrap();
+
+        let status = voice.status();
+        assert_eq!(status.phase, "listening");
+        assert_eq!(status.run_id.as_deref(), Some(run_id.as_str()));
+        assert_eq!(status.message, "Listening for a follow-up…");
+    }
+
+    #[cfg(feature = "desktop")]
+    #[test]
+    fn follow_up_queue_is_bounded_and_fifo() {
+        let mut actions = ActionState::default();
+        let ids = (0..MAX_QUEUED_INSTRUCTIONS)
+            .map(|index| {
+                let utterance_id = Uuid::new_v4();
+                actions
+                    .enqueue(QueuedInstruction {
+                        utterance_id,
+                        instruction: format!("instruction {index}"),
+                        expected_target: None,
+                    })
+                    .unwrap();
+                utterance_id
+            })
+            .collect::<Vec<_>>();
+
+        let error = actions
+            .enqueue(QueuedInstruction {
+                utterance_id: Uuid::new_v4(),
+                instruction: "one too many".into(),
+                expected_target: None,
+            })
+            .unwrap_err();
+        assert_eq!(error.code, "BUSY");
+        assert_eq!(
+            actions.queued.pop_front().map(|item| item.utterance_id),
+            Some(ids[0])
         );
     }
 }

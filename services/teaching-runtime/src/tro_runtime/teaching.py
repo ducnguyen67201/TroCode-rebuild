@@ -204,33 +204,28 @@ class TeachingSession:
         async def run() -> None:
             await event({"phase": "executing", "summary": "Working in the selected window."})
             outcome = "failed"
+            terminal = {
+                "phase": "failed",
+                "summary": "The selected-window instruction could not be completed.",
+                "actionsUsed": computer.actions_used,
+            }
             try:
                 await agent.run(request["instruction"])
                 outcome = "completed"
-                await event(
-                    {
-                        "phase": "completed",
-                        "summary": "Instruction completed.",
-                        "actionsUsed": computer.actions_used,
-                    }
-                )
+                terminal = {
+                    "phase": "completed",
+                    "summary": "Instruction completed.",
+                    "actionsUsed": computer.actions_used,
+                }
             except asyncio.CancelledError:
                 outcome = "cancelled"
-                await event(
-                    {
-                        "phase": "cancelled",
-                        "summary": "Instruction cancelled.",
-                        "actionsUsed": computer.actions_used,
-                    }
-                )
+                terminal = {
+                    "phase": "cancelled",
+                    "summary": "Instruction cancelled.",
+                    "actionsUsed": computer.actions_used,
+                }
             except Exception:
-                await event(
-                    {
-                        "phase": "failed",
-                        "summary": "The selected-window instruction could not be completed.",
-                        "actionsUsed": computer.actions_used,
-                    }
-                )
+                pass
             finally:
                 self.record("action_outcome", run_id=run_id, outcome=outcome)
                 self.prepared = None
@@ -238,6 +233,10 @@ class TeachingSession:
                 self.action_cancelled = None
                 self.action_run_id = None
                 self.action_task = None
+            # Publish terminal state only after the runtime can accept a fresh
+            # preparation, so the desktop FIFO can dispatch its next item.
+            terminal["actionsUsed"] = computer.actions_used
+            await event(terminal)
 
         self.action_task = asyncio.create_task(run())
         return run_id

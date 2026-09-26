@@ -24,7 +24,7 @@ fn bounds() {
 fn voice_projection_is_closed() {
     let value = serde_json::json!({
         "phase":"idle","revision":1,"utteranceId":null,"runId":null,
-        "partialTranscript":"","finalTranscript":"","targetTitle":null,
+        "partialTranscript":"","finalTranscript":"","queuedInstructions":[],"targetTitle":null,
         "message":"Ready.","shortcut":"Command+Control",
         "permissions":{"microphone":"granted","keyboardMonitoring":"granted","ready":true,"recovery":""},
         "confirmation":null,"actionsUsed":0

@@ -86,9 +86,17 @@ pub fn run() {
             });
             let mut action_events = runtime.subscribe_action_events();
             let action_voice = voice.clone();
+            let action_runtime = runtime.clone();
+            let action_auth = auth.clone();
             tauri::async_runtime::spawn(async move {
                 while let Ok(event) = action_events.recv().await {
-                    action_voice.apply_action_event(&event);
+                    action_voice
+                        .apply_action_event(
+                            &event,
+                            action_runtime.clone(),
+                            action_auth.clone(),
+                        )
+                        .await;
                 }
             });
             let handle = app.handle().clone();

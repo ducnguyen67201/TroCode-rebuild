@@ -642,6 +642,10 @@ agent action silently uploads arbitrary files or changes a final grade.
       Bound the ComputerTool run to 30 seconds, 12 actions and four model turns;
       revalidate the target before each mutation and require main-window approval
       for consequential or ambiguous actions.
+- [ ] Accept up to four final follow-up transcripts in FIFO order while one run
+      executes; prepare each only after the prior run ends, preserve the pinned
+      window identity, show the ordered queue in the main panel, and clear it on
+      cancel/disable/auth loss.
 - [ ] Provide complete text fallback through the same preparation, policy,
       confirmation, cancellation and evidence path.
 - [ ] Evaluate quiet/noisy Vietnamese and English input on agreed classroom
@@ -929,6 +933,16 @@ main Tro window approves or rejects them. Voice cannot approve itself. Emergency
 stop, cancellation, auth loss, target loss or process exit ends all capture,
 network and input work without replay. Audio remains memory-only and transcript,
 screenshot and typed values are not persisted or logged.
+
+While one F11 action is executing, another completed hold/release may transcribe
+into a bounded in-memory FIFO of at most four follow-ups. Follow-ups never call
+the action-preparation endpoint concurrently with the active run. When a run
+ends, the next item obtains a fresh grant and fresh observation of the same
+window identity pinned by the active run; a changed or missing window fails the
+queue closed. Cancel, disable, auth loss and process exit clear every queued
+item, and only final transcripts enter the queue. The main voice panel projects
+the FIFO count and ordered instruction text; the global HUD remains a minimal
+capture/action-state indicator.
 
 The cost/latency design uses fixed-model `gpt-transcribe` completed WAV requests,
 not GPT-Live or Realtime transcription: 1,250 ms chunks, 250 ms overlap, at most

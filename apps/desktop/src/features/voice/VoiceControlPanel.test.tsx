@@ -51,3 +51,33 @@ it('keeps text fallback available after automatic voice startup', async () => {
     expect(screen.getByText('Instruction completed.')).toBeTruthy(),
   );
 });
+
+it('shows queued follow-ups in FIFO order while an instruction executes', async () => {
+  const client = createPreviewVoice();
+  let publish: ((status: VoiceStatus) => void) | undefined;
+  client.subscribe = async (listener) => {
+    publish = listener;
+    return () => {};
+  };
+  render(<VoiceControlPanel client={client} />);
+  await screen.findByText(/Hold .* to speak/);
+  const current = await client.status();
+  await act(async () =>
+    publish!({
+      ...current,
+      revision: 10,
+      phase: 'executing',
+      runId: '00000000-0000-0000-0000-000000000011',
+      finalTranscript: 'Third instruction',
+      queuedInstructions: ['Second instruction', 'Third instruction'],
+      message: 'Working on the current instruction. 2 follow-ups queued.',
+    }),
+  );
+
+  expect(screen.getByText('Follow-up queue')).toBeTruthy();
+  expect(screen.getByLabelText('2 queued')).toBeTruthy();
+  expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+    'Second instruction',
+    'Third instruction',
+  ]);
+});

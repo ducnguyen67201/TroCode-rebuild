@@ -39,6 +39,15 @@
       "type": "string",
       "maxLength": 2000
     },
+    "queuedInstructions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      },
+      "maxItems": 4
+    },
     "targetTitle": {
       "type": ["string", "null"],
       "maxLength": 256
@@ -73,6 +82,7 @@
     "runId",
     "partialTranscript",
     "finalTranscript",
+    "queuedInstructions",
     "targetTitle",
     "message",
     "shortcut",

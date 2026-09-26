@@ -71,9 +71,15 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
       </section>
     );
   const busy = busyPhases.has(status.phase);
+  const latestFinalIsQueued =
+    status.queuedInstructions.at(-1) === status.finalTranscript;
   const transcript = cleared
     ? ''
-    : status.finalTranscript || status.partialTranscript;
+    : latestFinalIsQueued
+      ? ''
+      : status.finalTranscript || status.partialTranscript;
+  const showQueue =
+    (busy && Boolean(status.runId)) || status.queuedInstructions.length > 0;
   return (
     <section className="voice-panel" aria-labelledby="voice-heading">
       <div className="voice-heading-row">
@@ -150,6 +156,29 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
             </button>
           )}
         </div>
+      )}
+      {showQueue && (
+        <section className="voice-queue" aria-labelledby="voice-queue-heading">
+          <div className="voice-queue-heading">
+            <h3 id="voice-queue-heading">Follow-up queue</h3>
+            <span aria-label={`${status.queuedInstructions.length} queued`}>
+              {status.queuedInstructions.length}
+            </span>
+          </div>
+          {status.queuedInstructions.length > 0 ? (
+            <ol>
+              {status.queuedInstructions.map((queued, index) => (
+                <li key={`${index}-${queued}`}>{queued}</li>
+              ))}
+            </ol>
+          ) : (
+            <p>
+              {status.phase === 'listening' || status.phase === 'transcribing'
+                ? 'Your follow-up will appear here after transcription.'
+                : `Hold ${status.shortcut} again to add a follow-up.`}
+            </p>
+          )}
+        </section>
       )}
       {status.targetTitle && (
         <p className="voice-target">

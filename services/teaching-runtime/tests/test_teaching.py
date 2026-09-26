@@ -17,6 +17,9 @@ class Source:
     async def list_targets(self):
         return (observation().target,)
 
+    async def frontmost_target(self):
+        return observation().target
+
     async def observe(self, target, include_image=True):
         return replace(observation(self.value, time.time(), str(uuid4())), target=target)
 
@@ -109,5 +112,52 @@ def test_refresh_hides_changed_control_but_preserves_the_learner_check():
         session.observation = replace(session.observation, image="private-image")
         assert "image" not in session.projection(str(uuid4()))["observation"]
         await session.close()
+
+    asyncio.run(scenario())
+
+
+def test_terminal_action_event_is_published_after_next_preparation_is_allowed(monkeypatch):
+    async def scenario():
+        class CompletedAgent:
+            def __init__(self, *_args):
+                pass
+
+            async def run(self, _instruction):
+                return None
+
+        source = Source()
+        session = TeachingSession(source)
+        monkeypatch.setattr("tro_runtime.teaching.CuaObservationSource", Source)
+        monkeypatch.setattr("tro_runtime.action_agent.ComputerActionAgent", CompletedAgent)
+        monkeypatch.setattr("tro_runtime.model_client.create_model", lambda *_args: object())
+        first_utterance = str(uuid4())
+        prepared = await session.prepare_instruction({"utteranceId": first_utterance})
+        next_utterance = str(uuid4())
+        next_preparation = None
+
+        async def event_sink(event):
+            nonlocal next_preparation
+            if event["phase"] == "completed":
+                next_preparation = await session.prepare_instruction(
+                    {"utteranceId": next_utterance}
+                )
+
+        session.event_sink = event_sink
+        await session.execute_instruction(
+            {
+                "protocolVersion": 3,
+                "generationId": str(uuid4()),
+                "utteranceId": first_utterance,
+                "preparationId": prepared["preparationId"],
+                "instruction": "Do one safe thing",
+                "modelConfig": {"origin": "local", "grant": "grant", "model": "model"},
+            }
+        )
+        task = session.action_task
+        assert task is not None
+        await task
+
+        assert next_preparation is not None
+        assert next_preparation["utteranceId"] == next_utterance
 
     asyncio.run(scenario())

@@ -8,7 +8,11 @@ import {
   interruptOwned,
 } from './processes.mjs';
 import { root, fixtureEnvironment } from './environment.mjs';
-import { localAuthService, waitForReady } from './local-auth.mjs';
+import {
+  localAuthService,
+  localDevelopmentWorkspace,
+  waitForReady,
+} from './local-auth.mjs';
 import { verify } from './verify.mjs';
 const action = process.argv[2];
 const pythonProject = resolve(root, 'services/teaching-runtime');
@@ -34,11 +38,15 @@ async function databaseUp(env) {
   );
   await run('docker', [...compose, 'run', '--rm', 'bucket'], { env });
 }
-async function apiCommand(command, env) {
-  await run('cargo', ['run', '--locked', '-p', 'tro-api', '--', command], {
-    cwd: root,
-    env,
-  });
+async function apiCommand(command, env, args = []) {
+  await run(
+    'cargo',
+    ['run', '--locked', '-p', 'tro-api', '--', command, ...args],
+    {
+      cwd: root,
+      env,
+    },
+  );
 }
 async function prepareApi() {
   const env = await fixtureEnvironment();
@@ -101,6 +109,14 @@ try {
       const localAuth = localAuthService(env);
       if (localAuth) {
         await apiCommand('migrate', localAuth.environment);
+        await apiCommand(
+          'seed-local-workspace',
+          {
+            ...localAuth.environment,
+            TRO_ALLOW_LOCAL_WORKSPACE_SEED: '1',
+          },
+          [localDevelopmentWorkspace.email, localDevelopmentWorkspace.name],
+        );
       }
       const apis = [
         start('cargo', ['run', '--locked', '-p', 'tro-api', '--', 'serve'], {

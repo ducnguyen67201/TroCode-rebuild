@@ -6,6 +6,11 @@ const requiredHostedValues = [
   'TRO_REFRESH_KEY_B64',
 ];
 
+export const localDevelopmentWorkspace = Object.freeze({
+  email: 'duc.nguyen67201@gmail.com',
+  name: 'Tro Workspace',
+});
+
 export function localAuthService(environment) {
   const configuredOrigin = environment.TRO_AUTH_API_ORIGIN;
   if (!configuredOrigin) return null;

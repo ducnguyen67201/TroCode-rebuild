@@ -19,6 +19,10 @@ export interface VoiceStatus {
   runId: string | null;
   partialTranscript: string;
   finalTranscript: string;
+  /**
+   * @maxItems 4
+   */
+  queuedInstructions: [] | [string] | [string, string] | [string, string, string] | [string, string, string, string];
   targetTitle: string | null;
   message: string;
   shortcut: 'Command+Control' | 'Left Control+Left Alt' | 'Unavailable';

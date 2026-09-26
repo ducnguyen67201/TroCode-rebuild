@@ -481,6 +481,7 @@ impl<'de> ::serde::Deserialize<'de> for VoicePermissionsRecovery {
 ///    "partialTranscript",
 ///    "permissions",
 ///    "phase",
+///    "queuedInstructions",
 ///    "revision",
 ///    "runId",
 ///    "shortcut",
@@ -532,6 +533,15 @@ impl<'de> ::serde::Deserialize<'de> for VoicePermissionsRecovery {
 ///        "cancelled",
 ///        "failed"
 ///      ]
+///    },
+///    "queuedInstructions": {
+///      "type": "array",
+///      "items": {
+///        "type": "string",
+///        "maxLength": 2000,
+///        "minLength": 1
+///      },
+///      "maxItems": 4
 ///    },
 ///    "revision": {
 ///      "type": "integer",
@@ -585,6 +595,8 @@ pub struct VoiceStatus {
     pub partial_transcript: VoiceStatusPartialTranscript,
     pub permissions: VoicePermissions,
     pub phase: VoiceStatusPhase,
+    #[serde(rename = "queuedInstructions")]
+    pub queued_instructions: ::std::vec::Vec<VoiceStatusQueuedInstructionsItem>,
     pub revision: i64,
     #[serde(rename = "runId")]
     pub run_id: ::std::option::Option<VoiceStatusRunId>,
@@ -950,6 +962,90 @@ impl ::std::convert::TryFrom<::std::string::String> for VoiceStatusPhase {
         value: ::std::string::String,
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
+    }
+}
+///`VoiceStatusQueuedInstructionsItem`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "maxLength": 2000,
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct VoiceStatusQueuedInstructionsItem(::std::string::String);
+impl ::std::ops::Deref for VoiceStatusQueuedInstructionsItem {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<VoiceStatusQueuedInstructionsItem> for ::std::string::String {
+    fn from(value: VoiceStatusQueuedInstructionsItem) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&VoiceStatusQueuedInstructionsItem>
+for VoiceStatusQueuedInstructionsItem {
+    fn from(value: &VoiceStatusQueuedInstructionsItem) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for VoiceStatusQueuedInstructionsItem {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 2000usize {
+            return Err("longer than 2000 characters".into());
+        }
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for VoiceStatusQueuedInstructionsItem {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for VoiceStatusQueuedInstructionsItem {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for VoiceStatusQueuedInstructionsItem {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for VoiceStatusQueuedInstructionsItem {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
     }
 }
 ///`VoiceStatusRunId`
