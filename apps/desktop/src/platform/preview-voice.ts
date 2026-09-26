@@ -1,4 +1,7 @@
-import type { VoiceStatus } from '@tro/contracts';
+import {
+  DEFAULT_TRANSCRIPTION_LANGUAGE,
+  type VoiceStatus,
+} from '@tro/contracts';
 import type { VoiceClient } from './voice-client';
 
 const utteranceId = '00000000-0000-0000-0000-000000000010';
@@ -15,6 +18,7 @@ export function createPreviewVoice(): VoiceClient {
     targetTitle: null,
     message: `Hold ${previewShortcut()} to ask for help.`,
     shortcut: previewShortcut(),
+    transcriptionLanguage: DEFAULT_TRANSCRIPTION_LANGUAGE,
     permissions: {
       microphone: 'granted',
       keyboardMonitoring: 'granted',
@@ -50,6 +54,8 @@ export function createPreviewVoice(): VoiceClient {
         finalTranscript: '',
         message: 'Voice guidance is disabled.',
       }),
+    setTranscriptionLanguage: async (transcriptionLanguage) =>
+      publish({ transcriptionLanguage }),
     executeText: async (instruction) => {
       publish({
         phase: 'dispatching',

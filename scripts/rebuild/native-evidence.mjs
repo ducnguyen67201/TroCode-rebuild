@@ -21,11 +21,11 @@ export function assessEvidence(value) {
       accepted: false,
       reasons: ['Evidence does not match the schema.'],
     };
-  if (value.version !== 2)
+  if (value.version !== 3)
     return {
       valid: true,
       accepted: false,
-      reasons: ['Historical v1 evidence cannot satisfy lesson acceptance.'],
+      reasons: ['Historical v1/v2 evidence cannot satisfy current native acceptance.'],
     };
   const reasons = [];
   for (const [name, check] of Object.entries(value.checks)) {

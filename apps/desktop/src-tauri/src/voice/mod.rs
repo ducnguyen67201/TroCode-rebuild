@@ -1,6 +1,7 @@
 #[cfg(feature = "desktop")]
 pub mod audio;
 pub mod chunks;
+pub mod settings;
 pub mod transcript;
 
 use serde::{Deserialize, Serialize};
@@ -11,6 +12,8 @@ use tokio::sync::watch;
 #[cfg(feature = "desktop")]
 use tokio::sync::{Mutex, oneshot};
 use uuid::Uuid;
+
+use settings::{TranscriptionLanguage, VoiceSettingsStore};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,6 +36,7 @@ pub struct VoiceStatus {
     pub target_title: Option<String>,
     pub message: String,
     pub shortcut: String,
+    pub transcription_language: TranscriptionLanguage,
     pub permissions: VoicePermissions,
 }
 
@@ -55,6 +59,7 @@ impl Default for VoiceStatus {
                 "Unavailable"
             }
             .into(),
+            transcription_language: TranscriptionLanguage::default(),
             permissions: VoicePermissions {
                 microphone: "unknown".into(),
                 keyboard_monitoring: "unknown".into(),
@@ -67,6 +72,7 @@ impl Default for VoiceStatus {
 
 pub struct VoiceManager {
     status: watch::Sender<VoiceStatus>,
+    settings: VoiceSettingsStore,
     manual_disable: AtomicBool,
     #[cfg(feature = "desktop")]
     capture: Mutex<Option<ActiveCapture>>,
@@ -95,23 +101,64 @@ struct ActiveCapture {
 
 impl Default for VoiceManager {
     fn default() -> Self {
-        let (status, _) = watch::channel(VoiceStatus::default());
+        Self::from_settings_store(VoiceSettingsStore::default())
+    }
+}
+
+impl VoiceManager {
+    pub fn with_settings_path(path: std::path::PathBuf) -> Self {
+        Self::from_settings_store(VoiceSettingsStore::at(path))
+    }
+
+    fn from_settings_store(settings: VoiceSettingsStore) -> Self {
+        let initial = VoiceStatus {
+            transcription_language: settings.load(),
+            ..VoiceStatus::default()
+        };
+        let (status, _) = watch::channel(initial);
         Self {
             status,
+            settings,
             manual_disable: AtomicBool::new(false),
             #[cfg(feature = "desktop")]
             capture: Mutex::new(None),
         }
     }
-}
 
-impl VoiceManager {
     pub fn status(&self) -> VoiceStatus {
         self.status.borrow().clone()
     }
 
     pub fn subscribe(&self) -> watch::Receiver<VoiceStatus> {
         self.status.subscribe()
+    }
+
+    pub fn set_transcription_language(
+        &self,
+        value: &str,
+    ) -> Result<VoiceStatus, crate::worker::WorkerError> {
+        let language = value.parse::<TranscriptionLanguage>().map_err(|_| {
+            crate::worker::WorkerError::new(
+                "INVALID_MESSAGE",
+                "Choose Auto, English, or Vietnamese.",
+            )
+        })?;
+        self.settings.save(language).map_err(|_| {
+            crate::worker::WorkerError::new(
+                "SETTINGS_UNAVAILABLE",
+                "Transcription language could not be saved. Try again.",
+            )
+        })?;
+        self.status.send_modify(|status| {
+            status.revision += 1;
+            status.transcription_language = language;
+        });
+        Ok(self.status())
+    }
+
+    #[cfg(feature = "desktop")]
+    fn transcription_language_snapshot(&self) -> Vec<TranscriptionLanguage> {
+        settings::request_languages(self.status.borrow().transcription_language)
     }
 
     pub fn enable(&self, permissions: VoicePermissions) -> VoiceStatus {
@@ -327,6 +374,7 @@ impl VoiceManager {
             return Ok(());
         }
         let utterance_id = self.begin_listening()?;
+        let request_languages = self.transcription_language_snapshot();
         let mut microphone = audio::MicrophoneCapture::start().map_err(|_| {
             crate::worker::WorkerError::new(
                 "VOICE_PERMISSION_REQUIRED",
@@ -361,15 +409,17 @@ impl VoiceManager {
                         let auth = auth.clone();
                         let grant = voice_grant.grant.clone();
                         let prompt = transcript.prompt_tail();
+                        let languages = request_languages.clone();
                         uploads.spawn(async move {
-                            auth.transcribe(
+                            auth.transcribe(crate::auth::TranscriptionRequest::new(
                                 &grant,
                                 chunk.sequence,
                                 chunk.duration_ms,
                                 chunk.final_chunk,
                                 &prompt,
+                                &languages,
                                 chunk.bytes,
-                            )
+                            ))
                             .await
                         });
                     }
@@ -394,7 +444,14 @@ impl VoiceManager {
                                     pending.push_back(chunk);
                                 }
                             }
-                            if microphone.failed.load(std::sync::atomic::Ordering::Acquire) { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone capture stopped.")); }
+                            microphone.stop();
+                            while let Ok(value) = microphone.samples.try_recv() {
+                                for chunk in chunks.push(&value).map_err(|_| crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Voice instruction is too long."))? {
+                                    expected += 1;
+                                    pending.push_back(chunk);
+                                }
+                            }
+                            if let Some(message) = microphone.failure_message() { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", message)); }
                             if !chunks.has_speech() { return Err(crate::worker::WorkerError::new("NO_SPEECH", "No speech was detected.")); }
                             if let Some(chunk) = chunks.finish().map_err(|_| crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription is unavailable."))? {
                                 expected += 1;
@@ -404,7 +461,7 @@ impl VoiceManager {
                         }
                         value = microphone.samples.recv(), if !release_seen => {
                             let Some(value) = value else { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone capture stopped.")); };
-                            if microphone.failed.load(std::sync::atomic::Ordering::Acquire) { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone capture stopped.")); }
+                            if let Some(message) = microphone.failure_message() { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", message)); }
                             for chunk in chunks.push(&value).map_err(|_| crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Voice instruction is too long."))? {
                                 expected += 1;
                                 pending.push_back(chunk);

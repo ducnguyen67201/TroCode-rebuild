@@ -21,6 +21,16 @@ fn require_main(window: &tauri::WebviewWindow) -> Result<(), WorkerError> {
     }
 }
 
+#[tauri::command]
+pub fn app_relaunch(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+) -> Result<(), WorkerError> {
+    require_main(&window)?;
+    app.request_restart();
+    Ok(())
+}
+
 async fn require_workspace(auth: &AuthManager) -> Result<(), WorkerError> {
     auth.require_workspace_access().await
 }
@@ -246,6 +256,18 @@ pub fn voice_status(
 ) -> Result<VoiceStatus, WorkerError> {
     require_main(&window)?;
     Ok(voice.status())
+}
+
+#[tauri::command]
+pub async fn voice_set_transcription_language(
+    window: tauri::WebviewWindow,
+    language: String,
+    voice: Voice<'_>,
+    auth: Authentication<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    require_workspace(&auth).await?;
+    voice.set_transcription_language(&language)
 }
 
 #[tauri::command]

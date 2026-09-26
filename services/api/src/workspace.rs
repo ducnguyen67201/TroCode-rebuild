@@ -6,7 +6,7 @@ use crate::{
     error::ApiError,
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DatabaseTransaction, EntityTrait,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, DatabaseTransaction, DbErr, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
 };
 use serde::Serialize;
@@ -36,6 +36,14 @@ pub struct WorkspaceMember {
 pub struct WorkspaceMemberList {
     pub workspace: WorkspaceSummary,
     pub members: Vec<WorkspaceMember>,
+}
+
+pub struct LocalDevelopmentWorkspaceSeed<'a> {
+    pub owner_account_id: Uuid,
+    pub owner_membership_id: Uuid,
+    pub workspace_id: Uuid,
+    pub workspace_name: &'a str,
+    pub member_email: &'a str,
 }
 
 impl WorkspaceService {
@@ -215,6 +223,142 @@ impl WorkspaceService {
             .await
             .map_err(|_| ApiError::internal(correlation))
     }
+}
+
+pub async fn seed_local_development_workspace(
+    database: &DatabaseConnection,
+    seed: LocalDevelopmentWorkspaceSeed<'_>,
+) -> Result<(), DbErr> {
+    let (member_email, member_email_normalized) = normalize_email(seed.member_email)
+        .ok_or_else(|| DbErr::Custom("Invalid local development member email".to_owned()))?;
+    if seed.workspace_name.trim().is_empty() || seed.workspace_name.len() > 120 {
+        return Err(DbErr::Custom(
+            "Invalid local development workspace name".to_owned(),
+        ));
+    }
+
+    let transaction = database.begin().await?;
+    let now = OffsetDateTime::now_utc();
+    let owner_email = format!("local-owner+{}@tro.invalid", seed.workspace_id.simple());
+
+    if account::Entity::find_by_id(seed.owner_account_id)
+        .one(&transaction)
+        .await?
+        .is_none()
+    {
+        account::ActiveModel {
+            id: Set(seed.owner_account_id),
+            display_name: Set("Local Development Owner".to_owned()),
+            verified_email: Set(owner_email.clone()),
+            email_normalized: Set(owner_email.clone()),
+            status: Set("active".to_owned()),
+            created_at: Set(now),
+            updated_at: Set(now),
+        }
+        .insert(&transaction)
+        .await?;
+    }
+
+    if workspace::Entity::find_by_id(seed.workspace_id)
+        .one(&transaction)
+        .await?
+        .is_none()
+    {
+        workspace::ActiveModel {
+            id: Set(seed.workspace_id),
+            name: Set(seed.workspace_name.to_owned()),
+            status: Set("active".to_owned()),
+            created_by_account_id: Set(seed.owner_account_id),
+            created_at: Set(now),
+            updated_at: Set(now),
+        }
+        .insert(&transaction)
+        .await?;
+    }
+
+    if workspace_membership::Entity::find_by_id(seed.owner_membership_id)
+        .one(&transaction)
+        .await?
+        .is_none()
+    {
+        workspace_membership::ActiveModel {
+            id: Set(seed.owner_membership_id),
+            workspace_id: Set(seed.workspace_id),
+            account_id: Set(Some(seed.owner_account_id)),
+            email: Set(owner_email.clone()),
+            email_normalized: Set(owner_email),
+            role: Set("owner".to_owned()),
+            added_by_account_id: Set(seed.owner_account_id),
+            created_at: Set(now),
+            joined_at: Set(Some(now)),
+            removed_at: Set(None),
+        }
+        .insert(&transaction)
+        .await?;
+    }
+
+    let member_account = account::Entity::find()
+        .filter(account::Column::EmailNormalized.eq(&member_email_normalized))
+        .filter(account::Column::Status.eq("active"))
+        .one(&transaction)
+        .await?;
+    let existing_membership = workspace_membership::Entity::find()
+        .filter(workspace_membership::Column::WorkspaceId.eq(seed.workspace_id))
+        .filter(workspace_membership::Column::EmailNormalized.eq(&member_email_normalized))
+        .filter(workspace_membership::Column::RemovedAt.is_null())
+        .lock_exclusive()
+        .one(&transaction)
+        .await?;
+
+    match existing_membership {
+        Some(existing) if existing.account_id.is_none() && member_account.is_some() => {
+            let account_id = member_account.expect("checked above").id;
+            let membership_id = existing.id;
+            let mut claimed: workspace_membership::ActiveModel = existing.into();
+            claimed.account_id = Set(Some(account_id));
+            claimed.joined_at = Set(Some(now));
+            claimed.update(&transaction).await?;
+            insert_audit(
+                &transaction,
+                seed.workspace_id,
+                account_id,
+                membership_id,
+                "workspace.member_claimed",
+                now,
+            )
+            .await?;
+        }
+        Some(_) => {}
+        None => {
+            let account_id = member_account.map(|account| account.id);
+            let membership_id = Uuid::new_v4();
+            workspace_membership::ActiveModel {
+                id: Set(membership_id),
+                workspace_id: Set(seed.workspace_id),
+                account_id: Set(account_id),
+                email: Set(member_email),
+                email_normalized: Set(member_email_normalized),
+                role: Set("teacher".to_owned()),
+                added_by_account_id: Set(seed.owner_account_id),
+                created_at: Set(now),
+                joined_at: Set(account_id.map(|_| now)),
+                removed_at: Set(None),
+            }
+            .insert(&transaction)
+            .await?;
+            insert_audit(
+                &transaction,
+                seed.workspace_id,
+                seed.owner_account_id,
+                membership_id,
+                "workspace.member_added",
+                now,
+            )
+            .await?;
+        }
+    }
+
+    transaction.commit().await
 }
 
 #[async_trait::async_trait]

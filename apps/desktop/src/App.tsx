@@ -6,6 +6,8 @@ import type { AuthenticatedContext } from './features/auth/AuthGate';
 import { WorkspaceAccessPanel } from './features/workspace/WorkspaceAccessPanel';
 import { AppSidebar, type AppSection } from './features/navigation/AppSidebar';
 import { VoiceControlPanel } from './features/voice/VoiceControlPanel';
+import { SettingsPanel } from './features/settings/SettingsPanel';
+import { useLanguage } from './i18n';
 
 export function App({
   client,
@@ -14,10 +16,15 @@ export function App({
   client: DesktopClient;
   session: AuthenticatedContext;
 }) {
+  const { t } = useLanguage();
   const workspace = session.workspaces[0]!;
   const [section, setSection] = useState<AppSection>('learn');
   const pageTitle =
-    section === 'team' ? 'Team' : section === 'settings' ? 'Settings' : 'Learn';
+    section === 'team'
+      ? t('nav.team')
+      : section === 'settings'
+        ? t('nav.settings')
+        : t('nav.learn');
 
   return (
     <main className="app-shell">
@@ -45,19 +52,12 @@ export function App({
           {section === 'learn' && (
             <>
               <div className="intro">
-                <p className="eyebrow">A solid place to begin</p>
-                <h1>
-                  Make room
-                  <br />
-                  for learning.
-                </h1>
-                <p>
-                  One desktop. One private runtime.
-                  <br />A clear foundation for what comes next.
-                </p>
+                <p className="eyebrow">{t('app.learn.eyebrow')}</p>
+                <MultilineText as="h1" text={t('app.learn.title')} />
+                <MultilineText as="p" text={t('app.learn.description')} />
               </div>
               {client.preview && (
-                <p className="preview">Preview — simulated runtime</p>
+                <p className="preview">{t('common.previewRuntime')}</p>
               )}
               <RuntimeStatus client={client} />
               <VoiceControlPanel client={client.voice} />
@@ -68,12 +68,9 @@ export function App({
           {section === 'team' && workspace.role === 'owner' && (
             <>
               <div className="section-intro">
-                <p className="eyebrow">Workspace access</p>
-                <h1>Your workspace, your people.</h1>
-                <p>
-                  Keep the roster intentional. Access begins only after Google
-                  verifies the exact email you add here.
-                </p>
+                <p className="eyebrow">{t('app.team.eyebrow')}</p>
+                <h1>{t('app.team.title')}</h1>
+                <p>{t('app.team.description')}</p>
               </div>
               <WorkspaceAccessPanel
                 client={client.workspace}
@@ -83,64 +80,35 @@ export function App({
           )}
 
           {section === 'settings' && (
-            <SettingsPanel session={session} workspaceName={workspace.name} />
+            <SettingsPanel
+              client={client}
+              session={session}
+              workspaceName={workspace.name}
+            />
           )}
 
-          <footer>
-            React presentation · Rust supervision · Python runtime
-          </footer>
+          <footer>{t('common.presentationStack')}</footer>
         </div>
       </section>
     </main>
   );
 }
 
-function SettingsPanel({
-  session,
-  workspaceName,
+function MultilineText({
+  as: Element,
+  text,
 }: {
-  session: AuthenticatedContext;
-  workspaceName: string;
+  as: 'h1' | 'p';
+  text: string;
 }) {
-  const workspace = session.workspaces[0]!;
   return (
-    <section className="settings-panel" aria-labelledby="settings-heading">
-      <div className="section-intro">
-        <p className="eyebrow">Account & access</p>
-        <h1 id="settings-heading">Settings</h1>
-        <p>Your profile and secure device session for this workspace.</p>
-      </div>
-
-      <div className="settings-grid">
-        <article>
-          <p className="settings-label">Profile</p>
-          <strong>{session.user.displayName}</strong>
-          <span>{session.user.email}</span>
-        </article>
-        <article>
-          <p className="settings-label">Workspace</p>
-          <strong>{workspaceName}</strong>
-          <span className="settings-role">{workspace.role}</span>
-        </article>
-      </div>
-
-      <div className="device-session">
-        <div>
-          <strong>Secure device session</strong>
-          <p>
-            Your sign-in stays on this device and is checked against current
-            workspace access.
-          </p>
-        </div>
-        <button
-          className="sign-out-button"
-          disabled={session.signingOut}
-          onClick={session.signOut}
-          type="button"
-        >
-          {session.signingOut ? 'Signing out…' : 'Sign out'}
-        </button>
-      </div>
-    </section>
+    <Element>
+      {text.split('\n').map((line, index) => (
+        <span key={`${index}-${line}`}>
+          {index > 0 && <br />}
+          {line}
+        </span>
+      ))}
+    </Element>
   );
 }

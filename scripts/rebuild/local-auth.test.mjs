@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import test from 'node:test';
-import { localAuthService, waitForReady } from './local-auth.mjs';
+import {
+  localAuthService,
+  localDevelopmentWorkspace,
+  waitForReady,
+} from './local-auth.mjs';
 
 const configured = () => ({
   DATABASE_URL: 'postgres://fixture:secret@127.0.0.1:55439/tro_rebuild_test',
@@ -23,6 +27,13 @@ test('configures the loopback hosted auth service alongside the fixture API', ()
   assert.equal(service.environment.TRO_API_BIND, '127.0.0.1:4319');
   assert.equal(service.environment.TRO_ALLOW_HOSTED_MIGRATION, '1');
   assert.equal(service.environment.DATABASE_URL, fixture.DATABASE_URL);
+});
+
+test('declares the idempotent local workspace membership seed', () => {
+  assert.deepEqual(localDevelopmentWorkspace, {
+    email: 'duc.nguyen67201@gmail.com',
+    name: 'Tro Workspace',
+  });
 });
 
 test('does not launch a local service for absent or remote auth origins', () => {

@@ -19,6 +19,17 @@ explicit simulation; it never silently replaces a failing native connection.
 validated `VoiceStatus` projection and closed enable/text/cancel commands;
 raw audio, key events, native actions and grants never enter React.
 
+`features/onboarding/PermissionOnboarding.tsx` is the post-authentication device gate.
+It receives only a validated `DeviceReadiness` projection through
+`platform/device-client.ts`. React owns the local decorative teaching pointer and
+permission explanations; `PermissionSettingsGuide.tsx` renders the validated,
+non-interactive guide projection in a dedicated click-through window. React has no
+native handles or input capability. The only local
+marker is `tro.device-onboarding.v1`, containing a schema version and the learner's
+microphone choice. It stores no permission truth, device identity, screen content or
+audio. Native readiness is recomputed on every launch and from Settings, so revocation
+reopens the gate.
+
 ## Native host
 
 `apps/desktop/src-tauri/src/commands.rs` is the UI command boundary. `manager.rs`
@@ -32,9 +43,16 @@ merging and the voice status authority. The emergency shortcut cancels voice and
 guidance work before stopping the worker.
 
 `account.rs` reads private proof configuration and obtains bounded model grants.
-`permissions.rs` handles OS observation consent. Tauri capability files restrict
+`permissions.rs` handles closed OS device readiness checks and explicit consent
+requests plus fixed, allowlisted settings destinations. `permission_guide.rs` owns the
+nonactivating settings guide window and exposes only its current bounded projection.
+macOS checks Screen Recording, Accessibility and optional microphone access;
+Windows reports Graphics Capture support and runs an explicit, bounded microphone
+probe whose samples are discarded. Camera access is outside this boundary.
+Tauri capability files restrict
 which WebView can invoke which command; these are separate from OS consent.
-The overlay cannot invoke teaching, account or worker control commands.
+Neither overlay can invoke teaching, account or worker control commands. The settings
+guide is click-through and cannot invoke the settings-launch command itself.
 
 `auth/` owns system-browser Google authorization with PKCE/state/nonce, the
 fixed-origin hosted API client, access-token memory and rotating refresh-token

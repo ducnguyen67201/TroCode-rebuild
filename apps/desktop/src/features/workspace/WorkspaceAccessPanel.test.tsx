@@ -13,6 +13,7 @@ import type {
 } from '@tro/contracts';
 import type { WorkspaceClient } from '../../platform/workspace-client';
 import { WorkspaceAccessPanel } from './WorkspaceAccessPanel';
+import { LanguageProvider } from '../../i18n';
 
 afterEach(cleanup);
 
@@ -97,6 +98,18 @@ it('requires a second click before removing a non-owner member', async () => {
     student.membershipId,
   );
   expect(screen.queryByRole('button', { name: 'Remove access' })).toBeNull();
+});
+
+it('localizes workspace roles and membership states', async () => {
+  render(
+    <LanguageProvider initialLocale="vi">
+      <WorkspaceAccessPanel client={clientWith({})} workspace={workspace} />
+    </LanguageProvider>,
+  );
+
+  await screen.findByText('Những người có quyền truy cập');
+  expect(screen.getByText('Chủ sở hữu')).toBeTruthy();
+  expect(screen.getByText('Đang hoạt động')).toBeTruthy();
 });
 
 function memberList(members: WorkspaceMember[]): WorkspaceMemberList {

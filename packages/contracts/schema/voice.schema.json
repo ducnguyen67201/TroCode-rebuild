@@ -51,6 +51,9 @@
       "type": "string",
       "enum": ["Command+Control", "Left Control+Left Alt", "Unavailable"]
     },
+    "transcriptionLanguage": {
+      "$ref": "#/definitions/TranscriptionLanguage"
+    },
     "permissions": {
       "$ref": "#/definitions/VoicePermissions"
     }
@@ -65,10 +68,17 @@
     "targetTitle",
     "message",
     "shortcut",
+    "transcriptionLanguage",
     "permissions"
   ],
   "additionalProperties": false,
   "definitions": {
+    "TranscriptionLanguage": {
+      "title": "TranscriptionLanguage",
+      "type": "string",
+      "enum": ["vi", "en", "auto"],
+      "default": "vi"
+    },
     "PermissionState": {
       "type": "string",
       "enum": [

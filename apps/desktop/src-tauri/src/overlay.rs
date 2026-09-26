@@ -108,7 +108,7 @@ pub fn show_voice(app: &tauri::AppHandle, status: &crate::voice::VoiceStatus) {
     let status = status.clone();
     let _ = app.run_on_main_thread(move || {
         let Some(window) = handle.get_webview_window("voice-hud") else { return; };
-        let visible = matches!(status.phase.as_str(), "listening" | "transcribing" | "dispatching" | "planning" | "guiding" | "failed");
+        let visible = voice_hud_visible(&status.phase);
         if visible {
             position_voice_hud(&handle, &window);
             let _ = window.emit("voice-hud-status", serde_json::json!({"phase":status.phase,"revision":status.revision,"message":status.message}));
@@ -117,6 +117,13 @@ pub fn show_voice(app: &tauri::AppHandle, status: &crate::voice::VoiceStatus) {
             let _ = window.hide();
         }
     });
+}
+
+fn voice_hud_visible(phase: &str) -> bool {
+    matches!(
+        phase,
+        "listening" | "transcribing" | "dispatching" | "planning" | "guiding" | "failed"
+    )
 }
 
 pub fn epoch(app: &tauri::AppHandle) -> u64 {
@@ -264,6 +271,27 @@ fn present_on_main(
 pub struct OverlayState {
     values: std::sync::Mutex<std::collections::HashMap<String, Value>>,
     epoch: std::sync::atomic::AtomicU64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::voice_hud_visible;
+
+    #[test]
+    fn voice_hud_exists_only_for_active_or_confirmation_states() {
+        for phase in [
+            "listening",
+            "transcribing",
+            "dispatching",
+            "executing",
+            "confirmation",
+        ] {
+            assert!(voice_hud_visible(phase));
+        }
+        for phase in ["disabled", "ready", "failed", "completed", "cancelled"] {
+            assert!(!voice_hud_visible(phase));
+        }
+    }
 }
 
 #[tauri::command]

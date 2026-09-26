@@ -1,4 +1,5 @@
 import type { WorkspaceSummary } from '@tro/contracts';
+import { localeKey, useLanguage } from '../../i18n';
 
 export type AppSection = 'learn' | 'team' | 'settings';
 
@@ -11,10 +12,12 @@ export function AppSidebar({
   onNavigate: (section: AppSection) => void;
   workspace: WorkspaceSummary;
 }) {
+  const { t } = useLanguage();
   const isOwner = workspace.role === 'owner';
+  const roleKey = localeKey('role', workspace.role);
 
   return (
-    <aside className="app-sidebar" aria-label="Workspace navigation">
+    <aside className="app-sidebar" aria-label={t('nav.workspaceNavigation')}>
       <div className="sidebar-top">
         <div className="sidebar-wordmark" aria-label="Tro">
           tro<span>.</span>
@@ -25,40 +28,40 @@ export function AppSidebar({
             {workspace.name.charAt(0).toUpperCase()}
           </span>
           <span className="workspace-details">
-            <small>Workspace</small>
+            <small>{t('nav.workspace')}</small>
             <strong>{workspace.name}</strong>
-            <span>{workspace.role}</span>
+            <span>{roleKey ? t(roleKey) : workspace.role}</span>
           </span>
         </div>
 
-        <nav className="sidebar-primary" aria-label="Learning">
+        <nav className="sidebar-primary" aria-label={t('nav.learning')}>
           <SidebarButton
             active={activeSection === 'learn'}
             icon="learn"
-            label="Learn"
+            label={t('nav.learn')}
             onClick={() => onNavigate('learn')}
           />
         </nav>
       </div>
 
       <div className="sidebar-bottom">
-        <nav aria-label="Workspace tools">
+        <nav aria-label={t('nav.workspaceTools')}>
           {isOwner && (
             <SidebarButton
               active={activeSection === 'team'}
               icon="team"
-              label="Team"
+              label={t('nav.team')}
               onClick={() => onNavigate('team')}
             />
           )}
           <SidebarButton
             active={activeSection === 'settings'}
             icon="settings"
-            label="Settings"
+            label={t('nav.settings')}
             onClick={() => onNavigate('settings')}
           />
         </nav>
-        <p className="sidebar-note">Private by design</p>
+        <p className="sidebar-note">{t('common.privateByDesign')}</p>
       </div>
     </aside>
   );

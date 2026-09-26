@@ -8,6 +8,7 @@ use axum::{
 use reqwest::multipart::{Form, Part};
 use serde::Serialize;
 use serde_json::Value;
+use tro_contracts::generated_voice::TranscriptionLanguage;
 use uuid::Uuid;
 
 const MAX_WAV_BYTES: usize = 1024 * 1024;
@@ -87,10 +88,7 @@ pub async fn transcribe(
     if prompt
         .as_ref()
         .is_some_and(|value| value.len() > MAX_PROMPT_BYTES)
-        || languages.is_empty()
-        || languages
-            .iter()
-            .any(|value| !matches!(value.as_str(), "en" | "vi"))
+        || !valid_language_hints(&languages)
     {
         return Err(ApiError::provider_invalid(correlation));
     }
@@ -126,6 +124,7 @@ pub async fn transcribe(
         form = form.text("languages[]", language.clone());
     }
     let started = std::time::Instant::now();
+    tracing::info!(event="provider.transcription.started", correlation_id=%correlation, sequence, audio_ms=actual_duration, model=%state.providers.transcription_model);
     let response = state
         .providers
         .client
@@ -134,7 +133,10 @@ pub async fn transcribe(
         .multipart(form)
         .send()
         .await
-        .map_err(|_| ApiError::provider_unavailable(correlation))?;
+        .map_err(|_| {
+            tracing::warn!(event="provider.transcription.transport_failed", correlation_id=%correlation, sequence, audio_ms=actual_duration, provider_elapsed_ms=started.elapsed().as_millis() as u64);
+            ApiError::provider_unavailable(correlation)
+        })?;
     let status = response.status();
     if response
         .content_length()
@@ -162,6 +164,17 @@ pub async fn transcribe(
         text,
         languages,
     }))
+}
+
+fn valid_language_hints(languages: &[String]) -> bool {
+    languages.len() <= 2
+        && languages.iter().all(|language| {
+            matches!(
+                language.parse::<TranscriptionLanguage>(),
+                Ok(TranscriptionLanguage::En | TranscriptionLanguage::Vi)
+            )
+        })
+        && !(languages.len() == 2 && languages[0] == languages[1])
 }
 
 fn wav_duration_ms(bytes: &[u8]) -> Option<i64> {
@@ -219,5 +232,26 @@ mod tests {
             writer.finalize().unwrap();
         }
         assert_eq!(wav_duration_ms(&wav), Some(1_000));
+    }
+
+    #[test]
+    fn accepts_auto_single_hints_and_legacy_dual_hints() {
+        assert!(valid_language_hints(&[]));
+        assert!(valid_language_hints(&["en".to_owned()]));
+        assert!(valid_language_hints(&["vi".to_owned()]));
+        assert!(valid_language_hints(&["en".to_owned(), "vi".to_owned()]));
+        assert!(valid_language_hints(&["vi".to_owned(), "en".to_owned()]));
+    }
+
+    #[test]
+    fn rejects_unknown_duplicate_or_oversized_language_hints() {
+        assert!(!valid_language_hints(&["fr".to_owned()]));
+        assert!(!valid_language_hints(&["auto".to_owned()]));
+        assert!(!valid_language_hints(&["en".to_owned(), "en".to_owned()]));
+        assert!(!valid_language_hints(&[
+            "en".to_owned(),
+            "vi".to_owned(),
+            "en".to_owned(),
+        ]));
     }
 }

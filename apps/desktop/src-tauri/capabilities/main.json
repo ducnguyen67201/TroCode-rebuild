@@ -4,6 +4,7 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "allow-app-relaunch",
     "allow-auth-status",
     "allow-auth-sign-in-google",
     "allow-auth-retry",
@@ -19,11 +20,14 @@
     "allow-account-select",
     "allow-teaching-request",
     "allow-proof-connect",
-    "allow-observation-permissions",
     "allow-voice-status",
     "allow-voice-enable",
     "allow-voice-disable",
+    "allow-voice-set-transcription-language",
     "allow-voice-execute-text",
-    "allow-voice-cancel"
+    "allow-voice-cancel",
+    "allow-device-readiness",
+    "allow-device-permission-request",
+    "allow-device-permission-settings"
   ]
 }

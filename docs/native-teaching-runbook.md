@@ -7,8 +7,8 @@ manual Windows/macOS record in `tests/acceptance/native-foundation.md` is comple
 
 ## Development
 
-Use `npm run setup`, then `npm run dev`. Start the runtime and use Observation
-permissions. Open the offline gesture fixture yourself in a browser. Find windows,
+Use `npm run setup`, then `npm run dev`. After authentication, complete the device
+checkup or revisit **Settings → Device permissions**. Open the offline gesture fixture yourself in a browser. Find windows,
 select the fixture and Observe. The manual guidance controls let you select an observed
 control and visualize a gesture. Repeat obtains fresh evidence. It never clicks, types,
 scrolls, drags, focuses or launches another application.
@@ -18,6 +18,48 @@ Command/Ctrl+Shift+Escape is the host emergency stop. A shortcut conflict preven
 rather than silently removing Stop. Secondary macOS monitor overlays remain disabled
 pending calibration. Restart Tro after changing the connected display set. Capture protection and permission attribution require actual device
 verification. No result from an animation establishes learning or submission.
+
+For permission-only development QA without hosted authentication, launch the Tauri
+development app with `?nativePermissionQa=1` in its `devUrl`. This route exists only
+when Vite compiles in development mode and still uses the real native permission
+bridge for device checks and settings actions. Completing onboarding automatically
+opens the normal Learn page with local preview workspace/runtime data, so no hosted
+account or classroom data is required for this QA route.
+
+## Device permission checkup
+
+Tro checks without prompting when the checkup opens. An OS prompt or exact settings
+destination is opened only after the learner presses the matching Tro button. The
+illustrated Tro pointers are presentation only. The settings guide is nonactivating and
+click-through: it can explain the visible path and add/drag fallback, but never moves,
+clicks, toggles, drags or drops the real pointer and never annotates an OS-owned consent
+prompt. On macOS the guide is placed beside the visible System Settings app list when
+the window bounds are available, with its arrow pointing back toward that list. It does
+not claim to detect an individual toggle or row.
+
+On macOS, **Open Screen Recording settings** deep-links to **System Settings → Privacy
+& Security → Screen & System Audio Recording**. Turn Tro on; if it is absent, use **+ →
+Applications → Tro.app → Open**, or drag Tro.app from Applications into the app list.
+Return to Tro and choose **I changed it — recheck**, then repeat for **Accessibility**.
+Optional microphone recovery opens **Privacy & Security → Microphone**. Use **Relaunch
+Tro** when shown. Test with the actual release identity, because a signing or bundle
+identity change can create a different TCC entry.
+
+On Windows 11, screen readiness is a support preflight. The first selected-window
+Observe remains authoritative, and protected/elevated windows can still be unavailable.
+For optional microphone recovery, use **Settings → Privacy & security → Microphone**
+and confirm both microphone access and **Let desktop apps access your microphone**.
+Tro opens that exact page only after the learner chooses **Open Microphone settings**;
+the learner performs every change. **I changed it — recheck** repeats the bounded,
+discarded-sample probe so Tro does not infer a grant from presentation alone. Windows
+screen access still uses the secure picker when Observe begins and has no onboarding
+app-list toggle.
+
+For a clean consent test, reset/revoke the relevant OS privacy decisions before launch.
+Those resets affect other tests and may require a relaunch. Verify both optional paths:
+one successful microphone request/probe and one complete **Use text instead** journey.
+The probe discards callback buffers immediately. There is no camera request, screen
+video recording, audio file, transcript or upload in this milestone.
 
 ## Optional proof server
 
@@ -71,6 +113,12 @@ keyboard-monitoring/accessibility recovery in the main window.
 Debug desktop builds permit the private model gateway at the exact
 `http://127.0.0.1` loopback host used by `make dev`. Release builds do not set
 that runtime capability and continue to require HTTPS.
+Debug terminal diagnostics identify only the bounded failure stage and code
+(capture start, selected-window observation, transcription transport, action
+setup or model transport); they never include audio, transcript, screen content,
+typed values, grants or provider response bodies.
+The voice HUD has a transparent document root and is hidden on every terminal
+state, including failure, so it cannot leave a persistent strip above other apps.
 
 Daily use is exactly Command+Control on macOS or physical Left Control+Left Alt
 on Windows. Hold to record and release either key to finalize. Windows AltGr and

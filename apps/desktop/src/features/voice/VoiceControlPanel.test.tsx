@@ -11,6 +11,7 @@ import {
 import type { VoiceStatus } from '@tro/contracts';
 import { createPreviewVoice } from '../../platform/preview-voice';
 import { VoiceControlPanel } from './VoiceControlPanel';
+import { LanguageProvider } from '../../i18n';
 
 afterEach(cleanup);
 
@@ -51,4 +52,22 @@ it('keeps text fallback available after automatic voice startup', async () => {
       screen.getByText('Follow the cursor in the selected window.'),
     ).toBeTruthy(),
   );
+});
+
+it('localizes voice chrome without changing the transcript', async () => {
+  const client = createPreviewVoice();
+  render(
+    <LanguageProvider initialLocale="vi">
+      <VoiceControlPanel client={client} />
+    </LanguageProvider>,
+  );
+
+  await screen.findByText('Giữ hai phím. Hỏi. Thả ra.');
+  fireEvent.change(screen.getByLabelText('Nhập văn bản thay vì nói'), {
+    target: { value: 'open settings' },
+  });
+  fireEvent.click(screen.getByText('Chỉ tôi cách làm'));
+
+  await screen.findByText('open settings');
+  expect(screen.getAllByText('Đang hướng dẫn')).toHaveLength(2);
 });

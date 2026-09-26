@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { TeachingCue } from '@tro/contracts';
+import { useLanguage } from '../../i18n';
 
 const CALLOUT_WIDTH = 320;
 const LINE_HEIGHT = 22;
@@ -24,16 +25,6 @@ function wrapCaption(caption: string, width = 42) {
   return lines.slice(0, 10);
 }
 
-function learnerVerb(gesture: TeachingCue['gesture']) {
-  return {
-    point: 'Look here',
-    click: 'Click',
-    drag: 'Drag',
-    type: 'Type',
-    scroll: 'Scroll',
-  }[gesture];
-}
-
 /** SVG pixels only: no DOM input dispatch, pointer movement, or application focus. */
 export function TeachingOverlay({
   cue,
@@ -48,6 +39,7 @@ export function TeachingOverlay({
   stepTotal?: number;
   viewport?: { width: number; height: number };
 }) {
+  const { t } = useLanguage();
   const source = cue.source;
   const x = source.x - origin.x;
   const y = source.y - origin.y;
@@ -104,7 +96,10 @@ export function TeachingOverlay({
       className="teaching-overlay"
       role="img"
       focusable="false"
-      aria-label={`${learnerVerb(cue.gesture)} demonstration, step ${stepIndex + 1} of ${stepTotal}: ${cue.caption}`}
+      aria-label={`${t('teaching.overlayAria', {
+        gesture: t(`gesture.${cue.gesture}`),
+        caption: cue.caption,
+      })}, ${stepIndex + 1}/${stepTotal}`}
     >
       <path
         className="cue-approach"
@@ -168,7 +163,11 @@ export function TeachingOverlay({
       >
         <rect width={CALLOUT_WIDTH} height={calloutHeight} rx="14" />
         <text x="18" y="27" className="cue-step-label">
-          Step {stepIndex + 1} of {stepTotal} · {learnerVerb(cue.gesture)}
+          {t('teaching.overlayStep', {
+            current: stepIndex + 1,
+            total: stepTotal,
+            gesture: t(`gesture.action.${cue.gesture}`),
+          })}
         </text>
         <text x="18" y="54" className="cue-caption" lang={cue.locale}>
           {captionLines.map((line, index) => (

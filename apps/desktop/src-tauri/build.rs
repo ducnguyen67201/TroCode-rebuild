@@ -2,6 +2,7 @@ fn main() {
     #[cfg(feature = "desktop")]
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "app_relaunch",
             "auth_status",
             "auth_sign_in_google",
             "auth_retry",
@@ -18,12 +19,16 @@ fn main() {
             "teaching_request",
             "proof_connect",
             "overlay_current",
-            "observation_permissions",
             "voice_status",
             "voice_enable",
             "voice_disable",
+            "voice_set_transcription_language",
             "voice_execute_text",
             "voice_cancel",
+            "permission_settings_guide_current",
+            "device_readiness",
+            "device_permission_request",
+            "device_permission_settings",
         ]),
     ))
     .expect("Tauri build configuration");

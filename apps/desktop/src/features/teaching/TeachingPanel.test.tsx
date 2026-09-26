@@ -1,5 +1,5 @@
 import React from 'react';
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import {
   act,
   cleanup,
@@ -11,6 +11,7 @@ import {
 import type { TeachingState } from '@tro/contracts';
 import { createPreviewClient } from '../../platform/preview-client';
 import { TeachingPanel } from './TeachingPanel';
+import { LanguageProvider } from '../../i18n';
 
 afterEach(cleanup);
 
@@ -91,4 +92,30 @@ it('shows bounded recovery guidance from runtime readiness', async () => {
   expect(screen.getByDisplayValue(/Increase the counter once/)).toBeTruthy();
   fireEvent.click(screen.getByText('Find windows'));
   await screen.findByText(/Connect your proof account first/);
+});
+
+it('keeps Vietnamese app copy independent from the lesson language', async () => {
+  const client = createPreviewClient();
+  const ask = vi.fn(client.teaching!.ask);
+  client.teaching!.ask = ask;
+  render(
+    <LanguageProvider initialLocale="vi">
+      <TeachingPanel client={client} />
+    </LanguageProvider>,
+  );
+
+  fireEvent.click(screen.getByText('Tìm cửa sổ'));
+  await screen.findByText('Simulated practice window');
+  fireEvent.change(screen.getByLabelText('Cửa sổ thực hành'), {
+    target: { value: '1:1' },
+  });
+  await waitFor(() =>
+    expect((screen.getByText('Quan sát') as HTMLButtonElement).disabled).toBe(
+      false,
+    ),
+  );
+  fireEvent.click(screen.getByText('Chỉ tôi cách làm / cách khác'));
+
+  await waitFor(() => expect(ask).toHaveBeenCalled());
+  expect(ask.mock.calls[0]?.[1]).toBe('en');
 });

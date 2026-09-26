@@ -13,7 +13,7 @@ def test_product_ceiling_has_only_observation():
     manifest = json.loads(files("tro_runtime").joinpath("resources/read-only.json").read_text())
     assert manifest["mode"] == "bounded"
     assert set(manifest["allow"]["tools"]) == {"list_apps", "list_windows", "get_window_state"}
-    assert manifest["resources"] == {}
+    assert manifest["resources"] == {"desktop": {"display": True}}
     assert not any(
         hasattr(CuaObservationSource, name)
         for name in [

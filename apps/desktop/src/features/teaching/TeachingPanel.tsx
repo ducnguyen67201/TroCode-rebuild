@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { TeachingState, TeachingCue } from '@tro/contracts';
 import type { DesktopClient } from '../../platform/desktop-client';
 import { TeachingOverlay } from './TeachingOverlay';
+import { localeKey, useLanguage } from '../../i18n';
 
 export function TeachingPanel({ client }: { client: DesktopClient }) {
+  const { t } = useLanguage();
   const [state, setState] = useState<TeachingState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -13,7 +15,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
   const [caption, setCaption] = useState(
     'Use your own mouse or keyboard on the highlighted control.',
   );
-  const [locale, setLocale] = useState<TeachingCue['locale']>('en');
+  const [lessonLocale, setLessonLocale] = useState<TeachingCue['locale']>('en');
   const [direction, setDirection] =
     useState<NonNullable<TeachingCue['direction']>>('down');
   const [label, setLabel] = useState('');
@@ -37,7 +39,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
         if (disposed) unsubscribe();
         else cleanup = unsubscribe;
       })
-      .catch(() => setError('Live guidance updates are unavailable.'));
+      .catch(() => setError(t('teaching.liveUnavailable')));
     return () => {
       disposed = true;
       cleanup?.();
@@ -81,49 +83,33 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
         );
       }
     } catch {
-      if (ticket === epoch.current)
-        setError(
-          'Guidance is unavailable. Start the runtime, check permissions, and observe again.',
-        );
+      if (ticket === epoch.current) setError(t('teaching.unavailable'));
     } finally {
       if (ticket === epoch.current) setBusy(false);
     }
   }
   const teaching = client.teaching;
   if (!teaching) return null;
+  const readiness = (value: string) => {
+    const key = localeKey('teaching.readiness', value);
+    return key ? t(key) : value;
+  };
   return (
-    <section className="teaching-panel" aria-label="Visual teaching">
-      <h2>Follow the cursor. Try it yourself.</h2>
-      <button
-        onClick={() => {
-          void teaching
-            .permissions()
-            .then(setError)
-            .catch(() => setError('Permission check unavailable.'));
-        }}
-      >
-        Observation permissions
-      </button>
-      <p>
-        Tro's instructor cursor points, circles and demonstrates the path. You
-        perform every real click, drag, keystroke and scroll.
-      </p>
+    <section className="teaching-panel" aria-label={t('teaching.aria')}>
+      <h2>{t('teaching.heading')}</h2>
+      <p>{t('teaching.description')}</p>
       <button
         disabled={busy}
         onClick={() => {
           void teaching
             .connectProof()
-            .catch(() =>
-              setError(
-                'Configure a private proof account on this device first.',
-              ),
-            );
+            .catch(() => setError(t('teaching.proofUnavailable')));
         }}
       >
-        Connect proof account
+        {t('teaching.connectProof')}
       </button>
       <label>
-        What would you like help with?
+        {t('teaching.question')}
         <input
           maxLength={1000}
           value={question}
@@ -132,15 +118,15 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
       </label>
       <button
         disabled={busy || !state?.target || !question.trim()}
-        onClick={() => void run(() => teaching.ask(question, locale))}
+        onClick={() => void run(() => teaching.ask(question, lessonLocale))}
       >
-        Show me how / show another way
+        {t('teaching.plan')}
       </button>
       <button
         disabled={busy}
         onClick={() => void run(() => teaching.listTargets())}
       >
-        Find windows
+        {t('teaching.findWindows')}
       </button>
       <button
         onClick={() => {
@@ -151,10 +137,10 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
           void client.stop();
         }}
       >
-        Stop guidance
+        {t('teaching.stop')}
       </button>
       <label>
-        Practice window
+        {t('teaching.practiceWindow')}
         <select
           disabled={busy}
           value={
@@ -167,14 +153,14 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
           }}
         >
           <option value="" disabled>
-            Select a window you opened
+            {t('teaching.selectWindow')}
           </option>
           {state?.targets.map((target) => (
             <option
               key={`${target.pid}:${target.window_id}`}
               value={`${target.pid}:${target.window_id}`}
             >
-              {target.title || 'Untitled window'}
+              {target.title || t('teaching.untitledWindow')}
             </option>
           ))}
         </select>
@@ -183,24 +169,26 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
         disabled={busy || !state?.target}
         onClick={() => void run(() => teaching.observe())}
       >
-        Observe
+        {t('teaching.observe')}
       </button>
       {state?.readiness && (
         <p role="status">
-          Observation: {state.readiness.observation}. Screenshot:{' '}
-          {state.readiness.screen}. Accessibility:{' '}
-          {state.readiness.accessibility}. Model: {state.readiness.model}.
+          {t('teaching.observation')}: {readiness(state.readiness.observation)}.{' '}
+          {t('teaching.screenshot')}: {readiness(state.readiness.screen)}.{' '}
+          {t('teaching.accessibility')}:{' '}
+          {readiness(state.readiness.accessibility)}. {t('teaching.model')}:{' '}
+          {readiness(state.readiness.model)}.
           {state.readiness.reason === 'connect_model' &&
-            ' Connect your proof account first.'}
+            ` ${t('teaching.connectModel')}`}
           {state.readiness.reason === 'observe_again' &&
-            ' Check observation access, then Observe again.'}
+            ` ${t('teaching.observeAgain')}`}
           {state.readiness.reason === 'retry_plan' &&
-            ' Model access or planning failed. Reconnect if your grant expired, then explicitly replan. Previous progress is preserved.'}
+            ` ${t('teaching.retryPlan')}`}
         </p>
       )}
       {state?.journey && (
-        <section aria-label="Teaching plan">
-          <h3>Your steps</h3>
+        <section aria-label={t('teaching.planAria')}>
+          <h3>{t('teaching.steps')}</h3>
           <ol>
             {state.journey.steps.map((step, index) => (
               <li
@@ -237,8 +225,8 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
               }
             >
               {state.journey.status === 'paused'
-                ? 'Resume guidance'
-                : 'Pause guidance'}
+                ? t('teaching.resume')
+                : t('teaching.pause')}
             </button>
           )}
           {teaching.planControl &&
@@ -247,23 +235,23 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
                 disabled={busy}
                 onClick={() => void run(() => teaching.planControl!('confirm'))}
               >
-                Continue — I’m ready
+                {t('teaching.continue')}
               </button>
             )}
         </section>
       )}
       <details>
-        <summary>Try one visual demonstration</summary>
+        <summary>{t('teaching.manualTools')}</summary>
         {state?.observation && (
           <fieldset disabled={busy}>
-            <legend>Visual guidance</legend>
+            <legend>{t('teaching.visualGuidance')}</legend>
             <label>
-              Control
+              {t('teaching.control')}
               <select
                 value={elementId}
                 onChange={(event) => setElementId(event.target.value)}
               >
-                <option value="">Choose an observed control</option>
+                <option value="">{t('teaching.chooseControl')}</option>
                 {state.observation.elements.map((element) => (
                   <option key={element.id} value={element.id}>
                     {element.label || element.role}
@@ -272,7 +260,7 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
               </select>
             </label>
             <label>
-              Gesture
+              {t('teaching.gesture')}
               <select
                 value={gesture}
                 onChange={(event) =>
@@ -281,19 +269,21 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
               >
                 {(['point', 'click', 'drag', 'type', 'scroll'] as const).map(
                   (item) => (
-                    <option key={item}>{item}</option>
+                    <option key={item} value={item}>
+                      {t(`gesture.${item}`)}
+                    </option>
                   ),
                 )}
               </select>
             </label>
             {gesture === 'drag' && (
               <label>
-                Destination
+                {t('teaching.destination')}
                 <select
                   value={destinationId}
                   onChange={(event) => setDestinationId(event.target.value)}
                 >
-                  <option value="">Choose destination</option>
+                  <option value="">{t('teaching.chooseDestination')}</option>
                   {state.observation.elements.map((element) => (
                     <option key={element.id} value={element.id}>
                       {element.label || element.role}
@@ -304,21 +294,23 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
             )}
             {gesture === 'scroll' && (
               <label>
-                Direction
+                {t('teaching.direction')}
                 <select
                   value={direction}
                   onChange={(event) =>
                     setDirection(event.target.value as typeof direction)
                   }
                 >
-                  {['up', 'down', 'left', 'right'].map((item) => (
-                    <option key={item}>{item}</option>
+                  {(['up', 'down', 'left', 'right'] as const).map((item) => (
+                    <option key={item} value={item}>
+                      {t(`direction.${item}`)}
+                    </option>
                   ))}
                 </select>
               </label>
             )}
             <label>
-              Caption
+              {t('teaching.caption')}
               <input
                 maxLength={400}
                 value={caption}
@@ -326,16 +318,19 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
               />
             </label>
             <label>
-              Language
+              {t('teaching.guidanceLanguage')}
               <select
-                value={locale}
+                value={lessonLocale}
                 onChange={(event) =>
-                  setLocale(event.target.value as typeof locale)
+                  setLessonLocale(event.target.value as typeof lessonLocale)
                 }
               >
                 <option value="en">English</option>
                 <option value="vi">Tiếng Việt</option>
               </select>
+              <small className="field-note">
+                {t('teaching.guidanceLanguageNote')}
+              </small>
             </label>
             <button
               disabled={
@@ -349,14 +344,14 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
                     elementId,
                     gesture,
                     caption,
-                    locale,
+                    locale: lessonLocale,
                     destinationId: gesture === 'drag' ? destinationId : null,
                     direction: gesture === 'scroll' ? direction : null,
                   }),
                 )
               }
             >
-              Show / repeat guidance
+              {t('teaching.showGuidance')}
             </button>
           </fieldset>
         )}
@@ -370,14 +365,14 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
             </div>
           )}
           <label>
-            Expected control label
+            {t('teaching.expectedLabel')}
             <input
               value={label}
               onChange={(event) => setLabel(event.target.value)}
             />
           </label>
           <label>
-            Expected value
+            {t('teaching.expectedValue')}
             <input
               value={expected}
               onChange={(event) => setExpected(event.target.value)}
@@ -389,13 +384,17 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
               void run(() => teaching.check(state.cue!.id, label, expected))
             }
           >
-            I tried it — check
+            {t('teaching.check')}
           </button>
         </>
       )}
       {state?.check && (
         <p role="status">
-          {state.check.outcome}: {state.check.message}
+          {(() => {
+            const key = localeKey('teaching.outcome', state.check.outcome);
+            return key ? t(key) : state.check.outcome;
+          })()}
+          : {state.check.message}
         </p>
       )}
       {error && <p role="alert">{error}</p>}

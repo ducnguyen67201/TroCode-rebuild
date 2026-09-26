@@ -60,8 +60,9 @@ remain possible under their own authority rules.
 | E6  | Founder clarification in this task, 2026-09-13                                                                                  | Show where/how to act; learner performs every external-app action; no automated demonstration                                                                                                                                                                                                          |
 | E5  | Granola: August 19, 16:00 “Short recording”, `9800dff4-f559-484a-bacb-c5d0c7a70887`                                             | Persistent/translucent highlight, tutorial language and readable pacing feedback; speaker is not established as a customer                                                                                                                                                                             |
 | E7  | Founder clarification in this task, 2026-09-25                                                                                  | Google is the initial production sign-in provider; the desktop is gated until authenticated; workspace membership is pre-added by verified email and claimed automatically without an invitation flow; active devices use renewable 30-day sessions and leave the app when renewal is no longer valid  |
-| E8  | Founder clarification in this task, 2026-09-25                                                                                  | Hold exactly Command+Control on macOS or Left Control+Left Alt on Windows to capture one instruction; use rolling completed-file transcription for lower cost, dispatch only the final transcript, and allow bounded direct computer control in the pinned window with confirmation and emergency stop |
+| E8  | Founder clarification in this task, 2026-09-25                                                                                  | Hold exactly Command+Control on macOS or Left Control+Left Alt on Windows to capture one instruction; use rolling completed-file transcription for lower cost and dispatch only the final transcript into the observation-only guidance journey                                                         |
 | E9  | Founder clarification in this task, 2026-09-26                                                                                  | Keep the teaching cursor separate and extensible through explicit `show_student_*` tools, but use it only to point, circle and demonstrate trajectories; the learner performs every real computer action and F11 direct control is superseded                                                          |
+| E10 | Founder clarification in this task, 2026-09-26                                                                                  | English and Vietnamese are application-interface choices. Selecting Vietnamese localizes the complete Tro interface and is independent of voice transcription and lesson/guidance language.                                                                                                            |
 
 E1 and E2 cover one private robotics/programming center. Parent needs are
 reported by the center, not by direct parent interviews. Partnership discussion
@@ -103,20 +104,21 @@ that the customer rejected automation.
 
 ## Founder requirements and supporting features
 
-| ID  | Requirement and source                                                                                                               | Implementation boundary                                                                                                                                                                                                                                                                                                    | Phase        |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| F01 | OpenAI Agents SDK controls the teaching plan and Instructor Cursor tools. E4/E9                                                      | Python runtime owns orchestration and the closed `show_student_*` tool list; CUA supplies read-only observation only                                                                                                                                                                                                       | P1, P2, P7-A |
-| F02 | Planner. E4                                                                                                                          | Structured, revisable teaching plan in the same session; no extra planning microservice                                                                                                                                                                                                                                    | P2           |
-| F03 | Cursor explains “what we are doing, then this, then that.” E4                                                                        | Step overview, grounded pointing, explanation, student action, fresh check; presentation does not grade                                                                                                                                                                                                                    | P1, P2       |
-| F04 | Know what is on screen. E3/E4                                                                                                        | Fresh native/semantic/visual context with target identity, coordinate mapping and stale-target handling                                                                                                                                                                                                                    | P1, P2       |
-| F05 | Teacher uploads material and uses it to make class work easier. E4                                                                   | Upload/ingestion state, review, immutable material versions, assignments and scoped retrieval                                                                                                                                                                                                                              | P3           |
-| F06 | Help students become independent with teacher guidance. E3/E4                                                                        | Visual guidance with learner-performed actions; teacher controls explanation/answer reveal, never external-app automation                                                                                                                                                                                                  | P2, P3       |
-| F07 | Cross-platform rebuild using agreed stack. E4                                                                                        | Tauri + React/TypeScript + bundled Python SDK/CUA + Rust backend                                                                                                                                                                                                                                                           | P0, P1, P8   |
-| F08 | Implement first, typecheck and verify afterward. E4                                                                                  | Complete milestone → review → applicable verification batch → grouped fixes                                                                                                                                                                                                                                                | Every phase  |
-| F09 | Readable, persistent, correctly localized teaching cues. E5, unattributed feedback                                                   | Highlight persists while relevant; local pacing, repeat/next controls, correct lesson language                                                                                                                                                                                                                             | P1, P2       |
-| F10 | Show where/how to click, drag, scroll or type; the learner performs it. E6/E9                                                        | Read-only CUA, visual gesture cues, learner action then fresh check; this boundary applies to every teaching and voice/text path                                                                                                                                                                                           | P1 onward    |
-| F11 | User-initiated selected-window guidance by exactly-two-key push-to-talk or text fallback. E8/E9                                      | Hold Command+Control on macOS or LeftCtrl+LeftAlt on Windows; Rust captures bounded in-memory audio and rolling completed WAV files, the final transcript starts one bounded Instructor Cursor plan, and stop/auth/target loss cancels with no replay                                                                      | P7-A, P8     |
-| F12 | Gate the product behind Google sign-in and automatically connect a verified account to workspace access pre-added for that email. E7 | Tauri/Rust owns the system-browser OAuth/PKCE flow and OS-protected refresh credential; the backend verifies Google identity, issues short-lived app JWTs, rotates a 30-day refresh session and derives current workspace authority from backend membership. React receives status/profile data, never bearer credentials. | P3, P8       |
+| ID  | Requirement and source                                                                                                               | Implementation boundary                                                                                                                                                                                                                                                                                                    | Phase            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| F01 | OpenAI Agents SDK controls the teaching plan and Instructor Cursor tools. E4/E9                                                      | Python runtime owns orchestration and the closed `show_student_*` tool list; CUA supplies read-only observation only                                                                                                                                                                                                       | P1, P2, P7-A     |
+| F02 | Planner. E4                                                                                                                          | Structured, revisable teaching plan in the same session; no extra planning microservice                                                                                                                                                                                                                                    | P2               |
+| F03 | Cursor explains “what we are doing, then this, then that.” E4                                                                        | Step overview, grounded pointing, explanation, student action, fresh check; presentation does not grade                                                                                                                                                                                                                    | P1, P2           |
+| F04 | Know what is on screen. E3/E4                                                                                                        | Fresh native/semantic/visual context with target identity, coordinate mapping and stale-target handling                                                                                                                                                                                                                    | P1, P2           |
+| F05 | Teacher uploads material and uses it to make class work easier. E4                                                                   | Upload/ingestion state, review, immutable material versions, assignments and scoped retrieval                                                                                                                                                                                                                              | P3               |
+| F06 | Help students become independent with teacher guidance. E3/E4                                                                        | Visual guidance with learner-performed actions; teacher controls explanation/answer reveal, never external-app automation                                                                                                                                                                                                  | P2, P3           |
+| F07 | Cross-platform rebuild using agreed stack. E4                                                                                        | Tauri + React/TypeScript + bundled Python SDK/CUA + Rust backend                                                                                                                                                                                                                                                           | P0, P1, P8       |
+| F08 | Implement first, typecheck and verify afterward. E4                                                                                  | Complete milestone → review → applicable verification batch → grouped fixes                                                                                                                                                                                                                                                | Every phase      |
+| F09 | Readable, persistent, correctly localized teaching cues. E5, unattributed feedback                                                   | Highlight persists while relevant; local pacing, repeat/next controls, correct lesson language                                                                                                                                                                                                                             | P1, P2           |
+| F10 | Show where/how to click, drag, scroll or type; the learner performs it. E6/E9                                                        | Read-only CUA, visual gesture cues, learner action then fresh check; this boundary applies to every teaching and voice/text path                                                                                                                                                                                           | P1 onward        |
+| F11 | User-initiated selected-window guidance by exactly-two-key push-to-talk or text fallback. E8/E9                                      | Hold Command+Control on macOS or LeftCtrl+LeftAlt on Windows; Rust captures bounded in-memory audio and rolling completed WAV files, the final transcript starts one bounded Instructor Cursor plan, and stop/auth/target loss cancels with no replay                                                                      | P7-A, P8         |
+| F12 | Gate the product behind Google sign-in and automatically connect a verified account to workspace access pre-added for that email. E7 | Tauri/Rust owns the system-browser OAuth/PKCE flow and OS-protected refresh credential; the backend verifies Google identity, issues short-lived app JWTs, rotates a 30-day refresh session and derives current workspace authority from backend membership. React receives status/profile data, never bearer credentials. | P3, P8           |
+| F13 | Let the user choose English or Vietnamese for the complete application interface. E10                                                | React owns one persisted application locale across sign-in, authenticated navigation, settings, teaching controls, voice controls and auxiliary windows. UI locale never changes transcription, typed instructions, external-app content or the independently selected lesson/guidance language.                           | P2, P3, P7-A, P8 |
 
 Uploads, SDK choice, and the exact cursor teaching loop are founder requirements.
 The interview supports their purpose; do not attribute their detailed design to
@@ -550,6 +552,8 @@ Tauri's overlay path, before extensive UI reconstruction.
       never permission to control the student's app.
 - [ ] Implement text/buttons fully, localized readable cues, and clear behavior
       for moved windows, wrong apps, missing permissions, unavailable tools and budgets.
+      English/Vietnamese application locale is persisted and remains independent
+      from transcription and lesson/guidance language (F13).
 
 Dependencies: P1. Covers C02/C04, silent C09; F01–F04/F06/F09.
 Exit: a student completes one multi-screen exercise, encounters a planted error,
@@ -637,6 +641,11 @@ agent action silently uploads arbitrary files or changes a final grade.
 - [ ] Capture memory-only audio and upload complete 1,250 ms WAV chunks with
       250 ms overlap through the fixed `gpt-transcribe` proxy. Merge in sequence;
       partial, failed, empty or incomplete transcription never dispatches.
+- [ ] Store a device-local transcription preference with exactly Auto, English
+      and Vietnamese. A fresh or invalid setting defaults to Vietnamese; Auto
+      omits language hints, while English/Vietnamese send `en`/`vi` for every
+      chunk in the capture-time snapshot. This guides recognition and does not
+      translate the instruction.
 - [ ] Dispatch the final transcript once to an expiring one-window preparation.
       Bound the Instructor Cursor plan to three visual steps and five model turns;
       revalidate the target before presentation and never dispatch native input.
@@ -732,18 +741,19 @@ lifecycle and failure handling, plus observed behavior in the relevant packaged
 application/classroom environment. Fake models can prove routing; they cannot
 prove that a real model correctly understands a student's screen.
 
-| Acceptance scenario                                         | Required evidence                                                                                               | Phases        |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
-| Fresh packaged installation on Windows/macOS                | Bundled runtime works without Python/Node installation; permissions, overlay, scaling and stop behave correctly | P1/P8         |
-| Multi-step lesson with a moved window and wrong input       | Re-observation, correct target, useful recovery, preserved lesson identity                                      | P2            |
-| Malicious instructions inside an uploaded resource          | Content cannot change teacher authority, tool grants or submission policy                                       | P3            |
-| Two roles plus a cross-account access attempt               | Backend denies improper publish/broadcast/read/review, independent of hidden UI                                 | P3/P6         |
-| Duplicate directive and disconnected student                | Durable per-device outcome; no stale backlog execution or false success                                         | P4            |
-| Crash while showing a gesture or checking work              | Cue hidden/no completion inferred; an F11 plan cancels and no transcript/tool call is replayed                  | P1/P2/P7-A/P8 |
-| Explicit Help and quiet unresolved student                  | Allowed contextual evidence reaches teacher; hypotheses and unknown state remain labeled                        | P5            |
-| Finished-but-unsubmitted, return, resubmit                  | Separate facts and artifact versions; no duplicate upload or accidental final grade                             | P6            |
-| Mic disabled, quiet speech, noise and interrupted narration | Full text path, recoverable transcription failure, partial/failure never dispatches                             | P2/P7-A       |
-| Existing installed state/database upgrade                   | Data/ownership preserved, supported compatibility path and realistic rollback plan                              | P8            |
+| Acceptance scenario                                         | Required evidence                                                                                                                     | Phases        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Fresh packaged installation on Windows/macOS                | Bundled runtime works without Python/Node installation; permissions, overlay, scaling and stop behave correctly                       | P1/P8         |
+| Multi-step lesson with a moved window and wrong input       | Re-observation, correct target, useful recovery, preserved lesson identity                                                            | P2            |
+| Malicious instructions inside an uploaded resource          | Content cannot change teacher authority, tool grants or submission policy                                                             | P3            |
+| Two roles plus a cross-account access attempt               | Backend denies improper publish/broadcast/read/review, independent of hidden UI                                                       | P3/P6         |
+| Duplicate directive and disconnected student                | Durable per-device outcome; no stale backlog execution or false success                                                               | P4            |
+| Crash while showing a gesture or checking work              | Cue hidden/no completion inferred; an F11 plan cancels and no transcript/tool call is replayed                                       | P1/P2/P7-A/P8 |
+| Explicit Help and quiet unresolved student                  | Allowed contextual evidence reaches teacher; hypotheses and unknown state remain labeled                                              | P5            |
+| Finished-but-unsubmitted, return, resubmit                  | Separate facts and artifact versions; no duplicate upload or accidental final grade                                                   | P6            |
+| Mic disabled, quiet speech, noise and interrupted narration | Full text path, recoverable transcription failure, partial/failure never dispatches                                                   | P2/P7-A       |
+| Switch the application between English and Vietnamese       | All application chrome and system statuses change and persist across windows/restart; transcription and lesson language do not change | P2/P3/P7-A/P8 |
+| Existing installed state/database upgrade                   | Data/ownership preserved, supported compatibility path and realistic rollback plan                                                    | P8            |
 
 Record baseline and pilot values for manual discovery trips/checks per class,
 time from reported or observed difficulty to useful help, repeated setup actions,
@@ -928,16 +938,42 @@ stop, cancellation, auth loss, target loss or process exit ends all capture,
 network and input work without replay. Audio remains memory-only and transcript,
 screenshot and typed values are not persisted or logged.
 
+While one F11 action is executing, another completed hold/release may transcribe
+into a bounded in-memory FIFO of at most four follow-ups. Follow-ups never call
+the action-preparation endpoint concurrently with the active run. When a run
+ends, the next item obtains a fresh grant and fresh observation of the same
+window identity pinned by the active run; a changed or missing window fails the
+queue closed. Cancel, disable, auth loss and process exit clear every queued
+item, and only final transcripts enter the queue. The main voice panel projects
+the FIFO count and ordered instruction text; the global HUD remains a minimal
+capture/action-state indicator.
+
 The cost/latency design uses fixed-model `gpt-transcribe` completed WAV requests,
 not GPT-Live or Realtime transcription: 1,250 ms chunks, 250 ms overlap, at most
 two requests in flight and deterministic ordered merging. This is an application
 tradeoff, not a claim that file transcription always beats realtime latency.
 P7-A/P8 acceptance must record actual EN/VI/noisy accuracy, billed duration,
 request count and reference-network latency on packaged macOS and Windows.
+The Settings surface exposes exactly Auto, English and Vietnamese for the next
+voice instruction. Rust persists the non-secret preference under the local app
+configuration and snapshots it when a chord-down capture is admitted, so every
+chunk in one utterance uses the same hint even if Settings changes mid-capture.
+The voice contract schema is the sole authority for the closed language codes
+and Vietnamese default; generated TypeScript and Rust bindings carry those
+values across the UI, native host and hosted proxy boundaries.
+Auto sends no `languages[]` field, English sends only `en`, and Vietnamese sends
+only `vi`; Vietnamese is the fresh-install and invalid-storage fallback. These
+are expected-input transcription hints, not translation or a guarantee of
+accuracy, and packaged acceptance must exercise all three choices.
 The bounded action loop uses the compiled `gpt-5.6-sol` model identifier; model
 policy is source-controlled and cannot be overridden by deployment environment.
 The native debug launcher alone permits the exact `http://127.0.0.1` model
 gateway used by local development; release runtimes continue to require HTTPS.
+Debug diagnostics expose only bounded stage/code pairs for capture, observation,
+transcription transport, action setup and model transport. They must never log
+audio, transcript text, screenshots, typed values, grants or provider bodies.
+The voice HUD is visible only during active capture/action or confirmation and
+hides immediately on failed, completed, cancelled, ready or disabled states.
 
 After an authenticated app launch, the voice client arms push-to-talk once
 automatically so the normal path requires only holding the two-key chord,
@@ -1033,3 +1069,53 @@ validator make the next acceptance run reproducible. See
 [reliable lesson architecture](architecture/reliable-lesson.md).
 These source changes do not close P1/P2: real-model lesson trials, installed worker
 permission attribution, Windows and display/latency acceptance remain pending.
+
+### Native permission onboarding decision — 2026-09-26
+
+The first authenticated desktop run includes a device permission checkup, with the
+same checkup available later from Settings. Screen observation is required for the
+screen-aware teaching journey. On macOS this covers Screen Recording and
+Accessibility; on Windows it reports supported/unknown capability honestly and
+defers actual selected-window proof to observation instead of presenting a macOS-like
+permission claim. Microphone access is optional and may be skipped because C09 keeps
+the complete text/button journey available with the microphone disabled. Camera
+access is not requested or declared in this milestone.
+
+The checkup uses a local teaching-pointer treatment to point at the next control
+inside Tro. After an explicit learner click, the native host may open the exact,
+allowlisted operating-system settings destination for that permission: Screen &
+System Audio Recording, Accessibility or Microphone on macOS, and Microphone on
+Windows. A separate nonactivating, click-through Tro guide may remain above that
+settings page to explain the current path, toggle, + button and Applications → Tro.app
+add/drag fallback. It uses fixed instructional placement rather than claiming dynamic
+knowledge of OS control geometry. When the native host can read the public bounds of
+the macOS System Settings window, it places that fixed guide beside the permission
+app list and points back toward the list; it does not identify or target an individual
+OS control. The in-app pointer disappears after this handoff. Tro never drives the real pointer, clicks, toggles,
+drags, drops or draws over an operating-system consent prompt; the learner performs
+every settings action. Windows screen observation continues to use its secure picker
+at Observe time rather than presenting a macOS-like permission page.
+
+Permission prompts or settings launches occur only after an explicit learner click;
+denied or revoked access produces a fresh recheck and an explicit relaunch state where
+the platform requires it. The microphone readiness probe discards samples in memory
+and does not create an audio or video recording. Packaged Windows x64 and macOS arm64
+acceptance must cover first run, exact-route opening, denial, recovery, revocation,
+relaunch, the microphone-skipped silent path, the guide's click-through behavior, and
+zero injected external input.
+
+### Application localization checkpoint — 2026-09-26
+
+F13 source support provides one persisted English/Vietnamese application locale
+for the sign-in threshold, device-permission onboarding and guide, authenticated
+shell, settings, workspace access, runtime, teaching controls, voice controls and
+auxiliary HUD/overlay accessibility text. Unknown native status details fall back
+to localized, bounded public messages rather than leaking untranslated diagnostics
+into the Vietnamese interface.
+
+The application locale is presentation state only. It does not alter the
+transcription pipeline, final transcript, typed instruction, selected-window
+content or the independently selected lesson/guidance locale. Source tests cover
+pre-auth switching, persistence, representative authenticated/voice/workspace
+surfaces and the separation between Vietnamese UI and English lesson planning.
+Packaged macOS/Windows visual and persistence acceptance remains part of P8.

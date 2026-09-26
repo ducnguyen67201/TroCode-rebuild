@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from tro_runtime.__main__ import serve
+from tro_runtime.__main__ import safe_failure_details, serve
 from tro_runtime.protocol import DIGEST, MAX_FRAME_BYTES, encode_message
 from tro_runtime.runtime import Runtime
 
@@ -52,6 +52,18 @@ def test_mismatch_and_generation():
     initialize(runtime)
     assert runtime.handle(request("health", generationId=str(uuid4())))["code"] == "NOT_READY"
     assert runtime.handle(request("stopped"))["code"] == "INVALID_MESSAGE"
+
+
+def test_failure_diagnostics_use_protocol_code_and_identify_safe_runtime_stage():
+    assert safe_failure_details("runtime.prepareInstruction") == (
+        "NOT_READY",
+        "Selected-window observation is unavailable. Check observation permissions.",
+    )
+    assert safe_failure_details("runtime.executeInstruction") == (
+        "NOT_READY",
+        "The selected-window action could not start.",
+    )
+    assert safe_failure_details("runtime.ask")[0] == "NOT_READY"
 
 
 def test_real_process_and_eof():

@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DeviceReadiness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "platform",
+    "requiresRelaunch",
+    "message",
+    "screenCapture",
+    "accessibility",
+    "microphone"
+  ],
+  "properties": {
+    "platform": { "$ref": "#/definitions/DevicePlatform" },
+    "requiresRelaunch": { "type": "boolean" },
+    "message": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "screenCapture": { "$ref": "#/definitions/DeviceCapability" },
+    "accessibility": { "$ref": "#/definitions/DeviceCapability" },
+    "microphone": { "$ref": "#/definitions/DeviceCapability" }
+  },
+  "definitions": {
+    "DevicePlatform": {
+      "type": "string",
+      "enum": ["macos", "windows", "unsupported"]
+    },
+    "CapabilityStatus": {
+      "type": "string",
+      "enum": [
+        "granted",
+        "available",
+        "notDetermined",
+        "denied",
+        "unavailable",
+        "unknown"
+      ]
+    },
+    "RecoveryAction": {
+      "type": "string",
+      "enum": ["none", "request", "manualSettings", "recheck", "relaunch"]
+    },
+    "PermissionRequestKind": {
+      "type": "string",
+      "enum": ["microphone"]
+    },
+    "PermissionSettingsTarget": {
+      "type": "string",
+      "enum": ["screenCapture", "accessibility", "microphone"]
+    },
+    "PermissionSettingsGuide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "target"],
+      "properties": {
+        "platform": { "$ref": "#/definitions/DevicePlatform" },
+        "target": { "$ref": "#/definitions/PermissionSettingsTarget" }
+      }
+    },
+    "DeviceCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "required", "canRequest", "recovery", "message"],
+      "properties": {
+        "status": { "$ref": "#/definitions/CapabilityStatus" },
+        "required": { "type": "boolean" },
+        "canRequest": { "type": "boolean" },
+        "recovery": { "$ref": "#/definitions/RecoveryAction" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    }
+  }
+}

@@ -34,7 +34,27 @@ struct Pending {
     deadline: Instant,
     correlation: Value,
     expected: String,
+    request_kind: String,
     reply: oneshot::Sender<Reply>,
+}
+
+fn runtime_error(value: &Value) -> WorkerError {
+    match (value["code"].as_str(), value["message"].as_str()) {
+        (
+            Some("NOT_READY"),
+            Some("Selected-window observation is unavailable. Check observation permissions."),
+        ) => WorkerError::new(
+            "OBSERVATION_UNAVAILABLE",
+            "Selected-window observation is unavailable. Check observation permissions.",
+        ),
+        (Some("NOT_READY"), Some("The selected-window action could not start.")) => {
+            WorkerError::new(
+                "ACTION_SETUP_UNAVAILABLE",
+                "The selected-window action could not start.",
+            )
+        }
+        _ => WorkerError::new("NOT_READY", "Runtime refused the request."),
+    }
 }
 #[derive(Clone)]
 pub struct Worker {
@@ -280,7 +300,12 @@ async fn drive(
                         let _ = waiter.reply.send(Err(WorkerError::new("INVALID_MESSAGE", "Runtime response identity mismatch.")));
                         break;
                     }
-                    let result = if value["kind"] == "runtime.error" { Err(WorkerError::new("NOT_READY", "Runtime refused the request.")) } else { Ok(value) };
+                    let result = if value["kind"] == "runtime.error" {
+                        let error = runtime_error(&value);
+                        #[cfg(debug_assertions)]
+                        eprintln!("tro diagnostic: runtime_request_failed kind={} code={}", waiter.request_kind, error.code);
+                        Err(error)
+                    } else { Ok(value) };
                     let _ = waiter.reply.send(result);
                 }
             }
@@ -325,6 +350,7 @@ async fn send_request(
     let expected = expected_response(request.value["kind"].as_str().ok_or(())?)
         .ok_or(())?
         .to_owned();
+    let request_kind = request.value["kind"].as_str().ok_or(())?.to_owned();
     let mut bytes = serde_json::to_vec(&request.value).map_err(|_| ())?;
     bytes.push(b'\n');
     if timeout(Duration::from_millis(200), input.write_all(&bytes))
@@ -340,8 +366,30 @@ async fn send_request(
             deadline: request.deadline,
             correlation: request.value["correlationId"].clone(),
             expected,
+            request_kind,
             reply: request.reply,
         },
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::runtime_error;
+    use serde_json::json;
+
+    #[test]
+    fn runtime_errors_expose_only_known_safe_diagnostic_categories() {
+        let observation = runtime_error(&json!({
+            "code":"NOT_READY",
+            "message":"Selected-window observation is unavailable. Check observation permissions."
+        }));
+        assert_eq!(observation.code, "OBSERVATION_UNAVAILABLE");
+        let unknown = runtime_error(&json!({
+            "code":"UPSTREAM_SECRET",
+            "message":"must not cross the boundary"
+        }));
+        assert_eq!(unknown.code, "NOT_READY");
+        assert_eq!(unknown.message, "Runtime refused the request.");
+    }
 }

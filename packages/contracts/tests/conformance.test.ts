@@ -2,13 +2,75 @@ import { describe, expect, it } from 'vitest';
 import corpus from '../../../tests/fixtures/contracts/corpus.json';
 import {
   parseAuthStatus,
+  parseDeviceReadiness,
   parseMessage,
+  parsePermissionSettingsGuide,
   parseStatus,
   parseWorkspaceMember,
   parseWorkspaceMemberList,
   parseVoiceStatus,
 } from '../src/index';
+const readiness = {
+  platform: 'macos',
+  requiresRelaunch: false,
+  message: 'Device permissions checked.',
+  screenCapture: {
+    status: 'granted',
+    required: true,
+    canRequest: false,
+    recovery: 'none',
+    message: 'Screen Recording is ready.',
+  },
+  accessibility: {
+    status: 'granted',
+    required: true,
+    canRequest: false,
+    recovery: 'none',
+    message: 'Accessibility is ready.',
+  },
+  microphone: {
+    status: 'notDetermined',
+    required: false,
+    canRequest: true,
+    recovery: 'request',
+    message: 'Microphone setup is optional.',
+  },
+};
 describe('wire conformance', () => {
+  it('accepts a closed device readiness projection', () =>
+    expect(parseDeviceReadiness(readiness)).toEqual(readiness));
+  it('rejects native extras and unknown readiness states', () => {
+    expect(() =>
+      parseDeviceReadiness({ ...readiness, rawError: 'private native data' }),
+    ).toThrow('Invalid device readiness');
+    expect(() =>
+      parseDeviceReadiness({
+        ...readiness,
+        microphone: { ...readiness.microphone, status: 'prompting' },
+      }),
+    ).toThrow('Invalid device readiness');
+  });
+  it('accepts only the closed permission settings guide projection', () => {
+    expect(
+      parsePermissionSettingsGuide({
+        platform: 'macos',
+        target: 'screenCapture',
+      }),
+    ).toEqual({ platform: 'macos', target: 'screenCapture' });
+    expect(() =>
+      parsePermissionSettingsGuide({
+        platform: 'windows',
+        target: 'camera',
+      }),
+    ).toThrow('Invalid permission settings guide');
+    expect(() =>
+      parsePermissionSettingsGuide({
+        platform: 'macos',
+        target: 'accessibility',
+        settingsUrl: 'private://native-detail',
+      }),
+    ).toThrow('Invalid permission settings guide');
+  });
   for (const entry of corpus)
     it(entry.name, () => {
       if (entry.valid) expect(() => parseMessage(entry.value)).not.toThrow();
@@ -113,6 +175,7 @@ describe('wire conformance', () => {
       targetTitle: null,
       message: 'Ready.',
       shortcut: 'Command+Control',
+      transcriptionLanguage: 'vi',
       permissions: {
         microphone: 'granted',
         keyboardMonitoring: 'granted',
@@ -121,6 +184,14 @@ describe('wire conformance', () => {
       },
     };
     expect(parseVoiceStatus(value)).toEqual(value);
+    const missingLanguage: Record<string, unknown> = { ...value };
+    delete missingLanguage.transcriptionLanguage;
+    expect(() => parseVoiceStatus(missingLanguage)).toThrow(
+      'Invalid voice status',
+    );
+    expect(() =>
+      parseVoiceStatus({ ...value, transcriptionLanguage: 'fr' }),
+    ).toThrow('Invalid voice status');
     expect(() => parseVoiceStatus({ ...value, audio: 'bytes' })).toThrow(
       'Invalid voice status',
     );
