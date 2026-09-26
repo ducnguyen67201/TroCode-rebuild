@@ -23,9 +23,9 @@ flowchart LR
 
 The visual target contains a description and x, y, width and height between zero
 and one. The rectangle must fit wholly inside the screenshot. A point is represented
-by a small rectangle. It is not a desktop coordinate. In F10 it is presentation-
-only; in F11 the selected-window adapter may map a current screenshot coordinate
-only after revalidating the pinned PID, window ID, bounds and screenshot geometry.
+by a small rectangle. It is not a desktop coordinate. In F10 and F11 it terminates
+at presentation: the host maps it only to overlay geometry after revalidating the
+pinned PID, window ID, bounds and screenshot geometry.
 
 For window bounds `(left, top, width, height)`, the mapping is:
 
@@ -72,6 +72,6 @@ still requires OS permission. Partial AX data never confirms progress automatica
 Visual location alone does not prove completion. An available, complete accessibility
 postcondition can still drive automatic advancement. Otherwise the learner uses
 Continue, recorded separately as a learner report. Model-based visual outcome checks
-are future work. In F10 guided teaching the learner performs every click, drag,
-scroll and keystroke. In F11, allowlisted selected-window actions may be performed
-by the bounded action run; consequential or ambiguous actions pause for confirmation.
+are future work. In every guided teaching and voice/text journey the learner
+performs every click, drag, scroll and keystroke. Overlay animations are ghost
+demonstrations and never dispatch operating-system input.

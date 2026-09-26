@@ -14,7 +14,6 @@ export type {
 } from './generated-workspace';
 export type {
   TranscriptionLanguage,
-  VoiceConfirmation,
   VoicePermissions,
   VoiceStatus,
 } from './generated-voice';

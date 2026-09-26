@@ -497,6 +497,36 @@ fn unsupported_projection() -> DeviceReadiness {
     }
 }
 
+pub fn voice_permissions(request: bool) -> crate::voice::VoicePermissions {
+    #[cfg(target_os = "macos")]
+    let keyboard = unsafe { AXIsProcessTrusted() };
+    #[cfg(not(target_os = "macos"))]
+    let keyboard = true;
+    let microphone = if request {
+        crate::voice::audio::MicrophoneCapture::start().is_ok()
+    } else {
+        false
+    };
+    crate::voice::VoicePermissions {
+        microphone: if microphone {
+            "granted"
+        } else if request {
+            "denied"
+        } else {
+            "prompt"
+        }
+        .into(),
+        keyboard_monitoring: if keyboard { "granted" } else { "denied" }.into(),
+        ready: microphone && keyboard,
+        recovery: if cfg!(target_os = "macos") {
+            "Enable Tro in Privacy & Security → Microphone and Accessibility/Input Monitoring, then relaunch."
+        } else {
+            "Enable microphone privacy access. Protected or elevated windows are unavailable."
+        }
+        .into(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -578,27 +608,5 @@ mod tests {
         assert_eq!(value.as_object().map(|value| value.len()), Some(6));
         assert!(value.get("rawError").is_none());
         assert!(value.get("audio").is_none());
-    }
-}
-
-pub fn voice_permissions(request: bool) -> crate::voice::VoicePermissions {
-    #[cfg(target_os = "macos")]
-    let keyboard = unsafe { AXIsProcessTrusted() };
-    #[cfg(not(target_os = "macos"))]
-    let keyboard = true;
-    let microphone = if request {
-        crate::voice::audio::MicrophoneCapture::start().is_ok()
-    } else {
-        false
-    };
-    crate::voice::VoicePermissions {
-        microphone: if microphone { "granted" } else if request { "denied" } else { "prompt" }.into(),
-        keyboard_monitoring: if keyboard { "granted" } else { "denied" }.into(),
-        ready: microphone && keyboard,
-        recovery: if cfg!(target_os = "macos") {
-            "Enable Tro in Privacy & Security → Microphone and Accessibility/Input Monitoring, then relaunch."
-        } else {
-            "Enable microphone privacy access. Protected or elevated windows are unavailable."
-        }.into(),
     }
 }

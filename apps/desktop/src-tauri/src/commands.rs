@@ -233,13 +233,8 @@ pub async fn teaching_request(
 ) -> Result<serde_json::Value, WorkerError> {
     require_main(&window)?;
     require_workspace(&auth).await?;
-    crate::overlay::hide(&app);
-    let epoch = crate::overlay::epoch(&app);
     let state = manager.teaching(&kind, payload).await?;
-    crate::overlay::present(&app, &state, epoch).await?;
-    if crate::overlay::should_track(&state) {
-        crate::overlay::track(app.clone(), manager.inner().clone(), epoch);
-    }
+    crate::overlay::present_guidance(&app, manager.inner().clone(), &state).await?;
     Ok(state)
 }
 
@@ -308,12 +303,14 @@ pub(crate) async fn arm_voice_control(
 
 #[tauri::command]
 pub async fn voice_disable(
+    app: tauri::AppHandle,
     window: tauri::WebviewWindow,
     voice: Voice<'_>,
     listener: ModifierListener<'_>,
     manager: Manager<'_>,
 ) -> Result<VoiceStatus, WorkerError> {
     require_main(&window)?;
+    crate::overlay::hide(&app);
     let _ = listener.set_enabled(false);
     voice.cancel(Some(&manager)).await;
     Ok(voice.disable())
@@ -321,6 +318,7 @@ pub async fn voice_disable(
 
 #[tauri::command]
 pub async fn voice_execute_text(
+    app: tauri::AppHandle,
     window: tauri::WebviewWindow,
     instruction: String,
     voice: Voice<'_>,
@@ -329,45 +327,21 @@ pub async fn voice_execute_text(
 ) -> Result<VoiceStatus, WorkerError> {
     require_main(&window)?;
     require_workspace(&auth).await?;
-    voice
+    let (status, state) = voice
         .execute_text(instruction, manager.inner().clone(), auth.inner().clone())
-        .await
+        .await?;
+    crate::overlay::present_guidance(&app, manager.inner().clone(), &state).await?;
+    Ok(status)
 }
 
 #[tauri::command]
 pub async fn voice_cancel(
+    app: tauri::AppHandle,
     window: tauri::WebviewWindow,
     voice: Voice<'_>,
     manager: Manager<'_>,
 ) -> Result<VoiceStatus, WorkerError> {
     require_main(&window)?;
+    crate::overlay::hide(&app);
     Ok(voice.cancel(Some(&manager)).await)
-}
-
-#[tauri::command]
-pub async fn voice_decide(
-    window: tauri::WebviewWindow,
-    run_id: String,
-    confirmation_id: String,
-    approve: bool,
-    voice: Voice<'_>,
-    manager: Manager<'_>,
-    auth: Authentication<'_>,
-) -> Result<VoiceStatus, WorkerError> {
-    require_main(&window)?;
-    require_workspace(&auth).await?;
-    let run_id = Uuid::parse_str(&run_id)
-        .map_err(|_| WorkerError::new("INVALID_MESSAGE", "Invalid action decision."))?;
-    let confirmation_id = Uuid::parse_str(&confirmation_id)
-        .map_err(|_| WorkerError::new("INVALID_MESSAGE", "Invalid action decision."))?;
-    if !manager
-        .decide_action(run_id, confirmation_id, approve)
-        .await?
-    {
-        return Err(WorkerError::new(
-            "NOT_READY",
-            "This confirmation is no longer active.",
-        ));
-    }
-    Ok(voice.status())
 }

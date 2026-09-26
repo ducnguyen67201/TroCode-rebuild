@@ -16,7 +16,7 @@ imports, provider keys or arbitrary process API.
 implements native requests and state subscriptions. `preview-teaching.ts` is an
 explicit simulation; it never silently replaces a failing native connection.
 `platform/voice-client.ts` is the only React voice/control surface. It carries a
-validated `VoiceStatus` projection and closed enable/text/cancel/decision commands;
+validated `VoiceStatus` projection and closed enable/text/cancel commands;
 raw audio, key events, native actions and grants never enter React.
 
 `features/onboarding/PermissionOnboarding.tsx` is the post-authentication device gate.
@@ -40,7 +40,7 @@ click-through windows, coordinate mapping, cue expiry and the refresh loop.
 `modifier_chord/` reduces passive physical modifier events to one press/release
 edge. `voice/` owns microphone capture, completed WAV chunks, ordered transcript
 merging and the voice status authority. The emergency shortcut cancels voice and
-action work before stopping the worker.
+guidance work before stopping the worker.
 
 `account.rs` reads private proof configuration and obtains bounded model grants.
 `permissions.rs` handles closed OS device readiness checks and explicit consent
@@ -71,12 +71,10 @@ refresh credential.
 | Module                  | Responsibility                                                                                |
 | ----------------------- | --------------------------------------------------------------------------------------------- |
 | `planning.py`           | Accessibility/visual plan types, bounded target resolution and deterministic step progression |
-| `agent.py`              | Local Agents SDK calls producing structured proposals/plans, with no callable tools           |
+| `agent.py`              | Local Agents SDK planning through only the fixed Instructor Cursor function tools             |
 | `observations.py`       | Immutable window, element and geometry values                                                 |
-| `observation_source.py` | F10 observation plus construction of one F11 selected-window bounded driver                   |
-| `computer.py`           | Closed Agents SDK AsyncComputer adapter, fresh target checks and action budget                |
-| `action_agent.py`       | Four-turn, 30-second ComputerTool run for one final instruction                               |
-| `action_run.py`         | Cancellation and single-use consequential-action confirmation                                 |
+| `observation_source.py` | Read-only selected-window observation for F10 and F11                                         |
+| `instructor_cursor.py`  | Closed Agents SDK function tools that stage visual teaching steps only                        |
 | `guidance.py`           | Pure cue construction and explicit expected-value checks                                      |
 | `session_store.py`      | Account-isolated, locked SQLite evidence journal                                              |
 | `model_client.py`       | HTTPS model client using a scoped backend grant                                               |
@@ -110,10 +108,11 @@ here. Shared classroom functionality is later work; proof identity is not a
 production authentication system.
 
 `services/api/src/provider/` is the production F11 boundary. Authenticated users
-obtain subject-bound opaque voice or action grants; only digests are stored and
+obtain subject-bound opaque voice or agent grants; only digests are stored and
 request/audio budgets are decremented transactionally before provider dispatch.
 The transcription proxy accepts bounded completed PCM16 WAV chunks and the
-Responses proxy admits only the fixed action model and one computer tool shape.
+Responses proxy admits only the fixed guidance model and five closed Instructor
+Cursor function-tool shapes.
 Provider keys, upstream origins and budget constants remain backend-owned.
 
 The Rust API maps its five current PostgreSQL tables with SeaORM entities, and

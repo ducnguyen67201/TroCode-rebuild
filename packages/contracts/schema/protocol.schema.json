@@ -102,25 +102,10 @@
       "$ref": "#/definitions/RuntimeInstructionPrepared"
     },
     {
-      "$ref": "#/definitions/RuntimeExecuteInstruction"
+      "$ref": "#/definitions/RuntimeStartGuidance"
     },
     {
-      "$ref": "#/definitions/RuntimeInstructionAccepted"
-    },
-    {
-      "$ref": "#/definitions/RuntimeActionDecision"
-    },
-    {
-      "$ref": "#/definitions/RuntimeActionDecisionResult"
-    },
-    {
-      "$ref": "#/definitions/RuntimeCancelAction"
-    },
-    {
-      "$ref": "#/definitions/RuntimeActionCancelResult"
-    },
-    {
-      "$ref": "#/definitions/RuntimeActionStatus"
+      "$ref": "#/definitions/RuntimeGuidanceStarted"
     }
   ],
   "definitions": {
@@ -200,7 +185,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["diagnostic", "selected_window_actions"]
+            "enum": ["diagnostic", "instructor_cursor"]
           },
           "maxItems": 2,
           "uniqueItems": true
@@ -890,40 +875,19 @@
           ],
           "properties": {
             "observation": {
-              "enum": [
-                "unknown",
-                "available",
-                "unavailable"
-              ]
+              "enum": ["unknown", "available", "unavailable"]
             },
             "model": {
-              "enum": [
-                "unconfigured",
-                "ready",
-                "unavailable"
-              ]
+              "enum": ["unconfigured", "ready", "unavailable"]
             },
             "reason": {
-              "enum": [
-                "none",
-                "connect_model",
-                "observe_again",
-                "retry_plan"
-              ]
+              "enum": ["none", "connect_model", "observe_again", "retry_plan"]
             },
             "screen": {
-              "enum": [
-                "unknown",
-                "available",
-                "unavailable"
-              ]
+              "enum": ["unknown", "available", "unavailable"]
             },
             "accessibility": {
-              "enum": [
-                "unknown",
-                "available",
-                "unavailable"
-              ]
+              "enum": ["unknown", "available", "unavailable"]
             }
           }
         },
@@ -933,17 +897,10 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "phase",
-              "elapsed_ms"
-            ],
+            "required": ["phase", "elapsed_ms"],
             "properties": {
               "phase": {
-                "enum": [
-                  "observation",
-                  "model",
-                  "grounding"
-                ]
+                "enum": ["observation", "model", "grounding"]
               },
               "elapsed_ms": {
                 "type": "number",
@@ -1923,8 +1880,8 @@
       ],
       "additionalProperties": false
     },
-    "RuntimeExecuteInstruction": {
-      "title": "RuntimeExecuteInstruction",
+    "RuntimeStartGuidance": {
+      "title": "RuntimeStartGuidance",
       "type": "object",
       "properties": {
         "protocolVersion": { "type": "integer", "enum": [3] },
@@ -1940,7 +1897,7 @@
           "type": "string",
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
         },
-        "kind": { "type": "string", "enum": ["runtime.executeInstruction"] },
+        "kind": { "type": "string", "enum": ["runtime.startGuidance"] },
         "utteranceId": {
           "type": "string",
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
@@ -1950,6 +1907,7 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
         },
         "instruction": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "locale": { "type": "string", "enum": ["en", "vi"] },
         "modelConfig": {
           "type": "object",
           "properties": {
@@ -1970,12 +1928,13 @@
         "utteranceId",
         "preparationId",
         "instruction",
+        "locale",
         "modelConfig"
       ],
       "additionalProperties": false
     },
-    "RuntimeInstructionAccepted": {
-      "title": "RuntimeInstructionAccepted",
+    "RuntimeGuidanceStarted": {
+      "title": "RuntimeGuidanceStarted",
       "type": "object",
       "properties": {
         "protocolVersion": { "type": "integer", "enum": [3] },
@@ -1991,11 +1950,8 @@
           "type": "string",
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
         },
-        "kind": { "type": "string", "enum": ["runtime.instructionAccepted"] },
-        "runId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        }
+        "kind": { "type": "string", "enum": ["runtime.guidanceStarted"] },
+        "state": { "$ref": "#/definitions/TeachingState" }
       },
       "required": [
         "protocolVersion",
@@ -2003,196 +1959,7 @@
         "correlationId",
         "generationId",
         "kind",
-        "runId"
-      ],
-      "additionalProperties": false
-    },
-    "RuntimeActionDecision": {
-      "title": "RuntimeActionDecision",
-      "type": "object",
-      "properties": {
-        "protocolVersion": { "type": "integer", "enum": [3] },
-        "requestId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "correlationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "generationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "kind": { "type": "string", "enum": ["runtime.actionDecision"] },
-        "runId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "confirmationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "decision": { "type": "string", "enum": ["approve", "reject"] }
-      },
-      "required": [
-        "protocolVersion",
-        "requestId",
-        "correlationId",
-        "generationId",
-        "kind",
-        "runId",
-        "confirmationId",
-        "decision"
-      ],
-      "additionalProperties": false
-    },
-    "RuntimeActionDecisionResult": {
-      "title": "RuntimeActionDecisionResult",
-      "type": "object",
-      "properties": {
-        "protocolVersion": { "type": "integer", "enum": [3] },
-        "requestId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "correlationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "generationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "kind": { "type": "string", "enum": ["runtime.actionDecisionResult"] },
-        "accepted": { "type": "boolean" }
-      },
-      "required": [
-        "protocolVersion",
-        "requestId",
-        "correlationId",
-        "generationId",
-        "kind",
-        "accepted"
-      ],
-      "additionalProperties": false
-    },
-    "RuntimeCancelAction": {
-      "title": "RuntimeCancelAction",
-      "type": "object",
-      "properties": {
-        "protocolVersion": { "type": "integer", "enum": [3] },
-        "requestId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "correlationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "generationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "kind": { "type": "string", "enum": ["runtime.cancelAction"] },
-        "runId": {
-          "type": ["string", "null"],
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        }
-      },
-      "required": [
-        "protocolVersion",
-        "requestId",
-        "correlationId",
-        "generationId",
-        "kind",
-        "runId"
-      ],
-      "additionalProperties": false
-    },
-    "RuntimeActionCancelResult": {
-      "title": "RuntimeActionCancelResult",
-      "type": "object",
-      "properties": {
-        "protocolVersion": { "type": "integer", "enum": [3] },
-        "requestId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "correlationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "generationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "kind": { "type": "string", "enum": ["runtime.actionCancelResult"] },
-        "cancelled": { "type": "boolean" }
-      },
-      "required": [
-        "protocolVersion",
-        "requestId",
-        "correlationId",
-        "generationId",
-        "kind",
-        "cancelled"
-      ],
-      "additionalProperties": false
-    },
-    "RuntimeActionStatus": {
-      "title": "RuntimeActionStatus",
-      "type": "object",
-      "properties": {
-        "protocolVersion": { "type": "integer", "enum": [3] },
-        "generationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "kind": { "type": "string", "enum": ["runtime.actionStatus"] },
-        "eventId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "runId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "revision": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "phase": {
-          "type": "string",
-          "enum": [
-            "executing",
-            "confirmation",
-            "completed",
-            "failed",
-            "cancelled"
-          ]
-        },
-        "summary": { "type": "string", "maxLength": 256 },
-        "actionsUsed": { "type": "integer", "minimum": 0, "maximum": 12 },
-        "confirmationId": {
-          "type": ["string", "null"],
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "confirmationReason": { "type": ["string", "null"], "maxLength": 256 }
-      },
-      "required": [
-        "protocolVersion",
-        "generationId",
-        "kind",
-        "eventId",
-        "runId",
-        "revision",
-        "phase",
-        "summary",
-        "actionsUsed",
-        "confirmationId",
-        "confirmationReason"
+        "state"
       ],
       "additionalProperties": false
     }

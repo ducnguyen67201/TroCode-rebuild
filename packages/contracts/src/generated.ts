@@ -34,13 +34,8 @@ export type RuntimeMessage =
   | RuntimePlanControlResult
   | RuntimePrepareInstruction
   | RuntimeInstructionPrepared
-  | RuntimeExecuteInstruction
-  | RuntimeInstructionAccepted
-  | RuntimeActionDecision
-  | RuntimeActionDecisionResult
-  | RuntimeCancelAction
-  | RuntimeActionCancelResult
-  | RuntimeActionStatus;
+  | RuntimeStartGuidance
+  | RuntimeGuidanceStarted;
 
 export interface RuntimeInitialize {
   protocolVersion: 3;
@@ -63,8 +58,8 @@ export interface RuntimeReady {
    */
   capabilities:
     | []
-    | ['diagnostic' | 'selected_window_actions']
-    | ['diagnostic' | 'selected_window_actions', 'diagnostic' | 'selected_window_actions'];
+    | ['diagnostic' | 'instructor_cursor']
+    | ['diagnostic' | 'instructor_cursor', 'diagnostic' | 'instructor_cursor'];
 }
 export interface RuntimeHealth {
   protocolVersion: 3;
@@ -425,73 +420,27 @@ export interface PreparedInstruction {
   target: Target;
   expiresAt: string;
 }
-export interface RuntimeExecuteInstruction {
+export interface RuntimeStartGuidance {
   protocolVersion: 3;
   requestId: string;
   correlationId: string;
   generationId: string;
-  kind: 'runtime.executeInstruction';
+  kind: 'runtime.startGuidance';
   utteranceId: string;
   preparationId: string;
   instruction: string;
+  locale: 'en' | 'vi';
   modelConfig: {
     origin: string;
     grant: string;
     model: string;
   };
 }
-export interface RuntimeInstructionAccepted {
+export interface RuntimeGuidanceStarted {
   protocolVersion: 3;
   requestId: string;
   correlationId: string;
   generationId: string;
-  kind: 'runtime.instructionAccepted';
-  runId: string;
-}
-export interface RuntimeActionDecision {
-  protocolVersion: 3;
-  requestId: string;
-  correlationId: string;
-  generationId: string;
-  kind: 'runtime.actionDecision';
-  runId: string;
-  confirmationId: string;
-  decision: 'approve' | 'reject';
-}
-export interface RuntimeActionDecisionResult {
-  protocolVersion: 3;
-  requestId: string;
-  correlationId: string;
-  generationId: string;
-  kind: 'runtime.actionDecisionResult';
-  accepted: boolean;
-}
-export interface RuntimeCancelAction {
-  protocolVersion: 3;
-  requestId: string;
-  correlationId: string;
-  generationId: string;
-  kind: 'runtime.cancelAction';
-  runId: string | null;
-}
-export interface RuntimeActionCancelResult {
-  protocolVersion: 3;
-  requestId: string;
-  correlationId: string;
-  generationId: string;
-  kind: 'runtime.actionCancelResult';
-  cancelled: boolean;
-}
-export interface RuntimeActionStatus {
-  protocolVersion: 3;
-  generationId: string;
-  kind: 'runtime.actionStatus';
-  eventId: string;
-  runId: string;
-  revision: number;
-  phase: 'executing' | 'confirmation' | 'completed' | 'failed' | 'cancelled';
-  summary: string;
-  actionsUsed: number;
-  confirmationId: string | null;
-  confirmationReason: string | null;
+  kind: 'runtime.guidanceStarted';
+  state: TeachingState;
 }

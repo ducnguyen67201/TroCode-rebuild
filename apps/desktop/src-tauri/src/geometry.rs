@@ -52,6 +52,8 @@ pub fn grounded(state: &Value) -> bool {
         return false;
     }
     match cue["gesture"].as_str() {
+        // These names describe pixels rendered by the click-through overlay. This
+        // validator never authorizes or dispatches a native input operation.
         Some("drag") => {
             let Some(destination) = rect(&cue["destination"]) else {
                 return false;
@@ -105,5 +107,14 @@ mod tests {
         state["cue"]["source"]["x"] = json!(0);
         state["cue"]["grounding"] = json!("accessibility");
         assert!(!grounded(&state));
+    }
+    #[test]
+    fn executable_or_unknown_gestures_are_rejected() {
+        let target = json!({"bounds":{"x":0,"y":0,"width":500,"height":400}});
+        let source = json!({"x":20,"y":20,"width":100,"height":40});
+        for gesture in ["execute", "keypress", "launch"] {
+            let state = json!({"target":target,"observation":{"id":"fresh","target":target,"elements":[{"id":"one","bounds":source}]},"cue":{"gesture":gesture,"observation_id":"fresh","element_id":"one","source":source,"destination":null,"direction":null}});
+            assert!(!grounded(&state));
+        }
     }
 }

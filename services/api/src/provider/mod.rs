@@ -1,3 +1,4 @@
+pub(crate) mod cursor_tools;
 pub mod grants;
 pub mod responses;
 pub mod transcription;
@@ -12,7 +13,7 @@ pub struct ProviderService {
     pub client: Client,
     pub api_key: Arc<str>,
     pub transcription_model: Arc<str>,
-    pub action_model: Arc<str>,
+    pub guidance_model: Arc<str>,
 }
 
 impl ProviderService {
@@ -20,7 +21,7 @@ impl ProviderService {
         database: DatabaseConnection,
         api_key: String,
         transcription_model: String,
-        action_model: String,
+        guidance_model: String,
     ) -> Result<Self, &'static str> {
         let client = Client::builder()
             .timeout(Duration::from_secs(20))
@@ -32,7 +33,7 @@ impl ProviderService {
             client,
             api_key: api_key.into(),
             transcription_model: transcription_model.into(),
-            action_model: action_model.into(),
+            guidance_model: guidance_model.into(),
         })
     }
 }

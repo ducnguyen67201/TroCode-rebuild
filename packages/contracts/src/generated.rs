@@ -1791,2548 +1791,6 @@ impl ::std::convert::From<&Rect> for Rect {
         value.clone()
     }
 }
-///`RuntimeActionCancelResult`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "RuntimeActionCancelResult",
-///  "type": "object",
-///  "required": [
-///    "cancelled",
-///    "correlationId",
-///    "generationId",
-///    "kind",
-///    "protocolVersion",
-///    "requestId"
-///  ],
-///  "properties": {
-///    "cancelled": {
-///      "type": "boolean"
-///    },
-///    "correlationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "generationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "kind": {
-///      "type": "string",
-///      "enum": [
-///        "runtime.actionCancelResult"
-///      ]
-///    },
-///    "protocolVersion": {
-///      "type": "integer",
-///      "enum": [
-///        3
-///      ]
-///    },
-///    "requestId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeActionCancelResult {
-    pub cancelled: bool,
-    #[serde(rename = "correlationId")]
-    pub correlation_id: RuntimeActionCancelResultCorrelationId,
-    #[serde(rename = "generationId")]
-    pub generation_id: RuntimeActionCancelResultGenerationId,
-    pub kind: RuntimeActionCancelResultKind,
-    #[serde(rename = "protocolVersion")]
-    pub protocol_version: RuntimeActionCancelResultProtocolVersion,
-    #[serde(rename = "requestId")]
-    pub request_id: RuntimeActionCancelResultRequestId,
-}
-impl ::std::convert::From<&RuntimeActionCancelResult> for RuntimeActionCancelResult {
-    fn from(value: &RuntimeActionCancelResult) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeActionCancelResultCorrelationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionCancelResultCorrelationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionCancelResultCorrelationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionCancelResultCorrelationId>
-for ::std::string::String {
-    fn from(value: RuntimeActionCancelResultCorrelationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionCancelResultCorrelationId>
-for RuntimeActionCancelResultCorrelationId {
-    fn from(value: &RuntimeActionCancelResultCorrelationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionCancelResultCorrelationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionCancelResultCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionCancelResultCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionCancelResultCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionCancelResultCorrelationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionCancelResultGenerationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionCancelResultGenerationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionCancelResultGenerationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionCancelResultGenerationId>
-for ::std::string::String {
-    fn from(value: RuntimeActionCancelResultGenerationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionCancelResultGenerationId>
-for RuntimeActionCancelResultGenerationId {
-    fn from(value: &RuntimeActionCancelResultGenerationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionCancelResultGenerationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionCancelResultGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionCancelResultGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionCancelResultGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionCancelResultGenerationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionCancelResultKind`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "runtime.actionCancelResult"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeActionCancelResultKind {
-    #[serde(rename = "runtime.actionCancelResult")]
-    RuntimeActionCancelResult,
-}
-impl ::std::convert::From<&Self> for RuntimeActionCancelResultKind {
-    fn from(value: &RuntimeActionCancelResultKind) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeActionCancelResultKind {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::RuntimeActionCancelResult => f.write_str("runtime.actionCancelResult"),
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeActionCancelResultKind {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "runtime.actionCancelResult" => Ok(Self::RuntimeActionCancelResult),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionCancelResultKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionCancelResultKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionCancelResultKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeActionCancelResultProtocolVersion`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "integer",
-///  "enum": [
-///    3
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug)]
-#[serde(transparent)]
-pub struct RuntimeActionCancelResultProtocolVersion(i64);
-impl ::std::ops::Deref for RuntimeActionCancelResultProtocolVersion {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionCancelResultProtocolVersion> for i64 {
-    fn from(value: RuntimeActionCancelResultProtocolVersion) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionCancelResultProtocolVersion>
-for RuntimeActionCancelResultProtocolVersion {
-    fn from(value: &RuntimeActionCancelResultProtocolVersion) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<i64> for RuntimeActionCancelResultProtocolVersion {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: i64,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![3_i64].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionCancelResultProtocolVersion {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
-///`RuntimeActionCancelResultRequestId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionCancelResultRequestId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionCancelResultRequestId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionCancelResultRequestId> for ::std::string::String {
-    fn from(value: RuntimeActionCancelResultRequestId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionCancelResultRequestId>
-for RuntimeActionCancelResultRequestId {
-    fn from(value: &RuntimeActionCancelResultRequestId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionCancelResultRequestId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionCancelResultRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionCancelResultRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionCancelResultRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionCancelResultRequestId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecision`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "RuntimeActionDecision",
-///  "type": "object",
-///  "required": [
-///    "confirmationId",
-///    "correlationId",
-///    "decision",
-///    "generationId",
-///    "kind",
-///    "protocolVersion",
-///    "requestId",
-///    "runId"
-///  ],
-///  "properties": {
-///    "confirmationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "correlationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "decision": {
-///      "type": "string",
-///      "enum": [
-///        "approve",
-///        "reject"
-///      ]
-///    },
-///    "generationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "kind": {
-///      "type": "string",
-///      "enum": [
-///        "runtime.actionDecision"
-///      ]
-///    },
-///    "protocolVersion": {
-///      "type": "integer",
-///      "enum": [
-///        3
-///      ]
-///    },
-///    "requestId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "runId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeActionDecision {
-    #[serde(rename = "confirmationId")]
-    pub confirmation_id: RuntimeActionDecisionConfirmationId,
-    #[serde(rename = "correlationId")]
-    pub correlation_id: RuntimeActionDecisionCorrelationId,
-    pub decision: RuntimeActionDecisionDecision,
-    #[serde(rename = "generationId")]
-    pub generation_id: RuntimeActionDecisionGenerationId,
-    pub kind: RuntimeActionDecisionKind,
-    #[serde(rename = "protocolVersion")]
-    pub protocol_version: RuntimeActionDecisionProtocolVersion,
-    #[serde(rename = "requestId")]
-    pub request_id: RuntimeActionDecisionRequestId,
-    #[serde(rename = "runId")]
-    pub run_id: RuntimeActionDecisionRunId,
-}
-impl ::std::convert::From<&RuntimeActionDecision> for RuntimeActionDecision {
-    fn from(value: &RuntimeActionDecision) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeActionDecisionConfirmationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionConfirmationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionConfirmationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionConfirmationId>
-for ::std::string::String {
-    fn from(value: RuntimeActionDecisionConfirmationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionConfirmationId>
-for RuntimeActionDecisionConfirmationId {
-    fn from(value: &RuntimeActionDecisionConfirmationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionConfirmationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionDecisionConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionDecisionConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionConfirmationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecisionCorrelationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionCorrelationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionCorrelationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionCorrelationId> for ::std::string::String {
-    fn from(value: RuntimeActionDecisionCorrelationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionCorrelationId>
-for RuntimeActionDecisionCorrelationId {
-    fn from(value: &RuntimeActionDecisionCorrelationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionCorrelationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionDecisionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionDecisionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionCorrelationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecisionDecision`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "approve",
-///    "reject"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeActionDecisionDecision {
-    #[serde(rename = "approve")]
-    Approve,
-    #[serde(rename = "reject")]
-    Reject,
-}
-impl ::std::convert::From<&Self> for RuntimeActionDecisionDecision {
-    fn from(value: &RuntimeActionDecisionDecision) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeActionDecisionDecision {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Approve => f.write_str("approve"),
-            Self::Reject => f.write_str("reject"),
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionDecision {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "approve" => Ok(Self::Approve),
-            "reject" => Ok(Self::Reject),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionDecision {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionDecisionDecision {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionDecisionDecision {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeActionDecisionGenerationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionGenerationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionGenerationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionGenerationId> for ::std::string::String {
-    fn from(value: RuntimeActionDecisionGenerationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionGenerationId>
-for RuntimeActionDecisionGenerationId {
-    fn from(value: &RuntimeActionDecisionGenerationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionGenerationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionDecisionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionDecisionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionGenerationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecisionKind`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "runtime.actionDecision"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeActionDecisionKind {
-    #[serde(rename = "runtime.actionDecision")]
-    RuntimeActionDecision,
-}
-impl ::std::convert::From<&Self> for RuntimeActionDecisionKind {
-    fn from(value: &RuntimeActionDecisionKind) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeActionDecisionKind {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::RuntimeActionDecision => f.write_str("runtime.actionDecision"),
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionKind {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "runtime.actionDecision" => Ok(Self::RuntimeActionDecision),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionDecisionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionDecisionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeActionDecisionProtocolVersion`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "integer",
-///  "enum": [
-///    3
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionProtocolVersion(i64);
-impl ::std::ops::Deref for RuntimeActionDecisionProtocolVersion {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionProtocolVersion> for i64 {
-    fn from(value: RuntimeActionDecisionProtocolVersion) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionProtocolVersion>
-for RuntimeActionDecisionProtocolVersion {
-    fn from(value: &RuntimeActionDecisionProtocolVersion) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<i64> for RuntimeActionDecisionProtocolVersion {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: i64,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![3_i64].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionProtocolVersion {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
-///`RuntimeActionDecisionRequestId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionRequestId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionRequestId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionRequestId> for ::std::string::String {
-    fn from(value: RuntimeActionDecisionRequestId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionRequestId>
-for RuntimeActionDecisionRequestId {
-    fn from(value: &RuntimeActionDecisionRequestId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionRequestId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionDecisionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionDecisionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionRequestId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecisionResult`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "RuntimeActionDecisionResult",
-///  "type": "object",
-///  "required": [
-///    "accepted",
-///    "correlationId",
-///    "generationId",
-///    "kind",
-///    "protocolVersion",
-///    "requestId"
-///  ],
-///  "properties": {
-///    "accepted": {
-///      "type": "boolean"
-///    },
-///    "correlationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "generationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "kind": {
-///      "type": "string",
-///      "enum": [
-///        "runtime.actionDecisionResult"
-///      ]
-///    },
-///    "protocolVersion": {
-///      "type": "integer",
-///      "enum": [
-///        3
-///      ]
-///    },
-///    "requestId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeActionDecisionResult {
-    pub accepted: bool,
-    #[serde(rename = "correlationId")]
-    pub correlation_id: RuntimeActionDecisionResultCorrelationId,
-    #[serde(rename = "generationId")]
-    pub generation_id: RuntimeActionDecisionResultGenerationId,
-    pub kind: RuntimeActionDecisionResultKind,
-    #[serde(rename = "protocolVersion")]
-    pub protocol_version: RuntimeActionDecisionResultProtocolVersion,
-    #[serde(rename = "requestId")]
-    pub request_id: RuntimeActionDecisionResultRequestId,
-}
-impl ::std::convert::From<&RuntimeActionDecisionResult> for RuntimeActionDecisionResult {
-    fn from(value: &RuntimeActionDecisionResult) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeActionDecisionResultCorrelationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionResultCorrelationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionResultCorrelationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionResultCorrelationId>
-for ::std::string::String {
-    fn from(value: RuntimeActionDecisionResultCorrelationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionResultCorrelationId>
-for RuntimeActionDecisionResultCorrelationId {
-    fn from(value: &RuntimeActionDecisionResultCorrelationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionResultCorrelationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionResultCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionDecisionResultCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionDecisionResultCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionResultCorrelationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecisionResultGenerationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionResultGenerationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionResultGenerationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionResultGenerationId>
-for ::std::string::String {
-    fn from(value: RuntimeActionDecisionResultGenerationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionResultGenerationId>
-for RuntimeActionDecisionResultGenerationId {
-    fn from(value: &RuntimeActionDecisionResultGenerationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionResultGenerationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionResultGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionDecisionResultGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionDecisionResultGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionResultGenerationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecisionResultKind`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "runtime.actionDecisionResult"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeActionDecisionResultKind {
-    #[serde(rename = "runtime.actionDecisionResult")]
-    RuntimeActionDecisionResult,
-}
-impl ::std::convert::From<&Self> for RuntimeActionDecisionResultKind {
-    fn from(value: &RuntimeActionDecisionResultKind) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeActionDecisionResultKind {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::RuntimeActionDecisionResult => {
-                f.write_str("runtime.actionDecisionResult")
-            }
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionResultKind {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "runtime.actionDecisionResult" => Ok(Self::RuntimeActionDecisionResult),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionResultKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionDecisionResultKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionDecisionResultKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeActionDecisionResultProtocolVersion`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "integer",
-///  "enum": [
-///    3
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionResultProtocolVersion(i64);
-impl ::std::ops::Deref for RuntimeActionDecisionResultProtocolVersion {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionResultProtocolVersion> for i64 {
-    fn from(value: RuntimeActionDecisionResultProtocolVersion) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionResultProtocolVersion>
-for RuntimeActionDecisionResultProtocolVersion {
-    fn from(value: &RuntimeActionDecisionResultProtocolVersion) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<i64> for RuntimeActionDecisionResultProtocolVersion {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: i64,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![3_i64].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionResultProtocolVersion {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
-///`RuntimeActionDecisionResultRequestId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionResultRequestId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionResultRequestId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionResultRequestId>
-for ::std::string::String {
-    fn from(value: RuntimeActionDecisionResultRequestId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionResultRequestId>
-for RuntimeActionDecisionResultRequestId {
-    fn from(value: &RuntimeActionDecisionResultRequestId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionResultRequestId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionResultRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionDecisionResultRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionDecisionResultRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionResultRequestId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionDecisionRunId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionDecisionRunId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionDecisionRunId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionRunId> for ::std::string::String {
-    fn from(value: RuntimeActionDecisionRunId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionDecisionRunId> for RuntimeActionDecisionRunId {
-    fn from(value: &RuntimeActionDecisionRunId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionDecisionRunId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionDecisionRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionDecisionRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionDecisionRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionDecisionRunId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionStatus`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "RuntimeActionStatus",
-///  "type": "object",
-///  "required": [
-///    "actionsUsed",
-///    "confirmationId",
-///    "confirmationReason",
-///    "eventId",
-///    "generationId",
-///    "kind",
-///    "phase",
-///    "protocolVersion",
-///    "revision",
-///    "runId",
-///    "summary"
-///  ],
-///  "properties": {
-///    "actionsUsed": {
-///      "type": "integer",
-///      "maximum": 12.0,
-///      "minimum": 0.0
-///    },
-///    "confirmationId": {
-///      "type": [
-///        "string",
-///        "null"
-///      ],
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "confirmationReason": {
-///      "type": [
-///        "string",
-///        "null"
-///      ],
-///      "maxLength": 256
-///    },
-///    "eventId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "generationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "kind": {
-///      "type": "string",
-///      "enum": [
-///        "runtime.actionStatus"
-///      ]
-///    },
-///    "phase": {
-///      "type": "string",
-///      "enum": [
-///        "executing",
-///        "confirmation",
-///        "completed",
-///        "failed",
-///        "cancelled"
-///      ]
-///    },
-///    "protocolVersion": {
-///      "type": "integer",
-///      "enum": [
-///        3
-///      ]
-///    },
-///    "revision": {
-///      "type": "integer",
-///      "maximum": 9007199254740991.0,
-///      "minimum": 1.0
-///    },
-///    "runId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "summary": {
-///      "type": "string",
-///      "maxLength": 256
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeActionStatus {
-    #[serde(rename = "actionsUsed")]
-    pub actions_used: i64,
-    #[serde(rename = "confirmationId")]
-    pub confirmation_id: ::std::option::Option<RuntimeActionStatusConfirmationId>,
-    #[serde(rename = "confirmationReason")]
-    pub confirmation_reason: ::std::option::Option<
-        RuntimeActionStatusConfirmationReason,
-    >,
-    #[serde(rename = "eventId")]
-    pub event_id: RuntimeActionStatusEventId,
-    #[serde(rename = "generationId")]
-    pub generation_id: RuntimeActionStatusGenerationId,
-    pub kind: RuntimeActionStatusKind,
-    pub phase: RuntimeActionStatusPhase,
-    #[serde(rename = "protocolVersion")]
-    pub protocol_version: RuntimeActionStatusProtocolVersion,
-    pub revision: ::std::num::NonZeroU64,
-    #[serde(rename = "runId")]
-    pub run_id: RuntimeActionStatusRunId,
-    pub summary: RuntimeActionStatusSummary,
-}
-impl ::std::convert::From<&RuntimeActionStatus> for RuntimeActionStatus {
-    fn from(value: &RuntimeActionStatus) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeActionStatusConfirmationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionStatusConfirmationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionStatusConfirmationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionStatusConfirmationId> for ::std::string::String {
-    fn from(value: RuntimeActionStatusConfirmationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionStatusConfirmationId>
-for RuntimeActionStatusConfirmationId {
-    fn from(value: &RuntimeActionStatusConfirmationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusConfirmationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionStatusConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionStatusConfirmationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionStatusConfirmationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionStatusConfirmationReason`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "maxLength": 256
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionStatusConfirmationReason(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionStatusConfirmationReason {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionStatusConfirmationReason>
-for ::std::string::String {
-    fn from(value: RuntimeActionStatusConfirmationReason) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionStatusConfirmationReason>
-for RuntimeActionStatusConfirmationReason {
-    fn from(value: &RuntimeActionStatusConfirmationReason) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusConfirmationReason {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if value.chars().count() > 256usize {
-            return Err("longer than 256 characters".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusConfirmationReason {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionStatusConfirmationReason {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeActionStatusConfirmationReason {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionStatusConfirmationReason {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionStatusEventId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionStatusEventId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionStatusEventId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionStatusEventId> for ::std::string::String {
-    fn from(value: RuntimeActionStatusEventId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionStatusEventId> for RuntimeActionStatusEventId {
-    fn from(value: &RuntimeActionStatusEventId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusEventId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusEventId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionStatusEventId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionStatusEventId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionStatusEventId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionStatusGenerationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionStatusGenerationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionStatusGenerationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionStatusGenerationId> for ::std::string::String {
-    fn from(value: RuntimeActionStatusGenerationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionStatusGenerationId>
-for RuntimeActionStatusGenerationId {
-    fn from(value: &RuntimeActionStatusGenerationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusGenerationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeActionStatusGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionStatusGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionStatusGenerationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionStatusKind`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "runtime.actionStatus"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeActionStatusKind {
-    #[serde(rename = "runtime.actionStatus")]
-    RuntimeActionStatus,
-}
-impl ::std::convert::From<&Self> for RuntimeActionStatusKind {
-    fn from(value: &RuntimeActionStatusKind) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeActionStatusKind {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::RuntimeActionStatus => f.write_str("runtime.actionStatus"),
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusKind {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "runtime.actionStatus" => Ok(Self::RuntimeActionStatus),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionStatusKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionStatusKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeActionStatusPhase`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "executing",
-///    "confirmation",
-///    "completed",
-///    "failed",
-///    "cancelled"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeActionStatusPhase {
-    #[serde(rename = "executing")]
-    Executing,
-    #[serde(rename = "confirmation")]
-    Confirmation,
-    #[serde(rename = "completed")]
-    Completed,
-    #[serde(rename = "failed")]
-    Failed,
-    #[serde(rename = "cancelled")]
-    Cancelled,
-}
-impl ::std::convert::From<&Self> for RuntimeActionStatusPhase {
-    fn from(value: &RuntimeActionStatusPhase) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeActionStatusPhase {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Executing => f.write_str("executing"),
-            Self::Confirmation => f.write_str("confirmation"),
-            Self::Completed => f.write_str("completed"),
-            Self::Failed => f.write_str("failed"),
-            Self::Cancelled => f.write_str("cancelled"),
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusPhase {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "executing" => Ok(Self::Executing),
-            "confirmation" => Ok(Self::Confirmation),
-            "completed" => Ok(Self::Completed),
-            "failed" => Ok(Self::Failed),
-            "cancelled" => Ok(Self::Cancelled),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusPhase {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionStatusPhase {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionStatusPhase {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeActionStatusProtocolVersion`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "integer",
-///  "enum": [
-///    3
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug)]
-#[serde(transparent)]
-pub struct RuntimeActionStatusProtocolVersion(i64);
-impl ::std::ops::Deref for RuntimeActionStatusProtocolVersion {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionStatusProtocolVersion> for i64 {
-    fn from(value: RuntimeActionStatusProtocolVersion) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionStatusProtocolVersion>
-for RuntimeActionStatusProtocolVersion {
-    fn from(value: &RuntimeActionStatusProtocolVersion) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<i64> for RuntimeActionStatusProtocolVersion {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: i64,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![3_i64].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionStatusProtocolVersion {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
-///`RuntimeActionStatusRunId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionStatusRunId(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionStatusRunId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionStatusRunId> for ::std::string::String {
-    fn from(value: RuntimeActionStatusRunId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionStatusRunId> for RuntimeActionStatusRunId {
-    fn from(value: &RuntimeActionStatusRunId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusRunId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionStatusRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionStatusRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionStatusRunId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeActionStatusSummary`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "maxLength": 256
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeActionStatusSummary(::std::string::String);
-impl ::std::ops::Deref for RuntimeActionStatusSummary {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeActionStatusSummary> for ::std::string::String {
-    fn from(value: RuntimeActionStatusSummary) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeActionStatusSummary> for RuntimeActionStatusSummary {
-    fn from(value: &RuntimeActionStatusSummary) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeActionStatusSummary {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if value.chars().count() > 256usize {
-            return Err("longer than 256 characters".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeActionStatusSummary {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeActionStatusSummary {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeActionStatusSummary {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeActionStatusSummary {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
 ///`RuntimeAsk`
 ///
 /// <details><summary>JSON schema</summary>
@@ -5414,563 +2872,6 @@ impl ::std::convert::TryFrom<::std::string::String> for RuntimeAskResultRequestI
     }
 }
 impl<'de> ::serde::Deserialize<'de> for RuntimeAskResultRequestId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeCancelAction`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "RuntimeCancelAction",
-///  "type": "object",
-///  "required": [
-///    "correlationId",
-///    "generationId",
-///    "kind",
-///    "protocolVersion",
-///    "requestId",
-///    "runId"
-///  ],
-///  "properties": {
-///    "correlationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "generationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "kind": {
-///      "type": "string",
-///      "enum": [
-///        "runtime.cancelAction"
-///      ]
-///    },
-///    "protocolVersion": {
-///      "type": "integer",
-///      "enum": [
-///        3
-///      ]
-///    },
-///    "requestId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "runId": {
-///      "type": [
-///        "string",
-///        "null"
-///      ],
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeCancelAction {
-    #[serde(rename = "correlationId")]
-    pub correlation_id: RuntimeCancelActionCorrelationId,
-    #[serde(rename = "generationId")]
-    pub generation_id: RuntimeCancelActionGenerationId,
-    pub kind: RuntimeCancelActionKind,
-    #[serde(rename = "protocolVersion")]
-    pub protocol_version: RuntimeCancelActionProtocolVersion,
-    #[serde(rename = "requestId")]
-    pub request_id: RuntimeCancelActionRequestId,
-    #[serde(rename = "runId")]
-    pub run_id: ::std::option::Option<RuntimeCancelActionRunId>,
-}
-impl ::std::convert::From<&RuntimeCancelAction> for RuntimeCancelAction {
-    fn from(value: &RuntimeCancelAction) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeCancelActionCorrelationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeCancelActionCorrelationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeCancelActionCorrelationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeCancelActionCorrelationId> for ::std::string::String {
-    fn from(value: RuntimeCancelActionCorrelationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeCancelActionCorrelationId>
-for RuntimeCancelActionCorrelationId {
-    fn from(value: &RuntimeCancelActionCorrelationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeCancelActionCorrelationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeCancelActionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeCancelActionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeCancelActionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeCancelActionCorrelationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeCancelActionGenerationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeCancelActionGenerationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeCancelActionGenerationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeCancelActionGenerationId> for ::std::string::String {
-    fn from(value: RuntimeCancelActionGenerationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeCancelActionGenerationId>
-for RuntimeCancelActionGenerationId {
-    fn from(value: &RuntimeCancelActionGenerationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeCancelActionGenerationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeCancelActionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeCancelActionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeCancelActionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeCancelActionGenerationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeCancelActionKind`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "runtime.cancelAction"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeCancelActionKind {
-    #[serde(rename = "runtime.cancelAction")]
-    RuntimeCancelAction,
-}
-impl ::std::convert::From<&Self> for RuntimeCancelActionKind {
-    fn from(value: &RuntimeCancelActionKind) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeCancelActionKind {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::RuntimeCancelAction => f.write_str("runtime.cancelAction"),
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeCancelActionKind {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "runtime.cancelAction" => Ok(Self::RuntimeCancelAction),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeCancelActionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeCancelActionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeCancelActionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeCancelActionProtocolVersion`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "integer",
-///  "enum": [
-///    3
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug)]
-#[serde(transparent)]
-pub struct RuntimeCancelActionProtocolVersion(i64);
-impl ::std::ops::Deref for RuntimeCancelActionProtocolVersion {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeCancelActionProtocolVersion> for i64 {
-    fn from(value: RuntimeCancelActionProtocolVersion) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeCancelActionProtocolVersion>
-for RuntimeCancelActionProtocolVersion {
-    fn from(value: &RuntimeCancelActionProtocolVersion) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<i64> for RuntimeCancelActionProtocolVersion {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: i64,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![3_i64].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeCancelActionProtocolVersion {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
-///`RuntimeCancelActionRequestId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeCancelActionRequestId(::std::string::String);
-impl ::std::ops::Deref for RuntimeCancelActionRequestId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeCancelActionRequestId> for ::std::string::String {
-    fn from(value: RuntimeCancelActionRequestId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeCancelActionRequestId>
-for RuntimeCancelActionRequestId {
-    fn from(value: &RuntimeCancelActionRequestId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeCancelActionRequestId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeCancelActionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeCancelActionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeCancelActionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeCancelActionRequestId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeCancelActionRunId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeCancelActionRunId(::std::string::String);
-impl ::std::ops::Deref for RuntimeCancelActionRunId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeCancelActionRunId> for ::std::string::String {
-    fn from(value: RuntimeCancelActionRunId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeCancelActionRunId> for RuntimeCancelActionRunId {
-    fn from(value: &RuntimeCancelActionRunId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeCancelActionRunId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeCancelActionRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeCancelActionRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeCancelActionRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeCancelActionRunId {
     fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
     where
         D: ::serde::Deserializer<'de>,
@@ -9163,1079 +6064,6 @@ impl<'de> ::serde::Deserialize<'de> for RuntimeErrorRequestId {
             })
     }
 }
-///`RuntimeExecuteInstruction`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "RuntimeExecuteInstruction",
-///  "type": "object",
-///  "required": [
-///    "correlationId",
-///    "generationId",
-///    "instruction",
-///    "kind",
-///    "modelConfig",
-///    "preparationId",
-///    "protocolVersion",
-///    "requestId",
-///    "utteranceId"
-///  ],
-///  "properties": {
-///    "correlationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "generationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "instruction": {
-///      "type": "string",
-///      "maxLength": 2000,
-///      "minLength": 1
-///    },
-///    "kind": {
-///      "type": "string",
-///      "enum": [
-///        "runtime.executeInstruction"
-///      ]
-///    },
-///    "modelConfig": {
-///      "type": "object",
-///      "required": [
-///        "grant",
-///        "model",
-///        "origin"
-///      ],
-///      "properties": {
-///        "grant": {
-///          "type": "string",
-///          "pattern": "^[0-9a-f]{64}$"
-///        },
-///        "model": {
-///          "type": "string",
-///          "maxLength": 128,
-///          "minLength": 1
-///        },
-///        "origin": {
-///          "type": "string",
-///          "maxLength": 2048
-///        }
-///      },
-///      "additionalProperties": false
-///    },
-///    "preparationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "protocolVersion": {
-///      "type": "integer",
-///      "enum": [
-///        3
-///      ]
-///    },
-///    "requestId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "utteranceId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeExecuteInstruction {
-    #[serde(rename = "correlationId")]
-    pub correlation_id: RuntimeExecuteInstructionCorrelationId,
-    #[serde(rename = "generationId")]
-    pub generation_id: RuntimeExecuteInstructionGenerationId,
-    pub instruction: RuntimeExecuteInstructionInstruction,
-    pub kind: RuntimeExecuteInstructionKind,
-    #[serde(rename = "modelConfig")]
-    pub model_config: RuntimeExecuteInstructionModelConfig,
-    #[serde(rename = "preparationId")]
-    pub preparation_id: RuntimeExecuteInstructionPreparationId,
-    #[serde(rename = "protocolVersion")]
-    pub protocol_version: RuntimeExecuteInstructionProtocolVersion,
-    #[serde(rename = "requestId")]
-    pub request_id: RuntimeExecuteInstructionRequestId,
-    #[serde(rename = "utteranceId")]
-    pub utterance_id: RuntimeExecuteInstructionUtteranceId,
-}
-impl ::std::convert::From<&RuntimeExecuteInstruction> for RuntimeExecuteInstruction {
-    fn from(value: &RuntimeExecuteInstruction) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeExecuteInstructionCorrelationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionCorrelationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionCorrelationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionCorrelationId>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionCorrelationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionCorrelationId>
-for RuntimeExecuteInstructionCorrelationId {
-    fn from(value: &RuntimeExecuteInstructionCorrelationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionCorrelationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionCorrelationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionGenerationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionGenerationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionGenerationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionGenerationId>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionGenerationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionGenerationId>
-for RuntimeExecuteInstructionGenerationId {
-    fn from(value: &RuntimeExecuteInstructionGenerationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionGenerationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionGenerationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionInstruction`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "maxLength": 2000,
-///  "minLength": 1
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionInstruction(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionInstruction {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionInstruction>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionInstruction) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionInstruction>
-for RuntimeExecuteInstructionInstruction {
-    fn from(value: &RuntimeExecuteInstructionInstruction) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionInstruction {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if value.chars().count() > 2000usize {
-            return Err("longer than 2000 characters".into());
-        }
-        if value.chars().count() < 1usize {
-            return Err("shorter than 1 characters".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionInstruction {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionInstruction {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionInstruction {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionInstruction {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionKind`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "runtime.executeInstruction"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeExecuteInstructionKind {
-    #[serde(rename = "runtime.executeInstruction")]
-    RuntimeExecuteInstruction,
-}
-impl ::std::convert::From<&Self> for RuntimeExecuteInstructionKind {
-    fn from(value: &RuntimeExecuteInstructionKind) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeExecuteInstructionKind {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::RuntimeExecuteInstruction => f.write_str("runtime.executeInstruction"),
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionKind {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "runtime.executeInstruction" => Ok(Self::RuntimeExecuteInstruction),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeExecuteInstructionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeExecuteInstructionKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeExecuteInstructionModelConfig`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "object",
-///  "required": [
-///    "grant",
-///    "model",
-///    "origin"
-///  ],
-///  "properties": {
-///    "grant": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{64}$"
-///    },
-///    "model": {
-///      "type": "string",
-///      "maxLength": 128,
-///      "minLength": 1
-///    },
-///    "origin": {
-///      "type": "string",
-///      "maxLength": 2048
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeExecuteInstructionModelConfig {
-    pub grant: RuntimeExecuteInstructionModelConfigGrant,
-    pub model: RuntimeExecuteInstructionModelConfigModel,
-    pub origin: RuntimeExecuteInstructionModelConfigOrigin,
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionModelConfig>
-for RuntimeExecuteInstructionModelConfig {
-    fn from(value: &RuntimeExecuteInstructionModelConfig) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeExecuteInstructionModelConfigGrant`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{64}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionModelConfigGrant(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionModelConfigGrant {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionModelConfigGrant>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionModelConfigGrant) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionModelConfigGrant>
-for RuntimeExecuteInstructionModelConfigGrant {
-    fn from(value: &RuntimeExecuteInstructionModelConfigGrant) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionModelConfigGrant {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        { ::regress::Regex::new("^[0-9a-f]{64}$").unwrap() });
-        if PATTERN.find(value).is_none() {
-            return Err("doesn't match pattern \"^[0-9a-f]{64}$\"".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionModelConfigGrant {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionModelConfigGrant {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionModelConfigGrant {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionModelConfigGrant {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionModelConfigModel`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "maxLength": 128,
-///  "minLength": 1
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionModelConfigModel(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionModelConfigModel {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionModelConfigModel>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionModelConfigModel) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionModelConfigModel>
-for RuntimeExecuteInstructionModelConfigModel {
-    fn from(value: &RuntimeExecuteInstructionModelConfigModel) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionModelConfigModel {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if value.chars().count() > 128usize {
-            return Err("longer than 128 characters".into());
-        }
-        if value.chars().count() < 1usize {
-            return Err("shorter than 1 characters".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionModelConfigModel {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionModelConfigModel {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionModelConfigModel {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionModelConfigModel {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionModelConfigOrigin`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "maxLength": 2048
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionModelConfigOrigin(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionModelConfigOrigin {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionModelConfigOrigin>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionModelConfigOrigin) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionModelConfigOrigin>
-for RuntimeExecuteInstructionModelConfigOrigin {
-    fn from(value: &RuntimeExecuteInstructionModelConfigOrigin) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionModelConfigOrigin {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if value.chars().count() > 2048usize {
-            return Err("longer than 2048 characters".into());
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionModelConfigOrigin {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionModelConfigOrigin {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionModelConfigOrigin {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionModelConfigOrigin {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionPreparationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionPreparationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionPreparationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionPreparationId>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionPreparationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionPreparationId>
-for RuntimeExecuteInstructionPreparationId {
-    fn from(value: &RuntimeExecuteInstructionPreparationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionPreparationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionPreparationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionPreparationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionPreparationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionPreparationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionProtocolVersion`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "integer",
-///  "enum": [
-///    3
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionProtocolVersion(i64);
-impl ::std::ops::Deref for RuntimeExecuteInstructionProtocolVersion {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionProtocolVersion> for i64 {
-    fn from(value: RuntimeExecuteInstructionProtocolVersion) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionProtocolVersion>
-for RuntimeExecuteInstructionProtocolVersion {
-    fn from(value: &RuntimeExecuteInstructionProtocolVersion) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<i64> for RuntimeExecuteInstructionProtocolVersion {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: i64,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![3_i64].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionProtocolVersion {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
-///`RuntimeExecuteInstructionRequestId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionRequestId(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionRequestId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionRequestId> for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionRequestId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionRequestId>
-for RuntimeExecuteInstructionRequestId {
-    fn from(value: &RuntimeExecuteInstructionRequestId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionRequestId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionRequestId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeExecuteInstructionUtteranceId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeExecuteInstructionUtteranceId(::std::string::String);
-impl ::std::ops::Deref for RuntimeExecuteInstructionUtteranceId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeExecuteInstructionUtteranceId>
-for ::std::string::String {
-    fn from(value: RuntimeExecuteInstructionUtteranceId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeExecuteInstructionUtteranceId>
-for RuntimeExecuteInstructionUtteranceId {
-    fn from(value: &RuntimeExecuteInstructionUtteranceId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeExecuteInstructionUtteranceId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeExecuteInstructionUtteranceId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeExecuteInstructionUtteranceId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeExecuteInstructionUtteranceId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeExecuteInstructionUtteranceId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
 ///`RuntimeExplain`
 ///
 /// <details><summary>JSON schema</summary>
@@ -11715,6 +7543,474 @@ impl ::std::convert::TryFrom<::std::string::String> for RuntimeExplainResultRequ
     }
 }
 impl<'de> ::serde::Deserialize<'de> for RuntimeExplainResultRequestId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeGuidanceStarted`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "RuntimeGuidanceStarted",
+///  "type": "object",
+///  "required": [
+///    "correlationId",
+///    "generationId",
+///    "kind",
+///    "protocolVersion",
+///    "requestId",
+///    "state"
+///  ],
+///  "properties": {
+///    "correlationId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "generationId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "kind": {
+///      "type": "string",
+///      "enum": [
+///        "runtime.guidanceStarted"
+///      ]
+///    },
+///    "protocolVersion": {
+///      "type": "integer",
+///      "enum": [
+///        3
+///      ]
+///    },
+///    "requestId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "state": {
+///      "$ref": "#/definitions/TeachingState"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeGuidanceStarted {
+    #[serde(rename = "correlationId")]
+    pub correlation_id: RuntimeGuidanceStartedCorrelationId,
+    #[serde(rename = "generationId")]
+    pub generation_id: RuntimeGuidanceStartedGenerationId,
+    pub kind: RuntimeGuidanceStartedKind,
+    #[serde(rename = "protocolVersion")]
+    pub protocol_version: RuntimeGuidanceStartedProtocolVersion,
+    #[serde(rename = "requestId")]
+    pub request_id: RuntimeGuidanceStartedRequestId,
+    pub state: TeachingState,
+}
+impl ::std::convert::From<&RuntimeGuidanceStarted> for RuntimeGuidanceStarted {
+    fn from(value: &RuntimeGuidanceStarted) -> Self {
+        value.clone()
+    }
+}
+///`RuntimeGuidanceStartedCorrelationId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeGuidanceStartedCorrelationId(::std::string::String);
+impl ::std::ops::Deref for RuntimeGuidanceStartedCorrelationId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeGuidanceStartedCorrelationId>
+for ::std::string::String {
+    fn from(value: RuntimeGuidanceStartedCorrelationId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeGuidanceStartedCorrelationId>
+for RuntimeGuidanceStartedCorrelationId {
+    fn from(value: &RuntimeGuidanceStartedCorrelationId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeGuidanceStartedCorrelationId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeGuidanceStartedCorrelationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeGuidanceStartedCorrelationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeGuidanceStartedCorrelationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeGuidanceStartedCorrelationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeGuidanceStartedGenerationId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeGuidanceStartedGenerationId(::std::string::String);
+impl ::std::ops::Deref for RuntimeGuidanceStartedGenerationId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeGuidanceStartedGenerationId> for ::std::string::String {
+    fn from(value: RuntimeGuidanceStartedGenerationId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeGuidanceStartedGenerationId>
+for RuntimeGuidanceStartedGenerationId {
+    fn from(value: &RuntimeGuidanceStartedGenerationId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeGuidanceStartedGenerationId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeGuidanceStartedGenerationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeGuidanceStartedGenerationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeGuidanceStartedGenerationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeGuidanceStartedGenerationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeGuidanceStartedKind`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "runtime.guidanceStarted"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum RuntimeGuidanceStartedKind {
+    #[serde(rename = "runtime.guidanceStarted")]
+    RuntimeGuidanceStarted,
+}
+impl ::std::convert::From<&Self> for RuntimeGuidanceStartedKind {
+    fn from(value: &RuntimeGuidanceStartedKind) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for RuntimeGuidanceStartedKind {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::RuntimeGuidanceStarted => f.write_str("runtime.guidanceStarted"),
+        }
+    }
+}
+impl ::std::str::FromStr for RuntimeGuidanceStartedKind {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "runtime.guidanceStarted" => Ok(Self::RuntimeGuidanceStarted),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeGuidanceStartedKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for RuntimeGuidanceStartedKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RuntimeGuidanceStartedKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`RuntimeGuidanceStartedProtocolVersion`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "integer",
+///  "enum": [
+///    3
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug)]
+#[serde(transparent)]
+pub struct RuntimeGuidanceStartedProtocolVersion(i64);
+impl ::std::ops::Deref for RuntimeGuidanceStartedProtocolVersion {
+    type Target = i64;
+    fn deref(&self) -> &i64 {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeGuidanceStartedProtocolVersion> for i64 {
+    fn from(value: RuntimeGuidanceStartedProtocolVersion) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeGuidanceStartedProtocolVersion>
+for RuntimeGuidanceStartedProtocolVersion {
+    fn from(value: &RuntimeGuidanceStartedProtocolVersion) -> Self {
+        value.clone()
+    }
+}
+impl ::std::convert::TryFrom<i64> for RuntimeGuidanceStartedProtocolVersion {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: i64,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if ![3_i64].contains(&value) {
+            Err("invalid value".into())
+        } else {
+            Ok(Self(value))
+        }
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeGuidanceStartedProtocolVersion {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        Self::try_from(<i64>::deserialize(deserializer)?)
+            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
+    }
+}
+///`RuntimeGuidanceStartedRequestId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeGuidanceStartedRequestId(::std::string::String);
+impl ::std::ops::Deref for RuntimeGuidanceStartedRequestId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeGuidanceStartedRequestId> for ::std::string::String {
+    fn from(value: RuntimeGuidanceStartedRequestId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeGuidanceStartedRequestId>
+for RuntimeGuidanceStartedRequestId {
+    fn from(value: &RuntimeGuidanceStartedRequestId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeGuidanceStartedRequestId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeGuidanceStartedRequestId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeGuidanceStartedRequestId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RuntimeGuidanceStartedRequestId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeGuidanceStartedRequestId {
     fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
     where
         D: ::serde::Deserializer<'de>,
@@ -13366,570 +9662,6 @@ impl<'de> ::serde::Deserialize<'de> for RuntimeInitializeSchemaDigest {
             })
     }
 }
-///`RuntimeInstructionAccepted`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "title": "RuntimeInstructionAccepted",
-///  "type": "object",
-///  "required": [
-///    "correlationId",
-///    "generationId",
-///    "kind",
-///    "protocolVersion",
-///    "requestId",
-///    "runId"
-///  ],
-///  "properties": {
-///    "correlationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "generationId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "kind": {
-///      "type": "string",
-///      "enum": [
-///        "runtime.instructionAccepted"
-///      ]
-///    },
-///    "protocolVersion": {
-///      "type": "integer",
-///      "enum": [
-///        3
-///      ]
-///    },
-///    "requestId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    },
-///    "runId": {
-///      "type": "string",
-///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///    }
-///  },
-///  "additionalProperties": false
-///}
-/// ```
-/// </details>
-#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct RuntimeInstructionAccepted {
-    #[serde(rename = "correlationId")]
-    pub correlation_id: RuntimeInstructionAcceptedCorrelationId,
-    #[serde(rename = "generationId")]
-    pub generation_id: RuntimeInstructionAcceptedGenerationId,
-    pub kind: RuntimeInstructionAcceptedKind,
-    #[serde(rename = "protocolVersion")]
-    pub protocol_version: RuntimeInstructionAcceptedProtocolVersion,
-    #[serde(rename = "requestId")]
-    pub request_id: RuntimeInstructionAcceptedRequestId,
-    #[serde(rename = "runId")]
-    pub run_id: RuntimeInstructionAcceptedRunId,
-}
-impl ::std::convert::From<&RuntimeInstructionAccepted> for RuntimeInstructionAccepted {
-    fn from(value: &RuntimeInstructionAccepted) -> Self {
-        value.clone()
-    }
-}
-///`RuntimeInstructionAcceptedCorrelationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeInstructionAcceptedCorrelationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeInstructionAcceptedCorrelationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeInstructionAcceptedCorrelationId>
-for ::std::string::String {
-    fn from(value: RuntimeInstructionAcceptedCorrelationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeInstructionAcceptedCorrelationId>
-for RuntimeInstructionAcceptedCorrelationId {
-    fn from(value: &RuntimeInstructionAcceptedCorrelationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeInstructionAcceptedCorrelationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeInstructionAcceptedCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeInstructionAcceptedCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeInstructionAcceptedCorrelationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeInstructionAcceptedCorrelationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeInstructionAcceptedGenerationId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeInstructionAcceptedGenerationId(::std::string::String);
-impl ::std::ops::Deref for RuntimeInstructionAcceptedGenerationId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeInstructionAcceptedGenerationId>
-for ::std::string::String {
-    fn from(value: RuntimeInstructionAcceptedGenerationId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeInstructionAcceptedGenerationId>
-for RuntimeInstructionAcceptedGenerationId {
-    fn from(value: &RuntimeInstructionAcceptedGenerationId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeInstructionAcceptedGenerationId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeInstructionAcceptedGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeInstructionAcceptedGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeInstructionAcceptedGenerationId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeInstructionAcceptedGenerationId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeInstructionAcceptedKind`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "enum": [
-///    "runtime.instructionAccepted"
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(
-    ::serde::Deserialize,
-    ::serde::Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd
-)]
-pub enum RuntimeInstructionAcceptedKind {
-    #[serde(rename = "runtime.instructionAccepted")]
-    RuntimeInstructionAccepted,
-}
-impl ::std::convert::From<&Self> for RuntimeInstructionAcceptedKind {
-    fn from(value: &RuntimeInstructionAcceptedKind) -> Self {
-        value.clone()
-    }
-}
-impl ::std::fmt::Display for RuntimeInstructionAcceptedKind {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::RuntimeInstructionAccepted => {
-                f.write_str("runtime.instructionAccepted")
-            }
-        }
-    }
-}
-impl ::std::str::FromStr for RuntimeInstructionAcceptedKind {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "runtime.instructionAccepted" => Ok(Self::RuntimeInstructionAccepted),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeInstructionAcceptedKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for RuntimeInstructionAcceptedKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeInstructionAcceptedKind {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-///`RuntimeInstructionAcceptedProtocolVersion`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "integer",
-///  "enum": [
-///    3
-///  ]
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug)]
-#[serde(transparent)]
-pub struct RuntimeInstructionAcceptedProtocolVersion(i64);
-impl ::std::ops::Deref for RuntimeInstructionAcceptedProtocolVersion {
-    type Target = i64;
-    fn deref(&self) -> &i64 {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeInstructionAcceptedProtocolVersion> for i64 {
-    fn from(value: RuntimeInstructionAcceptedProtocolVersion) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeInstructionAcceptedProtocolVersion>
-for RuntimeInstructionAcceptedProtocolVersion {
-    fn from(value: &RuntimeInstructionAcceptedProtocolVersion) -> Self {
-        value.clone()
-    }
-}
-impl ::std::convert::TryFrom<i64> for RuntimeInstructionAcceptedProtocolVersion {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: i64,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        if ![3_i64].contains(&value) {
-            Err("invalid value".into())
-        } else {
-            Ok(Self(value))
-        }
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeInstructionAcceptedProtocolVersion {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        Self::try_from(<i64>::deserialize(deserializer)?)
-            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
-    }
-}
-///`RuntimeInstructionAcceptedRequestId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeInstructionAcceptedRequestId(::std::string::String);
-impl ::std::ops::Deref for RuntimeInstructionAcceptedRequestId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeInstructionAcceptedRequestId>
-for ::std::string::String {
-    fn from(value: RuntimeInstructionAcceptedRequestId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeInstructionAcceptedRequestId>
-for RuntimeInstructionAcceptedRequestId {
-    fn from(value: &RuntimeInstructionAcceptedRequestId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeInstructionAcceptedRequestId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeInstructionAcceptedRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeInstructionAcceptedRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String>
-for RuntimeInstructionAcceptedRequestId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeInstructionAcceptedRequestId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
-///`RuntimeInstructionAcceptedRunId`
-///
-/// <details><summary>JSON schema</summary>
-///
-/// ```json
-///{
-///  "type": "string",
-///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-///}
-/// ```
-/// </details>
-#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[serde(transparent)]
-pub struct RuntimeInstructionAcceptedRunId(::std::string::String);
-impl ::std::ops::Deref for RuntimeInstructionAcceptedRunId {
-    type Target = ::std::string::String;
-    fn deref(&self) -> &::std::string::String {
-        &self.0
-    }
-}
-impl ::std::convert::From<RuntimeInstructionAcceptedRunId> for ::std::string::String {
-    fn from(value: RuntimeInstructionAcceptedRunId) -> Self {
-        value.0
-    }
-}
-impl ::std::convert::From<&RuntimeInstructionAcceptedRunId>
-for RuntimeInstructionAcceptedRunId {
-    fn from(value: &RuntimeInstructionAcceptedRunId) -> Self {
-        value.clone()
-    }
-}
-impl ::std::str::FromStr for RuntimeInstructionAcceptedRunId {
-    type Err = self::error::ConversionError;
-    fn from_str(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
-        {
-            ::regress::Regex::new(
-                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                )
-                .unwrap()
-        });
-        if PATTERN.find(value).is_none() {
-            return Err(
-                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
-                    .into(),
-            );
-        }
-        Ok(Self(value.to_string()))
-    }
-}
-impl ::std::convert::TryFrom<&str> for RuntimeInstructionAcceptedRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &str,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String>
-for RuntimeInstructionAcceptedRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for RuntimeInstructionAcceptedRunId {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl<'de> ::serde::Deserialize<'de> for RuntimeInstructionAcceptedRunId {
-    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
-    where
-        D: ::serde::Deserializer<'de>,
-    {
-        ::std::string::String::deserialize(deserializer)?
-            .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
-    }
-}
 ///`RuntimeInstructionPrepared`
 ///
 /// <details><summary>JSON schema</summary>
@@ -15438,25 +11170,10 @@ impl<'de> ::serde::Deserialize<'de> for RuntimeListTargetsResultRequestId {
 ///      "$ref": "#/definitions/RuntimeInstructionPrepared"
 ///    },
 ///    {
-///      "$ref": "#/definitions/RuntimeExecuteInstruction"
+///      "$ref": "#/definitions/RuntimeStartGuidance"
 ///    },
 ///    {
-///      "$ref": "#/definitions/RuntimeInstructionAccepted"
-///    },
-///    {
-///      "$ref": "#/definitions/RuntimeActionDecision"
-///    },
-///    {
-///      "$ref": "#/definitions/RuntimeActionDecisionResult"
-///    },
-///    {
-///      "$ref": "#/definitions/RuntimeCancelAction"
-///    },
-///    {
-///      "$ref": "#/definitions/RuntimeActionCancelResult"
-///    },
-///    {
-///      "$ref": "#/definitions/RuntimeActionStatus"
+///      "$ref": "#/definitions/RuntimeGuidanceStarted"
 ///    }
 ///  ]
 ///}
@@ -15498,13 +11215,8 @@ pub enum RuntimeMessage {
     PlanControlResult(RuntimePlanControlResult),
     PrepareInstruction(RuntimePrepareInstruction),
     InstructionPrepared(RuntimeInstructionPrepared),
-    ExecuteInstruction(RuntimeExecuteInstruction),
-    InstructionAccepted(RuntimeInstructionAccepted),
-    ActionDecision(RuntimeActionDecision),
-    ActionDecisionResult(RuntimeActionDecisionResult),
-    CancelAction(RuntimeCancelAction),
-    ActionCancelResult(RuntimeActionCancelResult),
-    ActionStatus(RuntimeActionStatus),
+    StartGuidance(RuntimeStartGuidance),
+    GuidanceStarted(RuntimeGuidanceStarted),
 }
 impl ::std::convert::From<&Self> for RuntimeMessage {
     fn from(value: &RuntimeMessage) -> Self {
@@ -15676,39 +11388,14 @@ impl ::std::convert::From<RuntimeInstructionPrepared> for RuntimeMessage {
         Self::InstructionPrepared(value)
     }
 }
-impl ::std::convert::From<RuntimeExecuteInstruction> for RuntimeMessage {
-    fn from(value: RuntimeExecuteInstruction) -> Self {
-        Self::ExecuteInstruction(value)
+impl ::std::convert::From<RuntimeStartGuidance> for RuntimeMessage {
+    fn from(value: RuntimeStartGuidance) -> Self {
+        Self::StartGuidance(value)
     }
 }
-impl ::std::convert::From<RuntimeInstructionAccepted> for RuntimeMessage {
-    fn from(value: RuntimeInstructionAccepted) -> Self {
-        Self::InstructionAccepted(value)
-    }
-}
-impl ::std::convert::From<RuntimeActionDecision> for RuntimeMessage {
-    fn from(value: RuntimeActionDecision) -> Self {
-        Self::ActionDecision(value)
-    }
-}
-impl ::std::convert::From<RuntimeActionDecisionResult> for RuntimeMessage {
-    fn from(value: RuntimeActionDecisionResult) -> Self {
-        Self::ActionDecisionResult(value)
-    }
-}
-impl ::std::convert::From<RuntimeCancelAction> for RuntimeMessage {
-    fn from(value: RuntimeCancelAction) -> Self {
-        Self::CancelAction(value)
-    }
-}
-impl ::std::convert::From<RuntimeActionCancelResult> for RuntimeMessage {
-    fn from(value: RuntimeActionCancelResult) -> Self {
-        Self::ActionCancelResult(value)
-    }
-}
-impl ::std::convert::From<RuntimeActionStatus> for RuntimeMessage {
-    fn from(value: RuntimeActionStatus) -> Self {
-        Self::ActionStatus(value)
+impl ::std::convert::From<RuntimeGuidanceStarted> for RuntimeMessage {
+    fn from(value: RuntimeGuidanceStarted) -> Self {
+        Self::GuidanceStarted(value)
     }
 }
 ///`RuntimeObserve`
@@ -19274,7 +14961,7 @@ impl<'de> ::serde::Deserialize<'de> for RuntimePresentationAckResultRequestId {
 ///        "type": "string",
 ///        "enum": [
 ///          "diagnostic",
-///          "selected_window_actions"
+///          "instructor_cursor"
 ///        ]
 ///      },
 ///      "maxItems": 2,
@@ -19343,7 +15030,7 @@ impl ::std::convert::From<&RuntimeReady> for RuntimeReady {
 ///  "type": "string",
 ///  "enum": [
 ///    "diagnostic",
-///    "selected_window_actions"
+///    "instructor_cursor"
 ///  ]
 ///}
 /// ```
@@ -19363,8 +15050,8 @@ impl ::std::convert::From<&RuntimeReady> for RuntimeReady {
 pub enum RuntimeReadyCapabilitiesItem {
     #[serde(rename = "diagnostic")]
     Diagnostic,
-    #[serde(rename = "selected_window_actions")]
-    SelectedWindowActions,
+    #[serde(rename = "instructor_cursor")]
+    InstructorCursor,
 }
 impl ::std::convert::From<&Self> for RuntimeReadyCapabilitiesItem {
     fn from(value: &RuntimeReadyCapabilitiesItem) -> Self {
@@ -19375,7 +15062,7 @@ impl ::std::fmt::Display for RuntimeReadyCapabilitiesItem {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         match *self {
             Self::Diagnostic => f.write_str("diagnostic"),
-            Self::SelectedWindowActions => f.write_str("selected_window_actions"),
+            Self::InstructorCursor => f.write_str("instructor_cursor"),
         }
     }
 }
@@ -19386,7 +15073,7 @@ impl ::std::str::FromStr for RuntimeReadyCapabilitiesItem {
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
         match value {
             "diagnostic" => Ok(Self::Diagnostic),
-            "selected_window_actions" => Ok(Self::SelectedWindowActions),
+            "instructor_cursor" => Ok(Self::InstructorCursor),
             _ => Err("invalid value".into()),
         }
     }
@@ -22906,6 +18593,1160 @@ impl ::std::convert::TryFrom<::std::string::String> for RuntimeStartGenerationId
     }
 }
 impl<'de> ::serde::Deserialize<'de> for RuntimeStartGenerationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidance`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "RuntimeStartGuidance",
+///  "type": "object",
+///  "required": [
+///    "correlationId",
+///    "generationId",
+///    "instruction",
+///    "kind",
+///    "locale",
+///    "modelConfig",
+///    "preparationId",
+///    "protocolVersion",
+///    "requestId",
+///    "utteranceId"
+///  ],
+///  "properties": {
+///    "correlationId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "generationId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "instruction": {
+///      "type": "string",
+///      "maxLength": 2000,
+///      "minLength": 1
+///    },
+///    "kind": {
+///      "type": "string",
+///      "enum": [
+///        "runtime.startGuidance"
+///      ]
+///    },
+///    "locale": {
+///      "type": "string",
+///      "enum": [
+///        "en",
+///        "vi"
+///      ]
+///    },
+///    "modelConfig": {
+///      "type": "object",
+///      "required": [
+///        "grant",
+///        "model",
+///        "origin"
+///      ],
+///      "properties": {
+///        "grant": {
+///          "type": "string",
+///          "pattern": "^[0-9a-f]{64}$"
+///        },
+///        "model": {
+///          "type": "string",
+///          "maxLength": 128,
+///          "minLength": 1
+///        },
+///        "origin": {
+///          "type": "string",
+///          "maxLength": 2048
+///        }
+///      },
+///      "additionalProperties": false
+///    },
+///    "preparationId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "protocolVersion": {
+///      "type": "integer",
+///      "enum": [
+///        3
+///      ]
+///    },
+///    "requestId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    },
+///    "utteranceId": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeStartGuidance {
+    #[serde(rename = "correlationId")]
+    pub correlation_id: RuntimeStartGuidanceCorrelationId,
+    #[serde(rename = "generationId")]
+    pub generation_id: RuntimeStartGuidanceGenerationId,
+    pub instruction: RuntimeStartGuidanceInstruction,
+    pub kind: RuntimeStartGuidanceKind,
+    pub locale: RuntimeStartGuidanceLocale,
+    #[serde(rename = "modelConfig")]
+    pub model_config: RuntimeStartGuidanceModelConfig,
+    #[serde(rename = "preparationId")]
+    pub preparation_id: RuntimeStartGuidancePreparationId,
+    #[serde(rename = "protocolVersion")]
+    pub protocol_version: RuntimeStartGuidanceProtocolVersion,
+    #[serde(rename = "requestId")]
+    pub request_id: RuntimeStartGuidanceRequestId,
+    #[serde(rename = "utteranceId")]
+    pub utterance_id: RuntimeStartGuidanceUtteranceId,
+}
+impl ::std::convert::From<&RuntimeStartGuidance> for RuntimeStartGuidance {
+    fn from(value: &RuntimeStartGuidance) -> Self {
+        value.clone()
+    }
+}
+///`RuntimeStartGuidanceCorrelationId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceCorrelationId(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceCorrelationId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceCorrelationId> for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceCorrelationId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceCorrelationId>
+for RuntimeStartGuidanceCorrelationId {
+    fn from(value: &RuntimeStartGuidanceCorrelationId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceCorrelationId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceCorrelationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidanceCorrelationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeStartGuidanceCorrelationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceCorrelationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidanceGenerationId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceGenerationId(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceGenerationId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceGenerationId> for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceGenerationId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceGenerationId>
+for RuntimeStartGuidanceGenerationId {
+    fn from(value: &RuntimeStartGuidanceGenerationId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceGenerationId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceGenerationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidanceGenerationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeStartGuidanceGenerationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceGenerationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidanceInstruction`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "maxLength": 2000,
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceInstruction(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceInstruction {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceInstruction> for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceInstruction) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceInstruction>
+for RuntimeStartGuidanceInstruction {
+    fn from(value: &RuntimeStartGuidanceInstruction) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceInstruction {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 2000usize {
+            return Err("longer than 2000 characters".into());
+        }
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceInstruction {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidanceInstruction {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RuntimeStartGuidanceInstruction {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceInstruction {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidanceKind`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "runtime.startGuidance"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum RuntimeStartGuidanceKind {
+    #[serde(rename = "runtime.startGuidance")]
+    RuntimeStartGuidance,
+}
+impl ::std::convert::From<&Self> for RuntimeStartGuidanceKind {
+    fn from(value: &RuntimeStartGuidanceKind) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for RuntimeStartGuidanceKind {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::RuntimeStartGuidance => f.write_str("runtime.startGuidance"),
+        }
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceKind {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "runtime.startGuidance" => Ok(Self::RuntimeStartGuidance),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for RuntimeStartGuidanceKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RuntimeStartGuidanceKind {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`RuntimeStartGuidanceLocale`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "en",
+///    "vi"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum RuntimeStartGuidanceLocale {
+    #[serde(rename = "en")]
+    En,
+    #[serde(rename = "vi")]
+    Vi,
+}
+impl ::std::convert::From<&Self> for RuntimeStartGuidanceLocale {
+    fn from(value: &RuntimeStartGuidanceLocale) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for RuntimeStartGuidanceLocale {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::En => f.write_str("en"),
+            Self::Vi => f.write_str("vi"),
+        }
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceLocale {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "en" => Ok(Self::En),
+            "vi" => Ok(Self::Vi),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceLocale {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for RuntimeStartGuidanceLocale {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RuntimeStartGuidanceLocale {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+///`RuntimeStartGuidanceModelConfig`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "object",
+///  "required": [
+///    "grant",
+///    "model",
+///    "origin"
+///  ],
+///  "properties": {
+///    "grant": {
+///      "type": "string",
+///      "pattern": "^[0-9a-f]{64}$"
+///    },
+///    "model": {
+///      "type": "string",
+///      "maxLength": 128,
+///      "minLength": 1
+///    },
+///    "origin": {
+///      "type": "string",
+///      "maxLength": 2048
+///    }
+///  },
+///  "additionalProperties": false
+///}
+/// ```
+/// </details>
+#[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeStartGuidanceModelConfig {
+    pub grant: RuntimeStartGuidanceModelConfigGrant,
+    pub model: RuntimeStartGuidanceModelConfigModel,
+    pub origin: RuntimeStartGuidanceModelConfigOrigin,
+}
+impl ::std::convert::From<&RuntimeStartGuidanceModelConfig>
+for RuntimeStartGuidanceModelConfig {
+    fn from(value: &RuntimeStartGuidanceModelConfig) -> Self {
+        value.clone()
+    }
+}
+///`RuntimeStartGuidanceModelConfigGrant`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{64}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceModelConfigGrant(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceModelConfigGrant {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceModelConfigGrant>
+for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceModelConfigGrant) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceModelConfigGrant>
+for RuntimeStartGuidanceModelConfigGrant {
+    fn from(value: &RuntimeStartGuidanceModelConfigGrant) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceModelConfigGrant {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        { ::regress::Regex::new("^[0-9a-f]{64}$").unwrap() });
+        if PATTERN.find(value).is_none() {
+            return Err("doesn't match pattern \"^[0-9a-f]{64}$\"".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceModelConfigGrant {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidanceModelConfigGrant {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeStartGuidanceModelConfigGrant {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceModelConfigGrant {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidanceModelConfigModel`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "maxLength": 128,
+///  "minLength": 1
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceModelConfigModel(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceModelConfigModel {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceModelConfigModel>
+for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceModelConfigModel) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceModelConfigModel>
+for RuntimeStartGuidanceModelConfigModel {
+    fn from(value: &RuntimeStartGuidanceModelConfigModel) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceModelConfigModel {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 128usize {
+            return Err("longer than 128 characters".into());
+        }
+        if value.chars().count() < 1usize {
+            return Err("shorter than 1 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceModelConfigModel {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidanceModelConfigModel {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeStartGuidanceModelConfigModel {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceModelConfigModel {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidanceModelConfigOrigin`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "maxLength": 2048
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceModelConfigOrigin(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceModelConfigOrigin {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceModelConfigOrigin>
+for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceModelConfigOrigin) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceModelConfigOrigin>
+for RuntimeStartGuidanceModelConfigOrigin {
+    fn from(value: &RuntimeStartGuidanceModelConfigOrigin) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceModelConfigOrigin {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if value.chars().count() > 2048usize {
+            return Err("longer than 2048 characters".into());
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceModelConfigOrigin {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidanceModelConfigOrigin {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeStartGuidanceModelConfigOrigin {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceModelConfigOrigin {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidancePreparationId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidancePreparationId(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidancePreparationId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidancePreparationId> for ::std::string::String {
+    fn from(value: RuntimeStartGuidancePreparationId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidancePreparationId>
+for RuntimeStartGuidancePreparationId {
+    fn from(value: &RuntimeStartGuidancePreparationId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidancePreparationId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidancePreparationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidancePreparationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String>
+for RuntimeStartGuidancePreparationId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidancePreparationId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidanceProtocolVersion`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "integer",
+///  "enum": [
+///    3
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceProtocolVersion(i64);
+impl ::std::ops::Deref for RuntimeStartGuidanceProtocolVersion {
+    type Target = i64;
+    fn deref(&self) -> &i64 {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceProtocolVersion> for i64 {
+    fn from(value: RuntimeStartGuidanceProtocolVersion) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceProtocolVersion>
+for RuntimeStartGuidanceProtocolVersion {
+    fn from(value: &RuntimeStartGuidanceProtocolVersion) -> Self {
+        value.clone()
+    }
+}
+impl ::std::convert::TryFrom<i64> for RuntimeStartGuidanceProtocolVersion {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: i64,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        if ![3_i64].contains(&value) {
+            Err("invalid value".into())
+        } else {
+            Ok(Self(value))
+        }
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceProtocolVersion {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        Self::try_from(<i64>::deserialize(deserializer)?)
+            .map_err(|e| { <D::Error as ::serde::de::Error>::custom(e.to_string()) })
+    }
+}
+///`RuntimeStartGuidanceRequestId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceRequestId(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceRequestId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceRequestId> for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceRequestId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceRequestId>
+for RuntimeStartGuidanceRequestId {
+    fn from(value: &RuntimeStartGuidanceRequestId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceRequestId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceRequestId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for RuntimeStartGuidanceRequestId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RuntimeStartGuidanceRequestId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceRequestId {
+    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+    where
+        D: ::serde::Deserializer<'de>,
+    {
+        ::std::string::String::deserialize(deserializer)?
+            .parse()
+            .map_err(|e: self::error::ConversionError| {
+                <D::Error as ::serde::de::Error>::custom(e.to_string())
+            })
+    }
+}
+///`RuntimeStartGuidanceUtteranceId`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+///}
+/// ```
+/// </details>
+#[derive(::serde::Serialize, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[serde(transparent)]
+pub struct RuntimeStartGuidanceUtteranceId(::std::string::String);
+impl ::std::ops::Deref for RuntimeStartGuidanceUtteranceId {
+    type Target = ::std::string::String;
+    fn deref(&self) -> &::std::string::String {
+        &self.0
+    }
+}
+impl ::std::convert::From<RuntimeStartGuidanceUtteranceId> for ::std::string::String {
+    fn from(value: RuntimeStartGuidanceUtteranceId) -> Self {
+        value.0
+    }
+}
+impl ::std::convert::From<&RuntimeStartGuidanceUtteranceId>
+for RuntimeStartGuidanceUtteranceId {
+    fn from(value: &RuntimeStartGuidanceUtteranceId) -> Self {
+        value.clone()
+    }
+}
+impl ::std::str::FromStr for RuntimeStartGuidanceUtteranceId {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        static PATTERN: ::std::sync::LazyLock<::regress::Regex> = ::std::sync::LazyLock::new(||
+        {
+            ::regress::Regex::new(
+                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                )
+                .unwrap()
+        });
+        if PATTERN.find(value).is_none() {
+            return Err(
+                "doesn't match pattern \"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$\""
+                    .into(),
+            );
+        }
+        Ok(Self(value.to_string()))
+    }
+}
+impl ::std::convert::TryFrom<&str> for RuntimeStartGuidanceUtteranceId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String>
+for RuntimeStartGuidanceUtteranceId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for RuntimeStartGuidanceUtteranceId {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl<'de> ::serde::Deserialize<'de> for RuntimeStartGuidanceUtteranceId {
     fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
     where
         D: ::serde::Deserializer<'de>,

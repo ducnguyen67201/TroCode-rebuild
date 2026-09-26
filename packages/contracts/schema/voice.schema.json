@@ -11,8 +11,8 @@
         "listening",
         "transcribing",
         "dispatching",
-        "executing",
-        "confirmation",
+        "planning",
+        "guiding",
         "completed",
         "cancelled",
         "failed"
@@ -27,7 +27,7 @@
       "type": ["string", "null"],
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
-    "runId": {
+    "guidanceId": {
       "type": ["string", "null"],
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
@@ -38,15 +38,6 @@
     "finalTranscript": {
       "type": "string",
       "maxLength": 2000
-    },
-    "queuedInstructions": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1,
-        "maxLength": 2000
-      },
-      "maxItems": 4
     },
     "targetTitle": {
       "type": ["string", "null"],
@@ -65,34 +56,20 @@
     },
     "permissions": {
       "$ref": "#/definitions/VoicePermissions"
-    },
-    "confirmation": {
-      "anyOf": [
-        { "$ref": "#/definitions/VoiceConfirmation" },
-        { "type": "null" }
-      ]
-    },
-    "actionsUsed": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 12
     }
   },
   "required": [
     "phase",
     "revision",
     "utteranceId",
-    "runId",
+    "guidanceId",
     "partialTranscript",
     "finalTranscript",
-    "queuedInstructions",
     "targetTitle",
     "message",
     "shortcut",
     "transcriptionLanguage",
-    "permissions",
-    "confirmation",
-    "actionsUsed"
+    "permissions"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -123,19 +100,6 @@
         "recovery": { "type": "string", "maxLength": 256 }
       },
       "required": ["microphone", "keyboardMonitoring", "ready", "recovery"],
-      "additionalProperties": false
-    },
-    "VoiceConfirmation": {
-      "title": "VoiceConfirmation",
-      "type": "object",
-      "properties": {
-        "confirmationId": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-        },
-        "summary": { "type": "string", "minLength": 1, "maxLength": 256 }
-      },
-      "required": ["confirmationId", "summary"],
       "additionalProperties": false
     }
   }

@@ -20,8 +20,6 @@ EvidenceKind = Literal[
     "check_mismatch",
     "check_unknown",
     "check_interrupted",
-    "action_outcome",
-    "action_decision",
 ]
 KINDS = frozenset(
     {
@@ -36,8 +34,6 @@ KINDS = frozenset(
         "check_mismatch",
         "check_unknown",
         "check_interrupted",
-        "action_outcome",
-        "action_decision",
     }
 )
 
@@ -115,9 +111,6 @@ class SessionStore:
                 "outcome",
                 "plan_id",
                 "step_index",
-                "run_id",
-                "confirmation_id",
-                "decision",
             }
         ):
             raise ValueError("Evidence metadata contains unsupported fields.")

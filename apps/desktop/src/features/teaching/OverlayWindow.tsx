@@ -8,6 +8,8 @@ interface Presentation {
   cue: TeachingCue;
   origin: { x: number; y: number };
   units: number;
+  stepIndex: number;
+  stepTotal: number;
 }
 function parse(value: unknown): Presentation | null {
   if (!value || typeof value !== 'object') return null;
@@ -31,6 +33,8 @@ function parse(value: unknown): Presentation | null {
     cue: state.cue,
     origin: { x: origin.x, y: origin.y },
     units: data.units,
+    stepIndex: state.journey?.index ?? 0,
+    stepTotal: state.journey?.steps.length ?? 1,
   };
 }
 export function OverlayWindow() {
@@ -82,7 +86,12 @@ export function OverlayWindow() {
         height: `${presentation.units * 100}%`,
       }}
     >
-      <TeachingOverlay cue={presentation.cue} origin={presentation.origin} />
+      <TeachingOverlay
+        cue={presentation.cue}
+        origin={presentation.origin}
+        stepIndex={presentation.stepIndex}
+        stepTotal={presentation.stepTotal}
+      />
     </div>
   );
 }

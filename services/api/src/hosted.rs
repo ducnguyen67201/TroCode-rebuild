@@ -67,7 +67,7 @@ impl HostedState {
             database.clone(),
             config.openai_api_key.clone(),
             config.transcription_model.clone(),
-            config.action_model.clone(),
+            config.guidance_model.clone(),
         )?);
         Ok(Self {
             database,

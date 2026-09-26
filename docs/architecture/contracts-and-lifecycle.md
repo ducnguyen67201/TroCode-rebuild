@@ -46,11 +46,12 @@ payload attempts to override the envelope. Python bounds frames and queue sizes.
 OS permission grants. Teaching requests use a bounded ordinary queue; lifecycle
 Stop/shutdown use a separate reserved control queue that cancels active work.
 
-F11 adds quick `prepareInstruction`, `executeInstruction` and `actionDecision`
-requests plus reserved `cancelAction`. A background action task reports closed
-`runtime.actionStatus` events with generation, run, event and increasing revision
-identity. Events never satisfy a pending response. The host drops stale/duplicate
-events and treats any other unsolicited frame as a protocol violation.
+F11 reuses quick `prepareInstruction` to pin a target, then sends the final voice
+transcript or typed fallback through `runtime.startGuidance`. The response is a
+validated `TeachingState`, and `runtime.cancelGuidance` is the reserved cancellation
+path. There are no native action events or approval decisions. Events never satisfy
+a pending response; the host drops stale/duplicate state and treats any other
+unsolicited frame as a protocol violation.
 
 | Request                       | Owner and effect                                                                   |
 | ----------------------------- | ---------------------------------------------------------------------------------- |
@@ -79,5 +80,6 @@ within one second, and null/invalid cues hide previous pixels immediately. Nativ
 operations execute on the main thread; the observation loop remains asynchronous.
 
 Account changes, auth loss and Stop invalidate old work. Shutdown cancels pending
-work, closes local resources and reaps the worker. F11 input exists only inside
-the active in-memory run; interrupted native input is never serialized or replayed.
+work, closes local resources and reaps the worker. F11 transcripts and Instructor
+Cursor drafts exist only inside the active in-memory run and are never serialized
+or replayed.

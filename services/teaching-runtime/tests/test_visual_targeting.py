@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from dataclasses import replace
 from types import SimpleNamespace
@@ -103,10 +104,27 @@ def test_visual_drag_maps_both_regions_and_projection_omits_image():
 
 def test_sdk_can_propose_visual_guidance_for_an_unlabelled_canvas(monkeypatch):
     async def run(agent, *args, **kwargs):
-        assert agent.tools == []
+        assert [tool.name for tool in agent.tools] == [
+            "show_student_where",
+            "show_student_click",
+            "show_student_drag",
+            "show_student_type",
+            "show_student_scroll",
+        ]
         if isinstance(args[0], list):
             assert args[0][0]["content"][1]["type"] == "input_image"
-        return SimpleNamespace(final_output={"steps": [visual_step().model_dump()]})
+        tool = agent.tools[1]
+        await tool.on_invoke_tool(
+            SimpleNamespace(tool_name=tool.name),
+            json.dumps(
+                {
+                    "target": visual_step().target.model_dump(),
+                    "caption": "Click the shape yourself.",
+                    "expected": None,
+                }
+            ),
+        )
+        return SimpleNamespace(final_output="staged")
 
     monkeypatch.setattr("tro_runtime.agent.Runner.run", run)
     result = asyncio.run(GuidanceAgent("unused").plan(screenshot(), "Select a shape", "en"))
@@ -165,6 +183,58 @@ def test_capture_can_fall_back_to_screen_only_and_checks_image_geometry(monkeypa
         output.screenshot_width = 800
         with pytest.raises(ValueError, match="geometry"):
             await source.observe(observation().target)
+
+    asyncio.run(scenario())
+
+
+def test_capture_retries_at_a_smaller_dimension_to_fit_model_gateway(monkeypatch):
+    import base64
+    import sys
+
+    from tro_runtime.observation_source import CuaObservationSource
+
+    monkeypatch.setitem(
+        sys.modules,
+        "cua_driver",
+        SimpleNamespace(GetWindowStateInput=lambda **kwargs: SimpleNamespace(**kwargs)),
+    )
+
+    async def scenario():
+        calls = []
+
+        async def capture(request):
+            calls.append(request.max_dimension)
+            raw_size = 600_000 if request.max_dimension == 768 else 400_000
+            width = request.max_dimension
+            height = round(width * 4 / 5)
+            return SimpleNamespace(
+                pid=42,
+                window_id=7,
+                window_bounds=SimpleNamespace(x=-100, y=0, width=500, height=400),
+                window_title="Canvas",
+                degraded=False,
+                elements=[],
+                elements_complete=True,
+                truncated=False,
+                screenshot_frame_valid=True,
+                screenshot_width=width,
+                screenshot_height=height,
+                images=[
+                    SimpleNamespace(
+                        mime_type="image/png",
+                        data_base64=base64.b64encode(b"x" * raw_size).decode(),
+                    )
+                ],
+            )
+
+        async def connect(target):
+            return SimpleNamespace(get_window_state=capture)
+
+        source = CuaObservationSource()
+        monkeypatch.setattr(source, "_connect", connect)
+        result = await source.observe(observation().target)
+        assert calls == [768, 512]
+        assert result.image is not None and len(result.image) < 750_000
 
     asyncio.run(scenario())
 

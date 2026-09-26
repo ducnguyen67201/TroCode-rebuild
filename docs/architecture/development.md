@@ -34,7 +34,12 @@ Windows/clean-machine validation and signing remain open, and no real provider r
 claimed. Packaged artifacts must be rebuilt after this source/protocol change.
 
 F11 packaged validation is separate: use
-[`push-to-talk-computer-control.md`](../../tests/acceptance/push-to-talk-computer-control.md)
+[`push-to-talk-guidance.md`](../../tests/acceptance/push-to-talk-guidance.md)
 on macOS arm64 and Windows x64. Source and preview tests cannot prove passive
-global hooks, microphone/privacy behavior, AltGr handling, native input delivery,
+global hooks, microphone/privacy behavior, AltGr handling, overlay click-through,
 provider latency, perceived responsiveness, signing or clean-machine cleanup.
+
+To add an Instructor Cursor capability, update the master requirement, the
+explicit Python tool method/schema, both gateway allowlists, plan validation,
+the renderer/accessibility text and unit/native acceptance tests. Do not use
+dynamic discovery or a generic dispatcher.

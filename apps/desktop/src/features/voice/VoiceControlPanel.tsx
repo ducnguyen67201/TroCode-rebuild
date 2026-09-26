@@ -8,8 +8,8 @@ const busyPhases = new Set([
   'listening',
   'transcribing',
   'dispatching',
-  'executing',
-  'confirmation',
+  'planning',
+  'guiding',
 ]);
 
 export function VoiceControlPanel({ client }: { client: VoiceClient }) {
@@ -73,15 +73,9 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
       </section>
     );
   const busy = busyPhases.has(status.phase);
-  const latestFinalIsQueued =
-    status.queuedInstructions.at(-1) === status.finalTranscript;
   const transcript = cleared
     ? ''
-    : latestFinalIsQueued
-      ? ''
-      : status.finalTranscript || status.partialTranscript;
-  const showQueue =
-    (busy && Boolean(status.runId)) || status.queuedInstructions.length > 0;
+    : status.finalTranscript || status.partialTranscript;
   const phaseKey = localeKey('voice.phase', status.phase);
   return (
     <section
@@ -171,70 +165,10 @@ export function VoiceControlPanel({ client }: { client: VoiceClient }) {
           )}
         </div>
       )}
-      {showQueue && (
-        <section className="voice-queue" aria-labelledby="voice-queue-heading">
-          <div className="voice-queue-heading">
-            <h3 id="voice-queue-heading">{t('voice.queue')}</h3>
-            <span
-              aria-label={t('voice.queued', {
-                count: status.queuedInstructions.length,
-              })}
-            >
-              {status.queuedInstructions.length}
-            </span>
-          </div>
-          {status.queuedInstructions.length > 0 ? (
-            <ol>
-              {status.queuedInstructions.map((queued, index) => (
-                <li key={`${index}-${queued}`}>{queued}</li>
-              ))}
-            </ol>
-          ) : (
-            <p>
-              {status.phase === 'listening' || status.phase === 'transcribing'
-                ? t('voice.followUpPending')
-                : t('voice.followUpHint', { shortcut: status.shortcut })}
-            </p>
-          )}
-        </section>
-      )}
       {status.targetTitle && (
         <p className="voice-target">
           {t('voice.selectedWindow')} <strong>{status.targetTitle}</strong>
         </p>
-      )}
-      {status.confirmation && status.runId && (
-        <div className="voice-confirmation" role="alert">
-          <h3>{t('voice.approvalRequired')}</h3>
-          <p>{status.confirmation.summary}</p>
-          <button
-            onClick={() =>
-              void run(() =>
-                client.decide(
-                  status.runId!,
-                  status.confirmation!.confirmationId,
-                  true,
-                ),
-              )
-            }
-          >
-            {t('voice.approve')}
-          </button>
-          <button
-            className="secondary"
-            onClick={() =>
-              void run(() =>
-                client.decide(
-                  status.runId!,
-                  status.confirmation!.confirmationId,
-                  false,
-                ),
-              )
-            }
-          >
-            {t('voice.reject')}
-          </button>
-        </div>
       )}
     </section>
   );
