@@ -381,20 +381,11 @@ impl VoiceManager {
                 "Microphone access is required.",
             )
         })?;
-        runtime.start().await?;
         let sample_rate = microphone.sample_rate;
         let (release, mut released) = oneshot::channel();
         let manager = self.clone();
         let task = tokio::spawn(async move {
-            let (prepared, voice_grant, guidance_grant) = tokio::join!(
-                runtime.prepare_instruction(utterance_id),
-                auth.provider_grant(utterance_id, true),
-                auth.provider_grant(utterance_id, false),
-            );
             let outcome = async {
-                let prepared = prepared?;
-                let (voice_grant, _) = voice_grant?;
-                let (guidance_grant, origin) = guidance_grant?;
                 let mut chunks = chunks::ChunkAssembler::new(sample_rate).map_err(|_| crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone format is unavailable."))?;
                 let mut transcript = transcript::TranscriptAssembler::default();
                 let mut expected = 0_u32;
@@ -402,32 +393,66 @@ impl VoiceManager {
                     std::collections::VecDeque::<chunks::WavChunk>::new();
                 let mut uploads = tokio::task::JoinSet::new();
                 let mut release_seen = false;
+                let preparation_runtime = runtime.clone();
+                let preparation_auth = auth.clone();
+                let preparation = async move {
+                    preparation_runtime.start().await?;
+                    let (prepared, voice_grant, guidance_grant) = tokio::join!(
+                        preparation_runtime.prepare_instruction(utterance_id),
+                        preparation_auth.provider_grant(utterance_id, true),
+                        preparation_auth.provider_grant(utterance_id, false),
+                    );
+                    let (voice_grant, _) = voice_grant?;
+                    Ok::<_, crate::worker::WorkerError>((
+                        prepared?,
+                        voice_grant,
+                        guidance_grant?,
+                    ))
+                };
+                tokio::pin!(preparation);
+                let mut preparation_complete = false;
+                let mut voice_grant: Option<crate::auth::api_client::ProviderGrant> = None;
+                let mut prepared_guidance = None;
                 loop {
-                    while uploads.len() < transcript::MAX_IN_FLIGHT
-                        && let Some(chunk) = pending.pop_front()
-                    {
-                        let auth = auth.clone();
-                        let grant = voice_grant.grant.clone();
-                        let prompt = transcript.prompt_tail();
-                        let languages = request_languages.clone();
-                        uploads.spawn(async move {
-                            auth.transcribe(crate::auth::TranscriptionRequest::new(
-                                &grant,
-                                chunk.sequence,
-                                chunk.duration_ms,
-                                chunk.final_chunk,
-                                &prompt,
-                                &languages,
-                                chunk.bytes,
-                            ))
-                            .await
-                        });
+                    if let Some(voice_grant) = voice_grant.as_ref() {
+                        while uploads.len() < transcript::MAX_IN_FLIGHT
+                            && let Some(chunk) = pending.pop_front()
+                        {
+                            let auth = auth.clone();
+                            let grant = voice_grant.grant.clone();
+                            let prompt = transcript.prompt_tail();
+                            let languages = request_languages.clone();
+                            uploads.spawn(async move {
+                                auth.transcribe(crate::auth::TranscriptionRequest::new(
+                                    &grant,
+                                    chunk.sequence,
+                                    chunk.duration_ms,
+                                    chunk.final_chunk,
+                                    &prompt,
+                                    &languages,
+                                    chunk.bytes,
+                                ))
+                                .await
+                            });
+                        }
                     }
-                    if release_seen && pending.is_empty() && uploads.is_empty() {
+                    if release_seen
+                        && preparation_complete
+                        && pending.is_empty()
+                        && uploads.is_empty()
+                    {
                         break;
                     }
                     tokio::select! {
                         biased;
+                        result = &mut preparation, if !preparation_complete => {
+                            let (prepared, voice_grant_value, guidance_grant) = result?;
+                            preparation_complete = true;
+                            voice_grant = Some(voice_grant_value);
+                            prepared_guidance = Some((prepared, guidance_grant));
+                            #[cfg(debug_assertions)]
+                            eprintln!("tro diagnostic: voice_preparation_ready release_seen={release_seen}");
+                        }
                         result = uploads.join_next(), if !uploads.is_empty() => {
                             let Some(result) = result else { continue; };
                             let response = result
@@ -457,7 +482,6 @@ impl VoiceManager {
                                 expected += 1;
                                 pending.push_back(chunk);
                             }
-                            if pending.len() > 1 { return Err(crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription could not keep up. Retry.")); }
                         }
                         value = microphone.samples.recv(), if !release_seen => {
                             let Some(value) = value else { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", "Microphone capture stopped.")); };
@@ -466,10 +490,15 @@ impl VoiceManager {
                                 expected += 1;
                                 pending.push_back(chunk);
                             }
-                            if pending.len() > 1 { return Err(crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription could not keep up. Retry.")); }
                         }
                     }
                 }
+                let (prepared, (guidance_grant, origin)) = prepared_guidance.ok_or(
+                    crate::worker::WorkerError::new(
+                        "TRANSCRIPTION_UNAVAILABLE",
+                        "Voice preparation did not complete. Retry.",
+                    ),
+                )?;
                 let final_text = transcript.finish(expected).map_err(|_| crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription is incomplete. Retry."))?;
                 manager.status.send_modify(|status| { status.revision += 1; status.phase = "dispatching".into(); status.final_transcript = final_text.clone(); status.message = "Preparing the selected window…".into(); });
                 let preparation_id = prepared["preparationId"].as_str().and_then(|value| Uuid::parse_str(value).ok()).ok_or(crate::worker::WorkerError::new("INVALID_MESSAGE", "Runtime returned an invalid preparation."))?;

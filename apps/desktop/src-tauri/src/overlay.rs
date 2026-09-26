@@ -278,17 +278,18 @@ mod tests {
     use super::voice_hud_visible;
 
     #[test]
-    fn voice_hud_exists_only_for_active_or_confirmation_states() {
+    fn voice_hud_exists_only_for_guidance_or_failure_states() {
         for phase in [
             "listening",
             "transcribing",
             "dispatching",
-            "executing",
-            "confirmation",
+            "planning",
+            "guiding",
+            "failed",
         ] {
             assert!(voice_hud_visible(phase));
         }
-        for phase in ["disabled", "ready", "failed", "completed", "cancelled"] {
+        for phase in ["disabled", "idle", "completed", "cancelled"] {
             assert!(!voice_hud_visible(phase));
         }
     }
