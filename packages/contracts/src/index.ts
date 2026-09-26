@@ -29,6 +29,10 @@ export type {
   RecoveryAction,
 } from './generated-device-readiness';
 export {
+  DEFAULT_TRANSCRIPTION_LANGUAGE,
+  TRANSCRIPTION_LANGUAGES,
+} from './generated-voice';
+export {
   parseAuthStatus,
   parseDeviceReadiness,
   parseMessage,

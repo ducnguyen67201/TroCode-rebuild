@@ -959,6 +959,9 @@ The Settings surface exposes exactly Auto, English and Vietnamese for the next
 voice instruction. Rust persists the non-secret preference under the local app
 configuration and snapshots it when a chord-down capture is admitted, so every
 chunk in one utterance uses the same hint even if Settings changes mid-capture.
+The voice contract schema is the sole authority for the closed language codes
+and Vietnamese default; generated TypeScript and Rust bindings carry those
+values across the UI, native host and hosted proxy boundaries.
 Auto sends no `languages[]` field, English sends only `en`, and Vietnamese sends
 only `vi`; Vietnamese is the fresh-install and invalid-storage fallback. These
 are expected-input transcription hints, not translation or a guarantee of

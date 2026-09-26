@@ -139,11 +139,12 @@ impl ::std::convert::TryFrom<::std::string::String> for PermissionState {
 /// ```json
 ///{
 ///  "title": "TranscriptionLanguage",
+///  "default": "vi",
 ///  "type": "string",
 ///  "enum": [
-///    "auto",
+///    "vi",
 ///    "en",
-///    "vi"
+///    "auto"
 ///  ]
 ///}
 /// ```
@@ -161,12 +162,12 @@ impl ::std::convert::TryFrom<::std::string::String> for PermissionState {
     PartialOrd
 )]
 pub enum TranscriptionLanguage {
-    #[serde(rename = "auto")]
-    Auto,
-    #[serde(rename = "en")]
-    En,
     #[serde(rename = "vi")]
     Vi,
+    #[serde(rename = "en")]
+    En,
+    #[serde(rename = "auto")]
+    Auto,
 }
 impl ::std::convert::From<&Self> for TranscriptionLanguage {
     fn from(value: &TranscriptionLanguage) -> Self {
@@ -176,9 +177,9 @@ impl ::std::convert::From<&Self> for TranscriptionLanguage {
 impl ::std::fmt::Display for TranscriptionLanguage {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         match *self {
-            Self::Auto => f.write_str("auto"),
-            Self::En => f.write_str("en"),
             Self::Vi => f.write_str("vi"),
+            Self::En => f.write_str("en"),
+            Self::Auto => f.write_str("auto"),
         }
     }
 }
@@ -188,9 +189,9 @@ impl ::std::str::FromStr for TranscriptionLanguage {
         value: &str,
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
         match value {
-            "auto" => Ok(Self::Auto),
-            "en" => Ok(Self::En),
             "vi" => Ok(Self::Vi),
+            "en" => Ok(Self::En),
+            "auto" => Ok(Self::Auto),
             _ => Err("invalid value".into()),
         }
     }
@@ -217,6 +218,11 @@ impl ::std::convert::TryFrom<::std::string::String> for TranscriptionLanguage {
         value: ::std::string::String,
     ) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
+    }
+}
+impl ::std::default::Default for TranscriptionLanguage {
+    fn default() -> Self {
+        TranscriptionLanguage::Vi
     }
 }
 ///`VoiceConfirmation`

@@ -1,35 +1,12 @@
 use serde::{Deserialize, Serialize};
-use std::{path::PathBuf, str::FromStr};
+use std::path::PathBuf;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum TranscriptionLanguage {
-    Auto,
-    En,
-    #[default]
-    Vi,
-}
+pub use tro_contracts::generated_voice::TranscriptionLanguage;
 
-impl TranscriptionLanguage {
-    pub fn request_languages(self) -> Vec<String> {
-        match self {
-            Self::Auto => Vec::new(),
-            Self::En => vec!["en".to_owned()],
-            Self::Vi => vec!["vi".to_owned()],
-        }
-    }
-}
-
-impl FromStr for TranscriptionLanguage {
-    type Err = ();
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value {
-            "auto" => Ok(Self::Auto),
-            "en" => Ok(Self::En),
-            "vi" => Ok(Self::Vi),
-            _ => Err(()),
-        }
+pub fn request_languages(language: TranscriptionLanguage) -> Vec<TranscriptionLanguage> {
+    match language {
+        TranscriptionLanguage::Auto => Vec::new(),
+        explicit => vec![explicit],
     }
 }
 
@@ -85,9 +62,15 @@ mod tests {
     #[test]
     fn defaults_to_vietnamese_and_maps_closed_provider_hints() {
         assert_eq!(TranscriptionLanguage::default(), TranscriptionLanguage::Vi);
-        assert!(TranscriptionLanguage::Auto.request_languages().is_empty());
-        assert_eq!(TranscriptionLanguage::En.request_languages(), vec!["en"]);
-        assert_eq!(TranscriptionLanguage::Vi.request_languages(), vec!["vi"]);
+        assert!(request_languages(TranscriptionLanguage::Auto).is_empty());
+        assert_eq!(
+            request_languages(TranscriptionLanguage::En),
+            vec![TranscriptionLanguage::En]
+        );
+        assert_eq!(
+            request_languages(TranscriptionLanguage::Vi),
+            vec![TranscriptionLanguage::Vi]
+        );
         assert!("fr".parse::<TranscriptionLanguage>().is_err());
     }
 

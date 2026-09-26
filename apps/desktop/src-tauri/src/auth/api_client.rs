@@ -6,6 +6,8 @@ use super::{
 };
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::time::Duration;
+#[cfg(any(feature = "desktop", test))]
+use tro_contracts::generated_voice::TranscriptionLanguage;
 use url::Url;
 
 const MAX_AUTH_RESPONSE_BYTES: usize = 32 * 1024;
@@ -273,7 +275,7 @@ impl AuthApiClient {
                     .collect::<String>(),
             );
         for language in request.languages {
-            form = form.text("languages[]", language.clone());
+            form = form.text("languages[]", language.to_string());
         }
         let response = self
             .client
@@ -284,7 +286,12 @@ impl AuthApiClient {
             .await
             .map_err(|_| ApiFailure::unavailable())?;
         let transcript: ChunkTranscript = response_json(response).await?;
-        if transcript.sequence != request.sequence || transcript.languages != request.languages {
+        let expected_languages = request
+            .languages
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>();
+        if transcript.sequence != request.sequence || transcript.languages != expected_languages {
             return Err(ApiFailure::unavailable());
         }
         Ok(transcript)
@@ -300,12 +307,11 @@ impl AuthApiClient {
 }
 
 #[cfg(any(feature = "desktop", test))]
-fn valid_language_hints(languages: &[String]) -> bool {
-    languages.len() <= 2
+fn valid_language_hints(languages: &[TranscriptionLanguage]) -> bool {
+    languages.len() <= 1
         && languages
             .iter()
-            .all(|language| matches!(language.as_str(), "en" | "vi"))
-        && !(languages.len() == 2 && languages[0] == languages[1])
+            .all(|language| !matches!(language, TranscriptionLanguage::Auto))
 }
 
 impl ApiFailure {
@@ -390,18 +396,14 @@ mod tests {
     }
 
     #[test]
-    fn transcription_language_hints_are_closed_and_auto_is_empty() {
+    fn generated_languages_map_to_the_closed_desktop_hint_shape() {
         assert!(valid_language_hints(&[]));
-        assert!(valid_language_hints(&["en".to_owned()]));
-        assert!(valid_language_hints(&["vi".to_owned()]));
-        assert!(valid_language_hints(&["en".to_owned(), "vi".to_owned()]));
-        assert!(valid_language_hints(&["vi".to_owned(), "en".to_owned()]));
-        assert!(!valid_language_hints(&["fr".to_owned()]));
-        assert!(!valid_language_hints(&["vi".to_owned(), "vi".to_owned()]));
+        assert!(valid_language_hints(&[TranscriptionLanguage::En]));
+        assert!(valid_language_hints(&[TranscriptionLanguage::Vi]));
+        assert!(!valid_language_hints(&[TranscriptionLanguage::Auto]));
         assert!(!valid_language_hints(&[
-            "en".to_owned(),
-            "vi".to_owned(),
-            "en".to_owned(),
+            TranscriptionLanguage::En,
+            TranscriptionLanguage::Vi,
         ]));
     }
 

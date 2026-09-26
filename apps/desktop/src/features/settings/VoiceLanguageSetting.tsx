@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import type { TranscriptionLanguage } from '@tro/contracts';
+import {
+  DEFAULT_TRANSCRIPTION_LANGUAGE,
+  TRANSCRIPTION_LANGUAGES,
+  type TranscriptionLanguage,
+} from '@tro/contracts';
 import type { VoiceClient } from '../../platform/voice-client';
+
+const LANGUAGE_LABELS = {
+  vi: 'Vietnamese',
+  en: 'English',
+  auto: 'Auto',
+} satisfies Record<TranscriptionLanguage, string>;
 
 export function VoiceLanguageSetting({ client }: { client: VoiceClient }) {
   const [language, setLanguage] = useState<TranscriptionLanguage | null>(null);
@@ -55,15 +65,17 @@ export function VoiceLanguageSetting({ client }: { client: VoiceClient }) {
       </div>
       <select
         id="transcription-language"
-        value={language ?? 'vi'}
+        value={language ?? DEFAULT_TRANSCRIPTION_LANGUAGE}
         disabled={language === null || saving}
         onChange={(event) =>
           void change(event.target.value as TranscriptionLanguage)
         }
       >
-        <option value="vi">Vietnamese</option>
-        <option value="en">English</option>
-        <option value="auto">Auto</option>
+        {TRANSCRIPTION_LANGUAGES.map((value) => (
+          <option key={value} value={value}>
+            {LANGUAGE_LABELS[value]}
+          </option>
+        ))}
       </select>
       {saving && <span className="voice-language-saving">Saving…</span>}
       {error && (

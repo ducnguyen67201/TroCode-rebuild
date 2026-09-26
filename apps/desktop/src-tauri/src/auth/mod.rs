@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 use std::{sync::Arc, time::Duration};
 use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 use tokio::sync::{Mutex, watch};
+#[cfg(feature = "desktop")]
+use tro_contracts::generated_voice::TranscriptionLanguage;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -53,7 +55,7 @@ pub(crate) struct TranscriptionRequest<'a> {
     duration_ms: u64,
     final_chunk: bool,
     prompt: &'a str,
-    languages: &'a [String],
+    languages: &'a [TranscriptionLanguage],
     wav: Vec<u8>,
 }
 
@@ -65,7 +67,7 @@ impl<'a> TranscriptionRequest<'a> {
         duration_ms: u64,
         final_chunk: bool,
         prompt: &'a str,
-        languages: &'a [String],
+        languages: &'a [TranscriptionLanguage],
         wav: Vec<u8>,
     ) -> Self {
         Self {

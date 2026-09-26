@@ -99,7 +99,8 @@
     "TranscriptionLanguage": {
       "title": "TranscriptionLanguage",
       "type": "string",
-      "enum": ["auto", "en", "vi"]
+      "enum": ["vi", "en", "auto"],
+      "default": "vi"
     },
     "PermissionState": {
       "type": "string",

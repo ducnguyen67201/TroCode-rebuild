@@ -248,11 +248,8 @@ impl VoiceManager {
     }
 
     #[cfg(any(feature = "desktop", test))]
-    fn transcription_language_snapshot(&self) -> Vec<String> {
-        self.status
-            .borrow()
-            .transcription_language
-            .request_languages()
+    fn transcription_language_snapshot(&self) -> Vec<TranscriptionLanguage> {
+        settings::request_languages(self.status.borrow().transcription_language)
     }
 
     pub fn enable(&self, permissions: VoicePermissions) -> VoiceStatus {
@@ -1023,8 +1020,11 @@ mod auto_arm_tests {
 
         voice.set_transcription_language("en").unwrap();
 
-        assert_eq!(current_capture, vec!["vi"]);
-        assert_eq!(voice.transcription_language_snapshot(), vec!["en"]);
+        assert_eq!(current_capture, vec![TranscriptionLanguage::Vi]);
+        assert_eq!(
+            voice.transcription_language_snapshot(),
+            vec![TranscriptionLanguage::En]
+        );
     }
 
     #[test]
