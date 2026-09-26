@@ -1,3 +1,5 @@
+#[cfg(feature = "desktop")]
+use super::TranscriptionRequest;
 use super::{
     AuthUser, OAuthExchange, SessionEnvelope, WorkspaceMember, WorkspaceMemberList,
     WorkspaceSummary,
@@ -239,29 +241,29 @@ impl AuthApiClient {
         Ok(grant)
     }
 
-    pub async fn transcribe(
+    #[cfg(feature = "desktop")]
+    pub(super) async fn transcribe(
         &self,
-        grant: &str,
-        sequence: u32,
-        duration_ms: u64,
-        final_chunk: bool,
-        prompt: &str,
-        wav: Vec<u8>,
+        request: TranscriptionRequest<'_>,
     ) -> Result<ChunkTranscript, ApiFailure> {
-        let form = reqwest::multipart::Form::new()
+        if !valid_language_hints(request.languages) {
+            return Err(ApiFailure::unavailable());
+        }
+        let mut form = reqwest::multipart::Form::new()
             .part(
                 "file",
-                reqwest::multipart::Part::bytes(wav)
-                    .file_name(format!("chunk-{sequence}.wav"))
+                reqwest::multipart::Part::bytes(request.wav)
+                    .file_name(format!("chunk-{}.wav", request.sequence))
                     .mime_str("audio/wav")
                     .map_err(|_| ApiFailure::unavailable())?,
             )
-            .text("sequence", sequence.to_string())
-            .text("durationMs", duration_ms.to_string())
-            .text("final", final_chunk.to_string())
+            .text("sequence", request.sequence.to_string())
+            .text("durationMs", request.duration_ms.to_string())
+            .text("final", request.final_chunk.to_string())
             .text(
                 "prompt",
-                prompt
+                request
+                    .prompt
                     .chars()
                     .rev()
                     .take(500)
@@ -269,18 +271,23 @@ impl AuthApiClient {
                     .into_iter()
                     .rev()
                     .collect::<String>(),
-            )
-            .text("languages[]", "en")
-            .text("languages[]", "vi");
+            );
+        for language in request.languages {
+            form = form.text("languages[]", language.clone());
+        }
         let response = self
             .client
             .post(self.url("v1/audio/transcriptions"))
-            .bearer_auth(grant)
+            .bearer_auth(request.grant)
             .multipart(form)
             .send()
             .await
             .map_err(|_| ApiFailure::unavailable())?;
-        response_json(response).await
+        let transcript: ChunkTranscript = response_json(response).await?;
+        if transcript.sequence != request.sequence || transcript.languages != request.languages {
+            return Err(ApiFailure::unavailable());
+        }
+        Ok(transcript)
     }
 
     pub fn provider_origin(&self) -> String {
@@ -290,6 +297,15 @@ impl AuthApiClient {
     fn url(&self, path: &str) -> Url {
         self.origin.join(path).expect("fixed relative auth path")
     }
+}
+
+#[cfg(any(feature = "desktop", test))]
+fn valid_language_hints(languages: &[String]) -> bool {
+    languages.len() <= 2
+        && languages
+            .iter()
+            .all(|language| matches!(language.as_str(), "en" | "vi"))
+        && !(languages.len() == 2 && languages[0] == languages[1])
 }
 
 impl ApiFailure {
@@ -371,6 +387,22 @@ mod tests {
         assert!(AuthApiClient::new("http://127.0.0.1:4318", false).is_err());
         assert!(AuthApiClient::new("https://api.tro.example/path", false).is_err());
         assert!(AuthApiClient::new("https://user@api.tro.example", false).is_err());
+    }
+
+    #[test]
+    fn transcription_language_hints_are_closed_and_auto_is_empty() {
+        assert!(valid_language_hints(&[]));
+        assert!(valid_language_hints(&["en".to_owned()]));
+        assert!(valid_language_hints(&["vi".to_owned()]));
+        assert!(valid_language_hints(&["en".to_owned(), "vi".to_owned()]));
+        assert!(valid_language_hints(&["vi".to_owned(), "en".to_owned()]));
+        assert!(!valid_language_hints(&["fr".to_owned()]));
+        assert!(!valid_language_hints(&["vi".to_owned(), "vi".to_owned()]));
+        assert!(!valid_language_hints(&[
+            "en".to_owned(),
+            "vi".to_owned(),
+            "en".to_owned(),
+        ]));
     }
 
     #[test]

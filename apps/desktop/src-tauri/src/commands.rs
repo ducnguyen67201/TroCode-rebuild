@@ -264,6 +264,18 @@ pub fn voice_status(
 }
 
 #[tauri::command]
+pub async fn voice_set_transcription_language(
+    window: tauri::WebviewWindow,
+    language: String,
+    voice: Voice<'_>,
+    auth: Authentication<'_>,
+) -> Result<VoiceStatus, WorkerError> {
+    require_main(&window)?;
+    require_workspace(&auth).await?;
+    voice.set_transcription_language(&language)
+}
+
+#[tauri::command]
 pub async fn voice_enable(
     window: tauri::WebviewWindow,
     voice: Voice<'_>,

@@ -1,6 +1,7 @@
 #[cfg(feature = "desktop")]
 pub mod audio;
 pub mod chunks;
+pub mod settings;
 pub mod transcript;
 
 use serde::{Deserialize, Serialize};
@@ -14,6 +15,8 @@ use tokio::sync::watch;
 #[cfg(feature = "desktop")]
 use tokio::sync::{Mutex, oneshot};
 use uuid::Uuid;
+
+use settings::{TranscriptionLanguage, VoiceSettingsStore};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,6 +47,7 @@ pub struct VoiceStatus {
     pub target_title: Option<String>,
     pub message: String,
     pub shortcut: String,
+    pub transcription_language: TranscriptionLanguage,
     pub permissions: VoicePermissions,
     pub confirmation: Option<VoiceConfirmation>,
     pub actions_used: u8,
@@ -69,6 +73,7 @@ impl Default for VoiceStatus {
                 "Unavailable"
             }
             .into(),
+            transcription_language: TranscriptionLanguage::default(),
             permissions: VoicePermissions {
                 microphone: "unknown".into(),
                 keyboard_monitoring: "unknown".into(),
@@ -83,6 +88,7 @@ impl Default for VoiceStatus {
 
 pub struct VoiceManager {
     status: watch::Sender<VoiceStatus>,
+    settings: VoiceSettingsStore,
     manual_disable: AtomicBool,
     #[cfg(feature = "desktop")]
     capture: Mutex<Option<ActiveCapture>>,
@@ -182,9 +188,24 @@ struct PreparedDispatch {
 
 impl Default for VoiceManager {
     fn default() -> Self {
-        let (status, _) = watch::channel(VoiceStatus::default());
+        Self::from_settings_store(VoiceSettingsStore::default())
+    }
+}
+
+impl VoiceManager {
+    pub fn with_settings_path(path: std::path::PathBuf) -> Self {
+        Self::from_settings_store(VoiceSettingsStore::at(path))
+    }
+
+    fn from_settings_store(settings: VoiceSettingsStore) -> Self {
+        let initial = VoiceStatus {
+            transcription_language: settings.load(),
+            ..VoiceStatus::default()
+        };
+        let (status, _) = watch::channel(initial);
         Self {
             status,
+            settings,
             manual_disable: AtomicBool::new(false),
             #[cfg(feature = "desktop")]
             capture: Mutex::new(None),
@@ -194,15 +215,44 @@ impl Default for VoiceManager {
             dispatch: Mutex::new(()),
         }
     }
-}
 
-impl VoiceManager {
     pub fn status(&self) -> VoiceStatus {
         self.status.borrow().clone()
     }
 
     pub fn subscribe(&self) -> watch::Receiver<VoiceStatus> {
         self.status.subscribe()
+    }
+
+    pub fn set_transcription_language(
+        &self,
+        value: &str,
+    ) -> Result<VoiceStatus, crate::worker::WorkerError> {
+        let language = value.parse::<TranscriptionLanguage>().map_err(|_| {
+            crate::worker::WorkerError::new(
+                "INVALID_MESSAGE",
+                "Choose Auto, English, or Vietnamese.",
+            )
+        })?;
+        self.settings.save(language).map_err(|_| {
+            crate::worker::WorkerError::new(
+                "SETTINGS_UNAVAILABLE",
+                "Transcription language could not be saved. Try again.",
+            )
+        })?;
+        self.status.send_modify(|status| {
+            status.revision += 1;
+            status.transcription_language = language;
+        });
+        Ok(self.status())
+    }
+
+    #[cfg(any(feature = "desktop", test))]
+    fn transcription_language_snapshot(&self) -> Vec<String> {
+        self.status
+            .borrow()
+            .transcription_language
+            .request_languages()
     }
 
     pub fn enable(&self, permissions: VoicePermissions) -> VoiceStatus {
@@ -694,6 +744,7 @@ impl VoiceManager {
         };
         let follow_up = follow_up_target.is_some();
         let utterance_id = self.begin_listening(follow_up)?;
+        let request_languages = self.transcription_language_snapshot();
         let mut microphone = audio::MicrophoneCapture::start().map_err(|_| {
             crate::worker::WorkerError::new(
                 "VOICE_PERMISSION_REQUIRED",
@@ -751,15 +802,17 @@ impl VoiceManager {
                             let auth = auth.clone();
                             let grant = voice_grant.grant.clone();
                             let prompt = transcript.prompt_tail();
+                            let languages = request_languages.clone();
                             uploads.spawn(async move {
-                                auth.transcribe(
+                                auth.transcribe(crate::auth::TranscriptionRequest::new(
                                     &grant,
                                     chunk.sequence,
                                     chunk.duration_ms,
                                     chunk.final_chunk,
                                     &prompt,
+                                    &languages,
                                     chunk.bytes,
-                                )
+                                ))
                                 .await
                             });
                         }
@@ -898,7 +951,7 @@ impl VoiceManager {
 mod auto_arm_tests {
     #[cfg(feature = "desktop")]
     use super::{ActionState, MAX_QUEUED_INSTRUCTIONS, QueuedInstruction};
-    use super::{AutoArmGate, VoiceManager, VoicePermissions};
+    use super::{AutoArmGate, VoiceManager, VoicePermissions, settings::TranscriptionLanguage};
     #[cfg(feature = "desktop")]
     use uuid::Uuid;
 
@@ -920,6 +973,75 @@ mod auto_arm_tests {
         assert!(!gate.update(true));
         assert!(!gate.update(false));
         assert!(gate.update(true));
+    }
+
+    #[test]
+    fn transcription_language_defaults_to_vietnamese_and_updates_only_its_projection() {
+        let voice = VoiceManager::default();
+        let before = voice.status();
+
+        assert_eq!(before.transcription_language, TranscriptionLanguage::Vi);
+        let after = voice.set_transcription_language("en").unwrap();
+
+        assert_eq!(after.transcription_language, TranscriptionLanguage::En);
+        assert_eq!(after.revision, before.revision + 1);
+        assert_eq!(after.phase, before.phase);
+        assert_eq!(after.run_id, before.run_id);
+        assert_eq!(
+            serde_json::to_value(after).unwrap()["transcriptionLanguage"],
+            "en"
+        );
+    }
+
+    #[test]
+    fn invalid_or_failed_language_changes_leave_status_unchanged() {
+        let directory = tempfile::tempdir().unwrap();
+        let blocked_parent = directory.path().join("not-a-directory");
+        std::fs::write(&blocked_parent, b"blocked").unwrap();
+        let voice = VoiceManager::with_settings_path(blocked_parent.join("voice-settings.json"));
+        let before = voice.status();
+
+        assert_eq!(
+            voice.set_transcription_language("fr").unwrap_err().code,
+            "INVALID_MESSAGE"
+        );
+        assert_eq!(
+            voice.set_transcription_language("en").unwrap_err().code,
+            "SETTINGS_UNAVAILABLE"
+        );
+        assert_eq!(voice.status().revision, before.revision);
+        assert_eq!(
+            voice.status().transcription_language,
+            before.transcription_language
+        );
+    }
+
+    #[test]
+    fn capture_language_snapshot_is_stable_until_the_next_capture() {
+        let voice = VoiceManager::default();
+        let current_capture = voice.transcription_language_snapshot();
+
+        voice.set_transcription_language("en").unwrap();
+
+        assert_eq!(current_capture, vec!["vi"]);
+        assert_eq!(voice.transcription_language_snapshot(), vec!["en"]);
+    }
+
+    #[test]
+    fn persisted_language_is_loaded_by_the_next_manager() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("voice-settings.json");
+        let voice = VoiceManager::with_settings_path(path.clone());
+
+        voice.set_transcription_language("auto").unwrap();
+        drop(voice);
+
+        assert_eq!(
+            VoiceManager::with_settings_path(path)
+                .status()
+                .transcription_language,
+            TranscriptionLanguage::Auto
+        );
     }
 
     #[test]

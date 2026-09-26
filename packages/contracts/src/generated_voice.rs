@@ -132,6 +132,93 @@ impl ::std::convert::TryFrom<::std::string::String> for PermissionState {
         value.parse()
     }
 }
+///`TranscriptionLanguage`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "title": "TranscriptionLanguage",
+///  "type": "string",
+///  "enum": [
+///    "auto",
+///    "en",
+///    "vi"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum TranscriptionLanguage {
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "en")]
+    En,
+    #[serde(rename = "vi")]
+    Vi,
+}
+impl ::std::convert::From<&Self> for TranscriptionLanguage {
+    fn from(value: &TranscriptionLanguage) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for TranscriptionLanguage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Auto => f.write_str("auto"),
+            Self::En => f.write_str("en"),
+            Self::Vi => f.write_str("vi"),
+        }
+    }
+}
+impl ::std::str::FromStr for TranscriptionLanguage {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "auto" => Ok(Self::Auto),
+            "en" => Ok(Self::En),
+            "vi" => Ok(Self::Vi),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for TranscriptionLanguage {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for TranscriptionLanguage {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for TranscriptionLanguage {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
 ///`VoiceConfirmation`
 ///
 /// <details><summary>JSON schema</summary>
@@ -486,6 +573,7 @@ impl<'de> ::serde::Deserialize<'de> for VoicePermissionsRecovery {
 ///    "runId",
 ///    "shortcut",
 ///    "targetTitle",
+///    "transcriptionLanguage",
 ///    "utteranceId"
 ///  ],
 ///  "properties": {
@@ -570,6 +658,9 @@ impl<'de> ::serde::Deserialize<'de> for VoicePermissionsRecovery {
 ///      ],
 ///      "maxLength": 256
 ///    },
+///    "transcriptionLanguage": {
+///      "$ref": "#/definitions/TranscriptionLanguage"
+///    },
 ///    "utteranceId": {
 ///      "type": [
 ///        "string",
@@ -603,6 +694,8 @@ pub struct VoiceStatus {
     pub shortcut: VoiceStatusShortcut,
     #[serde(rename = "targetTitle")]
     pub target_title: ::std::option::Option<VoiceStatusTargetTitle>,
+    #[serde(rename = "transcriptionLanguage")]
+    pub transcription_language: TranscriptionLanguage,
     #[serde(rename = "utteranceId")]
     pub utterance_id: ::std::option::Option<VoiceStatusUtteranceId>,
 }

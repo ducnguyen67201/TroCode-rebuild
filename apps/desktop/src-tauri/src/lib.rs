@@ -55,6 +55,7 @@ pub fn run() {
             commands::teaching_request,
             commands::proof_connect,
             commands::voice_status,
+            commands::voice_set_transcription_language,
             commands::voice_enable,
             commands::voice_disable,
             commands::voice_execute_text,
@@ -73,7 +74,9 @@ pub fn run() {
             app.manage(runtime.clone());
             let auth = Arc::new(auth::AuthManager::from_env(runtime.clone()));
             app.manage(auth.clone());
-            let voice = Arc::new(voice::VoiceManager::default());
+            let voice = Arc::new(voice::VoiceManager::with_settings_path(
+                app.path().app_config_dir()?.join("voice-settings.json"),
+            ));
             app.manage(voice.clone());
             let (chord_sender, chord_receiver) = std::sync::mpsc::sync_channel(8);
             let listener = Arc::new(modifier_chord::ModifierListener::start(chord_sender)

@@ -13,6 +13,7 @@ export type {
   WorkspaceMemberList,
 } from './generated-workspace';
 export type {
+  TranscriptionLanguage,
   VoiceConfirmation,
   VoicePermissions,
   VoiceStatus,

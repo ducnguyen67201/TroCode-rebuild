@@ -17,6 +17,7 @@ export function createPreviewVoice(): VoiceClient {
     targetTitle: null,
     message: `Hold ${previewShortcut()} to speak.`,
     shortcut: previewShortcut(),
+    transcriptionLanguage: 'vi',
     permissions: {
       microphone: 'granted',
       keyboardMonitoring: 'granted',
@@ -56,6 +57,8 @@ export function createPreviewVoice(): VoiceClient {
         confirmation: null,
         message: 'Voice control is disabled.',
       }),
+    setTranscriptionLanguage: async (transcriptionLanguage) =>
+      publish({ transcriptionLanguage }),
     executeText: async (instruction) => {
       publish({
         phase: 'dispatching',

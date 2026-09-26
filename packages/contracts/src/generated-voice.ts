@@ -1,5 +1,6 @@
 /* Generated. Do not edit. */
 
+export type TranscriptionLanguage = 'auto' | 'en' | 'vi';
 export type PermissionState = 'unknown' | 'notNeeded' | 'prompt' | 'granted' | 'denied' | 'unavailable';
 
 export interface VoiceStatus {
@@ -26,6 +27,7 @@ export interface VoiceStatus {
   targetTitle: string | null;
   message: string;
   shortcut: 'Command+Control' | 'Left Control+Left Alt' | 'Unavailable';
+  transcriptionLanguage: TranscriptionLanguage;
   permissions: VoicePermissions;
   confirmation: VoiceConfirmation | null;
   actionsUsed: number;

@@ -46,6 +46,40 @@ pub struct WorkspaceMemberList {
     pub members: Vec<WorkspaceMember>,
 }
 
+#[cfg(feature = "desktop")]
+pub(crate) struct TranscriptionRequest<'a> {
+    grant: &'a str,
+    sequence: u32,
+    duration_ms: u64,
+    final_chunk: bool,
+    prompt: &'a str,
+    languages: &'a [String],
+    wav: Vec<u8>,
+}
+
+#[cfg(feature = "desktop")]
+impl<'a> TranscriptionRequest<'a> {
+    pub(crate) fn new(
+        grant: &'a str,
+        sequence: u32,
+        duration_ms: u64,
+        final_chunk: bool,
+        prompt: &'a str,
+        languages: &'a [String],
+        wav: Vec<u8>,
+    ) -> Self {
+        Self {
+            grant,
+            sequence,
+            duration_ms,
+            final_chunk,
+            prompt,
+            languages,
+            wav,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SessionEnvelope {
@@ -231,24 +265,18 @@ impl AuthManager {
             .map_err(|error| authenticated_request_failure(&error))
     }
 
-    pub async fn transcribe(
+    #[cfg(feature = "desktop")]
+    pub(crate) async fn transcribe(
         &self,
-        grant: &str,
-        sequence: u32,
-        duration_ms: u64,
-        final_chunk: bool,
-        prompt: &str,
-        wav: Vec<u8>,
+        request: TranscriptionRequest<'_>,
     ) -> Result<api_client::ChunkTranscript, WorkerError> {
         let (api, _) = self.session_access().await?;
-        api.transcribe(grant, sequence, duration_ms, final_chunk, prompt, wav)
-            .await
-            .map_err(|_| {
-                WorkerError::new(
-                    "TRANSCRIPTION_UNAVAILABLE",
-                    "Voice transcription is unavailable. Retry explicitly.",
-                )
-            })
+        api.transcribe(request).await.map_err(|_| {
+            WorkerError::new(
+                "TRANSCRIPTION_UNAVAILABLE",
+                "Voice transcription is unavailable. Retry explicitly.",
+            )
+        })
     }
 
     pub async fn workspace_members(
