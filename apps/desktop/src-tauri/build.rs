@@ -19,6 +19,7 @@ fn main() {
             "teaching_request",
             "proof_connect",
             "overlay_current",
+            "cursor_companion_current",
             "voice_status",
             "voice_enable",
             "voice_disable",

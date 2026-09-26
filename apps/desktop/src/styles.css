@@ -1765,8 +1765,11 @@ select {
 }
 .cue-target {
   stroke: #147f68;
-  stroke-width: 4px;
-  fill: #baffdd33;
+  stroke-width: 3px;
+  fill: #baffdd1f;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cue-target-reveal 240ms ease-out both;
 }
 .cue-destination {
   stroke: #147f68;
@@ -1776,31 +1779,70 @@ select {
 }
 .cue-path {
   stroke: #147f68;
-  stroke-width: 5px;
-  stroke-dasharray: 10 6;
-  fill: none;
-}
-.cue-approach {
-  stroke: #163b2e;
   stroke-width: 3px;
-  stroke-dasharray: 7 7;
+  stroke-linecap: round;
+  stroke-dasharray: 12 8;
   fill: none;
-  opacity: 0.72;
-}
-.cue-pointer {
-  fill: #fcdb66;
-  stroke: #163b2e;
-  stroke-width: 3px;
 }
 .cue-cursor {
   transform-box: fill-box;
   transform-origin: center;
+  will-change: transform, opacity;
 }
 .cue-cursor-glyph {
-  fill: white;
+  fill: #7ff0bd;
   stroke: #102c23;
   stroke-width: 2px;
   stroke-linejoin: round;
+  filter: drop-shadow(0 2px 3px #0b2d2352);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.cursor-companion-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+.instructor-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+  filter: drop-shadow(0 3px 5px #0b2d236b);
+}
+.instructor-pointer svg {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+.instructor-pointer-glyph {
+  fill: #7ff0bd;
+  stroke: #102c23;
+  stroke-width: 2px;
+  stroke-linejoin: round;
+}
+.instructor-pointer-spark {
+  fill: #f8c748;
+  stroke: #fffdf5;
+  stroke-width: 1.5px;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: companion-spark 1.5s ease-in-out infinite;
+}
+@keyframes companion-spark {
+  50% {
+    transform: scale(1.3);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .instructor-pointer-spark {
+    animation: none;
+  }
 }
 .cue-callout rect {
   fill: #102c23f2;
@@ -1823,8 +1865,22 @@ select {
   stroke: white;
   stroke-width: 0.5px;
 }
-.cue-pulse {
-  animation: cue-pulse 0.6s ease-in-out infinite alternate;
+.cue-symbol-demonstration {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cue-symbol-demonstration 420ms ease-out 1.65s both;
+}
+.cue-click-ripple {
+  fill: none;
+  stroke: #fcbd3f;
+  stroke-width: 3px;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cue-click-ripple 2.2s ease-out 1.65s infinite;
+}
+.cue-cursor-click {
+  animation: cue-cursor-click 2.2s ease-in-out 1.65s infinite;
 }
 .cue-preview {
   height: 320px;
@@ -2013,27 +2069,91 @@ body.permission-guide-page #root {
     transform: translate(-6px, 0);
   }
 }
-@keyframes cue-pulse {
-  to {
-    opacity: 0.45;
-  }
-}
-@keyframes cue-arrive {
+@keyframes cue-target-reveal {
   from {
-    opacity: 0.25;
-    transform: translate(-52px, -44px) scale(0.85);
+    opacity: 0;
+    transform: scale(0.84);
   }
   to {
     opacity: 1;
-    transform: translate(0, 0) scale(1);
+    transform: scale(1);
   }
 }
-.cue-arrive {
-  animation: cue-arrive 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+@keyframes cue-pointer-tour {
+  0% {
+    opacity: 0.35;
+    transform: translate(0, -20px);
+  }
+  10% {
+    opacity: 1;
+  }
+  12.5% {
+    transform: translate(14px, -14px);
+  }
+  25% {
+    transform: translate(20px, 0);
+  }
+  37.5% {
+    transform: translate(14px, 14px);
+  }
+  50% {
+    transform: translate(0, 20px);
+  }
+  62.5% {
+    transform: translate(-14px, 14px);
+  }
+  75% {
+    transform: translate(-20px, 0);
+  }
+  87.5% {
+    transform: translate(-14px, -14px);
+  }
+  94% {
+    transform: translate(0, -20px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.cue-pointer-tour {
+  animation: cue-pointer-tour 1.65s linear both;
+}
+@keyframes cue-click-ripple {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.5);
+  }
+  28% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+  29%,
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+@keyframes cue-cursor-click {
+  0%,
+  20%,
+  100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(0.82);
+  }
+}
+@keyframes cue-symbol-demonstration {
+  to {
+    transform: translateY(-5px) scale(1.08);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cue-pulse,
-  .cue-arrive,
+  .cue-pointer-tour,
+  .cue-click-ripple,
+  .cue-cursor-click,
+  .cue-symbol-demonstration,
+  .cue-target,
   .voice-hud-listening .voice-wave i,
   .voice-hud-transcribing .voice-wave,
   .voice-hud-dispatching .voice-wave,
@@ -2048,12 +2168,42 @@ body.permission-guide-page #root {
 }
 
 .cue-drag {
-  animation: cue-drag 1.2s ease-in-out infinite;
+  animation: cue-drag 3s linear infinite;
 }
 @keyframes cue-drag {
-  70%,
-  100% {
+  0% {
+    transform: translate(0, -18px);
+  }
+  7% {
+    transform: translate(13px, -13px);
+  }
+  14% {
+    transform: translate(18px, 0);
+  }
+  21% {
+    transform: translate(13px, 13px);
+  }
+  28% {
+    transform: translate(0, 18px);
+  }
+  35% {
+    transform: translate(-13px, 13px);
+  }
+  42% {
+    transform: translate(-18px, 0);
+  }
+  49% {
+    transform: translate(-13px, -13px);
+  }
+  56% {
+    transform: translate(0, 0);
+  }
+  78%,
+  86% {
     transform: translate(var(--drag-x), var(--drag-y));
+  }
+  100% {
+    transform: translate(0, 0);
   }
 }
 @media (prefers-reduced-motion: reduce) {

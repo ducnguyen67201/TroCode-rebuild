@@ -51,18 +51,18 @@ remain possible under their own authority rules.
 
 ## Evidence register and limits
 
-| ID  | Source                                                                                                                          | What it establishes                                                                                                                                                                                                                                                                                    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| E1  | NoteSystem: `20_Projects/Tro/Customer Interview - 2026-08-24.md`, “Normalized notes supplied by Đức” and opening pain synthesis | Founder-recorded customer observations and requests; strongest evidence for the walk-around checking problem                                                                                                                                                                                           |
-| E2  | Same file, timestamped transcript of `New Recording 47.m4a`, 1:53:24                                                            | Classroom observation and discussion; automatic transcription contains substantial noise and overlapping speech                                                                                                                                                                                        |
-| E3  | NoteSystem: `20_Projects/Tro/docs/gtm-cofounder/founder-brief.md` and `gtm-roadmap.md`                                          | Founder vision, screen-aware MVP, teacher-support positioning, buyer and pilot hypotheses                                                                                                                                                                                                              |
-| E4  | Founder conversation in this task, 2026-09-13                                                                                   | SDK controlling CUA, planner, teaching cursor, screen awareness, teacher materials, accepted stack, implementation-first verification                                                                                                                                                                  |
-| E6  | Founder clarification in this task, 2026-09-13                                                                                  | Show where/how to act; learner performs every external-app action; no automated demonstration                                                                                                                                                                                                          |
-| E5  | Granola: August 19, 16:00 “Short recording”, `9800dff4-f559-484a-bacb-c5d0c7a70887`                                             | Persistent/translucent highlight, tutorial language and readable pacing feedback; speaker is not established as a customer                                                                                                                                                                             |
-| E7  | Founder clarification in this task, 2026-09-25                                                                                  | Google is the initial production sign-in provider; the desktop is gated until authenticated; workspace membership is pre-added by verified email and claimed automatically without an invitation flow; active devices use renewable 30-day sessions and leave the app when renewal is no longer valid  |
-| E8  | Founder clarification in this task, 2026-09-25                                                                                  | Hold exactly Command+Control on macOS or Left Control+Left Alt on Windows to capture one instruction; use rolling completed-file transcription for lower cost and dispatch only the final transcript into the observation-only guidance journey                                                         |
-| E9  | Founder clarification in this task, 2026-09-26                                                                                  | Keep the teaching cursor separate and extensible through explicit `show_student_*` tools, but use it only to point, circle and demonstrate trajectories; the learner performs every real computer action and F11 direct control is superseded                                                          |
-| E10 | Founder clarification in this task, 2026-09-26                                                                                  | English and Vietnamese are application-interface choices. Selecting Vietnamese localizes the complete Tro interface and is independent of voice transcription and lesson/guidance language.                                                                                                            |
+| ID  | Source                                                                                                                          | What it establishes                                                                                                                                                                                                                                                                                   |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | NoteSystem: `20_Projects/Tro/Customer Interview - 2026-08-24.md`, “Normalized notes supplied by Đức” and opening pain synthesis | Founder-recorded customer observations and requests; strongest evidence for the walk-around checking problem                                                                                                                                                                                          |
+| E2  | Same file, timestamped transcript of `New Recording 47.m4a`, 1:53:24                                                            | Classroom observation and discussion; automatic transcription contains substantial noise and overlapping speech                                                                                                                                                                                       |
+| E3  | NoteSystem: `20_Projects/Tro/docs/gtm-cofounder/founder-brief.md` and `gtm-roadmap.md`                                          | Founder vision, screen-aware MVP, teacher-support positioning, buyer and pilot hypotheses                                                                                                                                                                                                             |
+| E4  | Founder conversation in this task, 2026-09-13                                                                                   | SDK controlling CUA, planner, teaching cursor, screen awareness, teacher materials, accepted stack, implementation-first verification                                                                                                                                                                 |
+| E6  | Founder clarification in this task, 2026-09-13                                                                                  | Show where/how to act; learner performs every external-app action; no automated demonstration                                                                                                                                                                                                         |
+| E5  | Granola: August 19, 16:00 “Short recording”, `9800dff4-f559-484a-bacb-c5d0c7a70887`                                             | Persistent/translucent highlight, tutorial language and readable pacing feedback; speaker is not established as a customer                                                                                                                                                                            |
+| E7  | Founder clarification in this task, 2026-09-25                                                                                  | Google is the initial production sign-in provider; the desktop is gated until authenticated; workspace membership is pre-added by verified email and claimed automatically without an invitation flow; active devices use renewable 30-day sessions and leave the app when renewal is no longer valid |
+| E8  | Founder clarification in this task, 2026-09-25                                                                                  | Hold exactly Command+Control on macOS or Left Control+Left Alt on Windows to capture one instruction; use rolling completed-file transcription for lower cost and dispatch only the final transcript into the observation-only guidance journey                                                       |
+| E9  | Founder clarification in this task, 2026-09-26                                                                                  | Keep the teaching cursor separate and extensible through explicit `show_student_*` tools, but use it only to point, circle and demonstrate trajectories; the learner performs every real computer action and F11 direct control is superseded                                                         |
+| E10 | Founder clarification in this task, 2026-09-26                                                                                  | English and Vietnamese are application-interface choices. Selecting Vietnamese localizes the complete Tro interface and is independent of voice transcription and lesson/guidance language.                                                                                                           |
 
 E1 and E2 cover one private robotics/programming center. Parent needs are
 reported by the center, not by direct parent interviews. Partnership discussion
@@ -253,9 +253,14 @@ commands. React receives projections only. Interrupted plans and audio are
 memory-only and are never replayed.
 
 Tauri owns native presentation and process supervision. The interface animates
-locally from structured presentation requests. The model must not control each
-animation frame. A teaching pointer can move independently of the real mouse;
-highlighting and simulated click effects must not dispatch actual clicks.
+locally from structured presentation requests. While the desktop app is running, a
+small Tro companion icon follows the real pointer with an offset so the learner
+can see that the instructor is available. The teaching pointer may then move independently
+to the demonstrated target or along a ghost trajectory. At a target it uses one
+small, fixed-radius orbit before the minimal gesture demonstration; its travel never
+scales with the target rectangle. The model must not control each animation frame;
+pointer observation, highlighting and simulated click effects must never intercept
+or dispatch actual input.
 
 The backend owns shared classroom facts. Student reports, model hypotheses,
 observations, and teacher confirmations must remain distinguishable. A model
@@ -748,7 +753,7 @@ prove that a real model correctly understands a student's screen.
 | Malicious instructions inside an uploaded resource          | Content cannot change teacher authority, tool grants or submission policy                                                             | P3            |
 | Two roles plus a cross-account access attempt               | Backend denies improper publish/broadcast/read/review, independent of hidden UI                                                       | P3/P6         |
 | Duplicate directive and disconnected student                | Durable per-device outcome; no stale backlog execution or false success                                                               | P4            |
-| Crash while showing a gesture or checking work              | Cue hidden/no completion inferred; an F11 plan cancels and no transcript/tool call is replayed                                       | P1/P2/P7-A/P8 |
+| Crash while showing a gesture or checking work              | Cue hidden/no completion inferred; an F11 plan cancels and no transcript/tool call is replayed                                        | P1/P2/P7-A/P8 |
 | Explicit Help and quiet unresolved student                  | Allowed contextual evidence reaches teacher; hypotheses and unknown state remain labeled                                              | P5            |
 | Finished-but-unsubmitted, return, resubmit                  | Separate facts and artifact versions; no duplicate upload or accidental final grade                                                   | P6            |
 | Mic disabled, quiet speech, noise and interrupted narration | Full text path, recoverable transcription failure, partial/failure never dispatches                                                   | P2/P7-A       |
@@ -891,8 +896,10 @@ P1 uses explicit window selection, a separate click-through overlay and
 visual click/drag/type/scroll guidance on an offline fixture in an external
 browser. The learner performs every action. Session evidence separates rendered
 cues, learner reports and fresh observations; no mutation journal is built. Full adaptive teaching stays in P2. Model access uses
-short-lived account/session grants through a bounded Rust Responses gateway;
-provider keys stay server-side. Controlled proof accounts are separate from
+short-lived account/session grants through a bounded Rust Responses credential relay;
+provider keys stay server-side. The relay owns authentication, accounting, fixed
+model/origin, privacy/cost overrides and transport bounds while treating the
+remaining Agents SDK request as opaque. Controlled proof accounts are separate from
 P0's three fixtures and from production classroom authentication.
 
 Initial packaged evidence targets macOS arm64 and Windows x64. Other
@@ -952,6 +959,9 @@ The cost/latency design uses fixed-model `gpt-transcribe` completed WAV requests
 not GPT-Live or Realtime transcription: 1,250 ms chunks, 250 ms overlap, at most
 two requests in flight and deterministic ordered merging. This is an application
 tradeoff, not a claim that file transcription always beats realtime latency.
+The native client rejects only captures too short to form a valid request; it does
+not use a local amplitude threshold to guess whether quiet audio contains speech.
+An empty final provider transcript still fails without dispatching guidance.
 P7-A/P8 acceptance must record actual EN/VI/noisy accuracy, billed duration,
 request count and reference-network latency on packaged macOS and Windows.
 The Settings surface exposes exactly Auto, English and Vietnamese for the next
@@ -999,6 +1009,15 @@ observation or explicit learner Continue advances the journey. Tool invocation,
 presentation, learner action, observed progress, assignment completion and
 submission remain separate facts.
 
+The voice/text surface remains in Planning until the native host accepts a fresh,
+grounded cue and shows at least one click-through overlay window. A journey ID is
+not presentation evidence. Missing, stale, ungrounded or unsupported-display cues
+must wait for bounded refresh or fail visibly; they never project Guiding while no
+teaching pixels were admitted.
+An incomplete accessibility tree may ground a presentation-only cue when the planned
+role and label resolve to exactly one currently observed element, but it never proves
+learner progress or completion.
+
 The interaction follows the requested Playcode philosophy: immediate visual
 feedback, plain-language explanations, progressive steps and learner control.
 That philosophy affects presentation only; it never expands Tro's authority.
@@ -1006,8 +1025,9 @@ That philosophy affects presentation only; it never expands Tro's authority.
 No runtime package may contain a Tro-owned or model-invokable `ComputerTool`,
 native mouse/keyboard adapter, mutation manifest, generic dispatcher or hidden
 “do it for me” switch. The pinned Agents SDK may carry inert generic type
-definitions, but Tro never imports or registers them and both gateways reject
-their request shapes. Voice and typed requests use the same teaching state,
+definitions, but Tro never imports or registers them. Observation-only authority is
+enforced by the Python tool catalog and native presentation boundary, not by copying
+OpenAI request schemas into the credential relay. Voice and typed requests use the same teaching state,
 pacing and cancellation path. Native macOS/Windows acceptance must prove that
 the real pointer and target application remain unchanged until the learner acts.
 

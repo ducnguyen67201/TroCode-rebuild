@@ -42,7 +42,7 @@ export function OverlayWindow() {
   useEffect(() => {
     document.body.classList.add('overlay-page');
     let disposed = false;
-    let cleanup: (() => void) | undefined;
+    const cleanups: Array<() => void> = [];
     let expiry: ReturnType<typeof setTimeout>;
     function update(value: unknown) {
       if (disposed) return;
@@ -63,14 +63,14 @@ export function OverlayWindow() {
       (unlisten) => {
         if (disposed) unlisten();
         else {
-          cleanup = unlisten;
+          cleanups.push(unlisten);
           void invoke('overlay_current').then(update);
         }
       },
     );
     return () => {
       disposed = true;
-      cleanup?.();
+      for (const cleanup of cleanups.splice(0)) cleanup();
       clearTimeout(expiry);
     };
   }, []);

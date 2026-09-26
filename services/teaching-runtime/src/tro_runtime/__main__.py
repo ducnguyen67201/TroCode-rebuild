@@ -6,6 +6,7 @@ import sys
 import threading
 from typing import Any, BinaryIO
 
+from tro_runtime.errors import GuidanceError
 from tro_runtime.protocol import MAX_FRAME_BYTES, encode_message, parse_message
 from tro_runtime.runtime import Runtime
 from tro_runtime.teaching import TeachingSession
@@ -28,7 +29,7 @@ TEACHING_REQUESTS = frozenset(
 )
 
 
-def safe_failure_details(kind: str) -> tuple[str, str]:
+def safe_failure_details(kind: str, error: Exception | None = None) -> tuple[str, str]:
     """Return a diagnostic category that never includes native/provider details."""
     if kind == "runtime.prepareInstruction":
         return (
@@ -40,6 +41,8 @@ def safe_failure_details(kind: str) -> tuple[str, str]:
             "NOT_READY",
             "The selected-window action could not start.",
         )
+    if kind == "runtime.startGuidance" and isinstance(error, GuidanceError):
+        return ("NOT_READY", str(error))
     return (
         "NOT_READY",
         "Observation or guidance is unavailable. Retry explicitly.",
@@ -217,9 +220,9 @@ async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
             )
         except asyncio.CancelledError:
             raise
-        except Exception:
+        except Exception as error:
             # Native errors can contain screen text, paths, or application titles.
-            code, message = safe_failure_details(request["kind"])
+            code, message = safe_failure_details(request["kind"], error)
             write(failure(request, code, message))
 
     threading.Thread(target=read, daemon=True, name="tro-stdin").start()

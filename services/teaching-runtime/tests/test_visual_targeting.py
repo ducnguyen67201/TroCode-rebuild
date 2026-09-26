@@ -129,7 +129,7 @@ def test_sdk_can_propose_visual_guidance_for_an_unlabelled_canvas(monkeypatch):
     monkeypatch.setattr("tro_runtime.agent.Runner.run", run)
     result = asyncio.run(GuidanceAgent("unused").plan(screenshot(), "Select a shape", "en"))
     assert isinstance(result.steps[0].target, VisualTarget)
-    with pytest.raises(GuidanceError, match="could not be grounded"):
+    with pytest.raises(GuidanceError, match="not uniquely visible"):
         asyncio.run(GuidanceAgent("unused").plan(screenshot(None), "Select a shape", "en"))
 
 

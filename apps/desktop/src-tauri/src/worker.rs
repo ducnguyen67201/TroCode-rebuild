@@ -53,6 +53,32 @@ fn runtime_error(value: &Value) -> WorkerError {
                 "The selected-window action could not start.",
             )
         }
+        (
+            Some("NOT_READY"),
+            Some("The proposed guidance could not be grounded. Observe again, then replan."),
+        ) => WorkerError::new(
+            "GUIDANCE_UNAVAILABLE",
+            "The proposed guidance could not be grounded. Observe again, then try again.",
+        ),
+        (Some("NOT_READY"), Some("The model did not return a cursor step. Try again.")) => {
+            WorkerError::new(
+                "GUIDANCE_NO_TOOL",
+                "The model did not return a cursor step. Try again.",
+            )
+        }
+        (Some("NOT_READY"), Some("The model returned an invalid cursor tool call. Try again.")) => {
+            WorkerError::new(
+                "GUIDANCE_TOOL_INVALID",
+                "The model returned an invalid cursor tool call. Try again.",
+            )
+        }
+        (
+            Some("NOT_READY"),
+            Some("The model chose a target that is not uniquely visible. Try again."),
+        ) => WorkerError::new(
+            "GUIDANCE_TARGET_UNAVAILABLE",
+            "The model chose a target that is not uniquely visible. Try again.",
+        ),
         _ => WorkerError::new("NOT_READY", "Runtime refused the request."),
     }
 }
@@ -385,6 +411,11 @@ mod tests {
             "message":"Selected-window observation is unavailable. Check observation permissions."
         }));
         assert_eq!(observation.code, "OBSERVATION_UNAVAILABLE");
+        let invalid_tool = runtime_error(&json!({
+            "code":"NOT_READY",
+            "message":"The model returned an invalid cursor tool call. Try again."
+        }));
+        assert_eq!(invalid_tool.code, "GUIDANCE_TOOL_INVALID");
         let unknown = runtime_error(&json!({
             "code":"UPSTREAM_SECRET",
             "message":"must not cross the boundary"

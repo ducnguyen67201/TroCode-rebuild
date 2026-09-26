@@ -37,6 +37,10 @@ class InstructorCursor:
     def locale(self) -> Literal["en", "vi"]:
         return self._locale
 
+    @property
+    def staged_count(self) -> int:
+        return len(self._steps)
+
     def _stage(self, step: PlannedStep) -> ToolResult:
         if len(self._steps) >= self.MAX_STEPS:
             raise ValueError("A walkthrough can contain at most three steps.")

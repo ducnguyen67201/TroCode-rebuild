@@ -172,7 +172,7 @@ class TeachingSession:
         previous_replans = self.replans_remaining
         self.cue = None
         if previous is not None:
-            previous.pause("Preparing replacement guidance.")
+            previous.pause("Preparing replacement guidance.", "replacement_pending")
         try:
             plan = await self.plan(observation, question, locale)
         except Exception as error:
@@ -180,7 +180,8 @@ class TeachingSession:
                 previous.pause(
                     str(error)
                     if isinstance(error, GuidanceError)
-                    else "Planning failed. Your progress is preserved. Retry explicitly."
+                    else "Planning failed. Your progress is preserved. Retry explicitly.",
+                    "planning_unavailable",
                 )
             self.progress = previous
             self.objective = previous_objective
@@ -308,7 +309,10 @@ class TeachingSession:
                 observation = await self.observe(self.target)
             except Exception:
                 if self.progress is not None:
-                    self.progress.pause("Observation failed. Your progress is preserved.")
+                    self.progress.pause(
+                        "Observation failed. Your progress is preserved.",
+                        "observation_unavailable",
+                    )
                 return "askResult"
             await self._replace_guidance(observation, request["question"], request["locale"])
             return "askResult"
@@ -387,7 +391,10 @@ class TeachingSession:
             cue = self.progress.observe(fresh)
             self.measure("grounding", started)
         except Exception:
-            self.progress.pause("Observation is unavailable. Check access and resume explicitly.")
+            self.progress.pause(
+                "Observation is unavailable. Check access and resume explicitly.",
+                "observation_unavailable",
+            )
             return
         if self.progress.needs_replan and self.replans_remaining and self.agent is not None:
             self.replans_remaining -= 1
@@ -402,7 +409,10 @@ class TeachingSession:
                 self.progress = PlanProgress(plan, self.progress.locale, context)
                 await self.refresh_plan()
             except Exception:
-                self.progress.pause("Replanning is unavailable. Retry explicitly when ready.")
+                self.progress.pause(
+                    "Replanning is unavailable. Retry explicitly when ready.",
+                    "replanning_unavailable",
+                )
             return
         self.observation = fresh
         self.target = fresh.target

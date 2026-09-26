@@ -739,6 +739,25 @@ class Status(Enum):
     completed = 'completed'
 
 
+class Grounding1(Enum):
+    pending = 'pending'
+    cue_ready = 'cue_ready'
+    observation_not_fresh = 'observation_not_fresh'
+    window_changed = 'window_changed'
+    screen_unavailable = 'screen_unavailable'
+    screen_changed = 'screen_changed'
+    target_missing = 'target_missing'
+    target_ambiguous = 'target_ambiguous'
+    destination_missing = 'destination_missing'
+    destination_ambiguous = 'destination_ambiguous'
+    observation_unavailable = 'observation_unavailable'
+    replacement_pending = 'replacement_pending'
+    planning_unavailable = 'planning_unavailable'
+    replanning_unavailable = 'replanning_unavailable'
+    user_paused = 'user_paused'
+    completed = 'completed'
+
+
 class Step(RootModel[constr(min_length=1, max_length=400)]):
     root: constr(min_length=1, max_length=400)
 
@@ -752,6 +771,7 @@ class Journey(BaseModel):
     )
     index: conint(ge=0, le=3)
     status: Status
+    grounding: Grounding1 | None = None
     message: constr(max_length=400)
     steps: list[Step] = Field(..., max_length=3, min_length=1)
 

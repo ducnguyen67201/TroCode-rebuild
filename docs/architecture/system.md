@@ -35,7 +35,11 @@ reopens the gate.
 `apps/desktop/src-tauri/src/commands.rs` is the UI command boundary. `manager.rs`
 owns runtime availability and account selection. `worker.rs` owns child process,
 private pipes, correlated requests and shutdown. `overlay.rs` owns nonactivating,
-click-through windows, coordinate mapping, cue expiry and the refresh loop.
+click-through windows, read-only physical-pointer sampling, coordinate mapping, cue
+expiry and the refresh loop. A fixed transparent native layer projects pointer
+coordinates into a separate, frame-batched React icon while Tro is running. The
+coordinates remain inside that presentation window and never reach the runtime or
+backend; neither layer has an input API.
 `geometry.rs` validates presentation bounds against observed elements.
 `modifier_chord/` reduces passive physical modifier events to one press/release
 edge. `voice/` owns microphone capture, completed WAV chunks, ordered transcript
@@ -102,18 +106,21 @@ Owner member management crosses the same native boundary: React receives bounded
 member projections while Rust retains the bearer credential in memory.
 
 `services/api/src/model_gateway.rs` provides isolated proof identity, expiring
-model grants and a fixed provider route. It enforces a four-request grant budget,
-1024 output tokens, request/response size limits and timeouts. Provider keys stay
-here. Shared classroom functionality is later work; proof identity is not a
-production authentication system.
+model grants and the shared fixed-origin Responses credential relay. It enforces a
+four-request grant budget, configured model, nonstored/nonstreaming requests, 1024
+output tokens, request/response size limits and timeouts. Provider keys stay here.
+The remaining Agents SDK body is opaque to Rust. Shared classroom functionality is
+later work; proof identity is not a production authentication system.
 
 `services/api/src/provider/` is the production F11 boundary. Authenticated users
 obtain subject-bound opaque voice or agent grants; only digests are stored and
 request/audio budgets are decremented transactionally before provider dispatch.
-The transcription proxy accepts bounded completed PCM16 WAV chunks and the
-Responses proxy admits only the fixed guidance model and five closed Instructor
-Cursor function-tool shapes.
-Provider keys, upstream origins and budget constants remain backend-owned.
+The transcription adapter accepts and validates bounded completed PCM16 WAV chunks
+because audio sequencing and duration are Tro-owned. The Responses endpoint instead
+acts as a provider-compatible credential/accounting relay: it fixes the guidance
+model, privacy/cost settings and transport bounds without interpreting the SDK-owned
+input, image, tool or tool-result schemas. Provider keys, upstream origins and budget
+constants remain backend-owned.
 
 The Rust API maps its five current PostgreSQL tables with SeaORM entities, and
 the authentication and model-grant modules retain ownership of their policy and

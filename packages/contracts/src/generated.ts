@@ -236,6 +236,23 @@ export interface Journey {
   id: string;
   index: number;
   status: 'running' | 'awaiting_confirmation' | 'paused' | 'completed';
+  grounding?:
+    | 'pending'
+    | 'cue_ready'
+    | 'observation_not_fresh'
+    | 'window_changed'
+    | 'screen_unavailable'
+    | 'screen_changed'
+    | 'target_missing'
+    | 'target_ambiguous'
+    | 'destination_missing'
+    | 'destination_ambiguous'
+    | 'observation_unavailable'
+    | 'replacement_pending'
+    | 'planning_unavailable'
+    | 'replanning_unavailable'
+    | 'user_paused'
+    | 'completed';
   message: string;
   /**
    * @minItems 1

@@ -84,7 +84,9 @@ export function TeachingOverlay({
     Math.min(sideFits ? y : verticalY, bounds.height - calloutHeight - 12),
   );
   const cursorClass =
-    cue.gesture === 'drag' ? 'cue-cursor cue-drag' : 'cue-cursor cue-arrive';
+    cue.gesture === 'drag'
+      ? 'cue-cursor cue-drag'
+      : 'cue-cursor cue-pointer-tour';
   const cursorStyle = destination
     ? ({
         '--drag-x': `${destination.x + destination.width / 2 - center.x}px`,
@@ -101,10 +103,6 @@ export function TeachingOverlay({
         caption: cue.caption,
       })}, ${stepIndex + 1}/${stepTotal}`}
     >
-      <path
-        className="cue-approach"
-        d={`M ${center.x - 52} ${center.y - 44} Q ${center.x - 22} ${center.y - 18} ${center.x} ${center.y}`}
-      />
       <rect
         x={x}
         y={y}
@@ -125,26 +123,35 @@ export function TeachingOverlay({
           />
           <path
             className="cue-path"
+            pathLength="100"
             d={`M ${center.x} ${center.y} L ${destination.x + destination.width / 2} ${destination.y + destination.height / 2}`}
           />
         </>
       )}
       <g className={cursorClass} style={cursorStyle}>
-        <circle
-          className={
-            cue.gesture === 'click' ? 'cue-pointer cue-pulse' : 'cue-pointer'
-          }
-          cx={center.x}
-          cy={center.y}
-          r="14"
-        />
+        {cue.gesture === 'click' && (
+          <circle
+            className="cue-click-ripple"
+            cx={center.x}
+            cy={center.y}
+            r="16"
+          />
+        )}
         <path
-          className="cue-cursor-glyph"
+          className={
+            cue.gesture === 'click'
+              ? 'cue-cursor-glyph cue-cursor-click'
+              : 'cue-cursor-glyph'
+          }
           d={`M ${center.x - 7} ${center.y - 16} L ${center.x + 11} ${center.y + 8} L ${center.x + 3} ${center.y + 7} L ${center.x} ${center.y + 17} L ${center.x - 7} ${center.y + 14} L ${center.x - 3} ${center.y + 5} L ${center.x - 12} ${center.y + 9} Z`}
         />
       </g>
       {cue.gesture === 'scroll' && (
-        <text x={center.x + 24} y={center.y + 8} className="cue-symbol">
+        <text
+          x={center.x + 24}
+          y={center.y + 8}
+          className="cue-symbol cue-symbol-demonstration"
+        >
           {
             { up: '↑', down: '↓', left: '←', right: '→' }[
               cue.direction ?? 'down'
@@ -153,7 +160,11 @@ export function TeachingOverlay({
         </text>
       )}
       {cue.gesture === 'type' && (
-        <text x={center.x + 24} y={center.y + 8} className="cue-symbol">
+        <text
+          x={center.x + 24}
+          y={center.y + 8}
+          className="cue-symbol cue-symbol-demonstration"
+        >
           Aa
         </text>
       )}

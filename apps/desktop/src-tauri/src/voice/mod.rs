@@ -300,14 +300,56 @@ impl VoiceManager {
     }
 
     #[cfg(feature = "desktop")]
-    fn guidance_ready(&self, state: &serde_json::Value, target_title: Option<String>) {
+    fn guidance_pending(
+        &self,
+        state: &serde_json::Value,
+        target_title: Option<String>,
+    ) -> Result<(), crate::worker::WorkerError> {
         let guidance_id = state["journey"]["id"].as_str().map(str::to_owned);
+        if guidance_id.is_none() {
+            return Err(crate::worker::WorkerError::new(
+                "GUIDANCE_UNAVAILABLE",
+                "No visible guidance is ready. Try asking again.",
+            ));
+        }
+        self.status.send_modify(|status| {
+            status.revision += 1;
+            status.phase = "planning".into();
+            status.guidance_id = guidance_id;
+            status.target_title = target_title;
+            status.message = "Finding the first thing to show…".into();
+        });
+        Ok(())
+    }
+
+    #[cfg(feature = "desktop")]
+    pub(crate) fn guidance_presented(&self, state: &serde_json::Value) {
+        let guidance_id = state["journey"]["id"].as_str();
+        let current = self.status.borrow();
+        if current.phase != "planning" || current.guidance_id.as_deref() != guidance_id {
+            return;
+        }
+        drop(current);
         self.status.send_modify(|status| {
             status.revision += 1;
             status.phase = "guiding".into();
-            status.guidance_id = guidance_id;
-            status.target_title = target_title;
             status.message = "Follow the cursor in the selected window.".into();
+        });
+    }
+
+    #[cfg(feature = "desktop")]
+    pub(crate) fn guidance_failed(&self, guidance_id: Option<&str>, message: &'static str) {
+        let current = self.status.borrow();
+        if current.guidance_id.as_deref() != guidance_id
+            || !matches!(current.phase.as_str(), "planning" | "guiding")
+        {
+            return;
+        }
+        drop(current);
+        self.status.send_modify(|status| {
+            status.revision += 1;
+            status.phase = "failed".into();
+            status.message = message.into();
         });
     }
 
@@ -330,7 +372,7 @@ impl VoiceManager {
         instruction: String,
         runtime: Arc<crate::manager::RuntimeManager>,
         auth: Arc<crate::auth::AuthManager>,
-    ) -> Result<(VoiceStatus, serde_json::Value), crate::worker::WorkerError> {
+    ) -> Result<serde_json::Value, crate::worker::WorkerError> {
         if instruction.trim().is_empty() || instruction.len() > 2_000 {
             return Err(crate::worker::WorkerError::new(
                 "INVALID_MESSAGE",
@@ -360,8 +402,8 @@ impl VoiceManager {
         let (state, target_title) = self
             .prepare_guidance(&instruction, utterance_id, runtime, auth)
             .await?;
-        self.guidance_ready(&state, target_title);
-        Ok((self.status(), state))
+        self.guidance_pending(&state, target_title)?;
+        Ok(state)
     }
     #[cfg(feature = "desktop")]
     pub async fn begin_capture(
@@ -477,7 +519,9 @@ impl VoiceManager {
                                 }
                             }
                             if let Some(message) = microphone.failure_message() { return Err(crate::worker::WorkerError::new("VOICE_UNAVAILABLE", message)); }
-                            if !chunks.has_speech() { return Err(crate::worker::WorkerError::new("NO_SPEECH", "No speech was detected.")); }
+                            // Do not guess whether quiet audio contains speech. Forward every
+                            // valid-duration recording and let transcription make that decision.
+                            if !chunks.has_recording() { return Err(crate::worker::WorkerError::new("NO_SPEECH", "Hold the keys a little longer, then try again.")); }
                             if let Some(chunk) = chunks.finish().map_err(|_| crate::worker::WorkerError::new("TRANSCRIPTION_UNAVAILABLE", "Voice transcription is unavailable."))? {
                                 expected += 1;
                                 pending.push_back(chunk);
@@ -505,8 +549,11 @@ impl VoiceManager {
                 let target_title = prepared["target"]["title"].as_str().map(str::to_owned);
                 manager.transition("planning", "Preparing a simple walkthrough…");
                 let state = runtime.start_guidance(utterance_id, preparation_id, &final_text, "en", serde_json::json!({"origin":origin,"grant":guidance_grant.grant,"model":guidance_grant.model})).await?;
-                crate::overlay::present_guidance(&app, runtime.clone(), &state).await?;
-                manager.guidance_ready(&state, target_title);
+                manager.guidance_pending(&state, target_title)?;
+                let outcome = crate::overlay::present_guidance(&app, runtime.clone(), &state).await?;
+                if outcome == crate::overlay::PresentationOutcome::Presented {
+                    manager.guidance_presented(&state);
+                }
                 Ok::<(), crate::worker::WorkerError>(())
             }.await;
             if let Err(error) = outcome {
@@ -604,5 +651,54 @@ mod auto_arm_tests {
         voice.guidance_completed(Some("current"));
         assert_eq!(voice.status().phase, "completed");
         assert_eq!(voice.status().message, "Your guidance is ready.");
+    }
+
+    #[cfg(feature = "desktop")]
+    #[test]
+    fn guiding_is_projected_only_after_the_current_cue_is_presented() {
+        let voice = VoiceManager::default();
+        voice.enable(ready_permissions());
+        let state = serde_json::json!({"journey":{"id":"current"}});
+
+        voice
+            .guidance_pending(&state, Some("Notes".into()))
+            .unwrap();
+        assert_eq!(voice.status().phase, "planning");
+        assert_eq!(voice.status().message, "Finding the first thing to show…");
+
+        voice.guidance_presented(&serde_json::json!({"journey":{"id":"stale"}}));
+        assert_eq!(voice.status().phase, "planning");
+
+        voice.guidance_presented(&state);
+        assert_eq!(voice.status().phase, "guiding");
+        assert_eq!(
+            voice.status().message,
+            "Follow the cursor in the selected window."
+        );
+    }
+
+    #[cfg(feature = "desktop")]
+    #[test]
+    fn current_guidance_presentation_failure_is_visible() {
+        let voice = VoiceManager::default();
+        voice.enable(ready_permissions());
+        let state = serde_json::json!({"journey":{"id":"current"}});
+        voice.guidance_pending(&state, None).unwrap();
+
+        voice.guidance_failed(
+            Some("stale"),
+            "No visible guidance is ready. Try asking again.",
+        );
+        assert_eq!(voice.status().phase, "planning");
+
+        voice.guidance_failed(
+            Some("current"),
+            "No visible guidance is ready. Try asking again.",
+        );
+        assert_eq!(voice.status().phase, "failed");
+        assert_eq!(
+            voice.status().message,
+            "No visible guidance is ready. Try asking again."
+        );
     }
 }

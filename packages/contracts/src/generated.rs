@@ -796,6 +796,27 @@ impl<'de> ::serde::Deserialize<'de> for ElementValue {
 ///    "steps"
 ///  ],
 ///  "properties": {
+///    "grounding": {
+///      "type": "string",
+///      "enum": [
+///        "pending",
+///        "cue_ready",
+///        "observation_not_fresh",
+///        "window_changed",
+///        "screen_unavailable",
+///        "screen_changed",
+///        "target_missing",
+///        "target_ambiguous",
+///        "destination_missing",
+///        "destination_ambiguous",
+///        "observation_unavailable",
+///        "replacement_pending",
+///        "planning_unavailable",
+///        "replanning_unavailable",
+///        "user_paused",
+///        "completed"
+///      ]
+///    },
 ///    "id": {
 ///      "type": "string",
 ///      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
@@ -836,6 +857,8 @@ impl<'de> ::serde::Deserialize<'de> for ElementValue {
 #[derive(::serde::Deserialize, ::serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Journey {
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub grounding: ::std::option::Option<JourneyGrounding>,
     pub id: JourneyId,
     pub index: i64,
     pub message: JourneyMessage,
@@ -845,6 +868,157 @@ pub struct Journey {
 impl ::std::convert::From<&Journey> for Journey {
     fn from(value: &Journey) -> Self {
         value.clone()
+    }
+}
+///`JourneyGrounding`
+///
+/// <details><summary>JSON schema</summary>
+///
+/// ```json
+///{
+///  "type": "string",
+///  "enum": [
+///    "pending",
+///    "cue_ready",
+///    "observation_not_fresh",
+///    "window_changed",
+///    "screen_unavailable",
+///    "screen_changed",
+///    "target_missing",
+///    "target_ambiguous",
+///    "destination_missing",
+///    "destination_ambiguous",
+///    "observation_unavailable",
+///    "replacement_pending",
+///    "planning_unavailable",
+///    "replanning_unavailable",
+///    "user_paused",
+///    "completed"
+///  ]
+///}
+/// ```
+/// </details>
+#[derive(
+    ::serde::Deserialize,
+    ::serde::Serialize,
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd
+)]
+pub enum JourneyGrounding {
+    #[serde(rename = "pending")]
+    Pending,
+    #[serde(rename = "cue_ready")]
+    CueReady,
+    #[serde(rename = "observation_not_fresh")]
+    ObservationNotFresh,
+    #[serde(rename = "window_changed")]
+    WindowChanged,
+    #[serde(rename = "screen_unavailable")]
+    ScreenUnavailable,
+    #[serde(rename = "screen_changed")]
+    ScreenChanged,
+    #[serde(rename = "target_missing")]
+    TargetMissing,
+    #[serde(rename = "target_ambiguous")]
+    TargetAmbiguous,
+    #[serde(rename = "destination_missing")]
+    DestinationMissing,
+    #[serde(rename = "destination_ambiguous")]
+    DestinationAmbiguous,
+    #[serde(rename = "observation_unavailable")]
+    ObservationUnavailable,
+    #[serde(rename = "replacement_pending")]
+    ReplacementPending,
+    #[serde(rename = "planning_unavailable")]
+    PlanningUnavailable,
+    #[serde(rename = "replanning_unavailable")]
+    ReplanningUnavailable,
+    #[serde(rename = "user_paused")]
+    UserPaused,
+    #[serde(rename = "completed")]
+    Completed,
+}
+impl ::std::convert::From<&Self> for JourneyGrounding {
+    fn from(value: &JourneyGrounding) -> Self {
+        value.clone()
+    }
+}
+impl ::std::fmt::Display for JourneyGrounding {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        match *self {
+            Self::Pending => f.write_str("pending"),
+            Self::CueReady => f.write_str("cue_ready"),
+            Self::ObservationNotFresh => f.write_str("observation_not_fresh"),
+            Self::WindowChanged => f.write_str("window_changed"),
+            Self::ScreenUnavailable => f.write_str("screen_unavailable"),
+            Self::ScreenChanged => f.write_str("screen_changed"),
+            Self::TargetMissing => f.write_str("target_missing"),
+            Self::TargetAmbiguous => f.write_str("target_ambiguous"),
+            Self::DestinationMissing => f.write_str("destination_missing"),
+            Self::DestinationAmbiguous => f.write_str("destination_ambiguous"),
+            Self::ObservationUnavailable => f.write_str("observation_unavailable"),
+            Self::ReplacementPending => f.write_str("replacement_pending"),
+            Self::PlanningUnavailable => f.write_str("planning_unavailable"),
+            Self::ReplanningUnavailable => f.write_str("replanning_unavailable"),
+            Self::UserPaused => f.write_str("user_paused"),
+            Self::Completed => f.write_str("completed"),
+        }
+    }
+}
+impl ::std::str::FromStr for JourneyGrounding {
+    type Err = self::error::ConversionError;
+    fn from_str(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        match value {
+            "pending" => Ok(Self::Pending),
+            "cue_ready" => Ok(Self::CueReady),
+            "observation_not_fresh" => Ok(Self::ObservationNotFresh),
+            "window_changed" => Ok(Self::WindowChanged),
+            "screen_unavailable" => Ok(Self::ScreenUnavailable),
+            "screen_changed" => Ok(Self::ScreenChanged),
+            "target_missing" => Ok(Self::TargetMissing),
+            "target_ambiguous" => Ok(Self::TargetAmbiguous),
+            "destination_missing" => Ok(Self::DestinationMissing),
+            "destination_ambiguous" => Ok(Self::DestinationAmbiguous),
+            "observation_unavailable" => Ok(Self::ObservationUnavailable),
+            "replacement_pending" => Ok(Self::ReplacementPending),
+            "planning_unavailable" => Ok(Self::PlanningUnavailable),
+            "replanning_unavailable" => Ok(Self::ReplanningUnavailable),
+            "user_paused" => Ok(Self::UserPaused),
+            "completed" => Ok(Self::Completed),
+            _ => Err("invalid value".into()),
+        }
+    }
+}
+impl ::std::convert::TryFrom<&str> for JourneyGrounding {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &str,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<&::std::string::String> for JourneyGrounding {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: &::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
+    }
+}
+impl ::std::convert::TryFrom<::std::string::String> for JourneyGrounding {
+    type Error = self::error::ConversionError;
+    fn try_from(
+        value: ::std::string::String,
+    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+        value.parse()
     }
 }
 ///`JourneyId`

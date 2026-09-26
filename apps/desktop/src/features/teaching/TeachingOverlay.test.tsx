@@ -34,7 +34,11 @@ it('renders a ghost click without changing external input', () => {
   const { container } = render(
     <TeachingOverlay cue={{ ...cue, gesture: 'click', destination: null }} />,
   );
-  expect(container.querySelector('.cue-pulse')).not.toBeNull();
+  expect(container.querySelector('.cue-pointer-tour')).not.toBeNull();
+  expect(container.querySelector('.cue-cursor-click')).not.toBeNull();
+  expect(container.querySelectorAll('.cue-click-ripple')).toHaveLength(1);
+  expect(container.querySelector('.cue-focus-orbit')).toBeNull();
+  expect(container.querySelector('.cue-approach')).toBeNull();
   expect(container.querySelector('.cue-path')).toBeNull();
 });
 

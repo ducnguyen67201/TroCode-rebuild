@@ -55,6 +55,8 @@ def test_mismatch_and_generation():
 
 
 def test_failure_diagnostics_use_protocol_code_and_identify_safe_runtime_stage():
+    from tro_runtime.errors import GuidanceError
+
     assert safe_failure_details("runtime.prepareInstruction") == (
         "NOT_READY",
         "Selected-window observation is unavailable. Check observation permissions.",
@@ -64,6 +66,10 @@ def test_failure_diagnostics_use_protocol_code_and_identify_safe_runtime_stage()
         "The selected-window action could not start.",
     )
     assert safe_failure_details("runtime.ask")[0] == "NOT_READY"
+    assert safe_failure_details("runtime.startGuidance", GuidanceError("invalid_plan")) == (
+        "NOT_READY",
+        "The proposed guidance could not be grounded. Observe again, then replan.",
+    )
 
 
 def test_real_process_and_eof():

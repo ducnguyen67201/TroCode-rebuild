@@ -4,12 +4,13 @@ use crate::{
     db,
     entities::{proof_session, runtime_grant},
     error::ApiError,
-    provider::cursor_tools::valid_cursor_tools,
+    provider::responses_relay::{MAX_RESPONSES_REQUEST_BYTES, ResponsesRelay},
 };
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, State},
     http::{HeaderMap, StatusCode},
+    response::Response,
     routing::{get, post},
 };
 use sea_orm::{
@@ -28,26 +29,21 @@ fn utc_now() -> ChronoDateTimeUtc {
 #[derive(Clone)]
 pub struct Gateway {
     pub pool: DatabaseConnection,
-    client: reqwest::Client,
-    key: String,
-    model: String,
-    upstream: String,
+    responses: ResponsesRelay,
 }
 impl Gateway {
     pub fn new(pool: DatabaseConnection, key: String, model: String) -> Result<Self, &'static str> {
         if key.is_empty() || model.is_empty() || model.len() > 128 {
             return Err("Proof model configuration is incomplete.");
         }
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(25))
+            .redirect(reqwest::redirect::Policy::none())
+            .build()
+            .map_err(|_| "Model client unavailable.")?;
         Ok(Self {
             pool,
-            key,
-            model,
-            upstream: "https://api.openai.com/v1/responses".into(),
-            client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(25))
-                .redirect(reqwest::redirect::Policy::none())
-                .build()
-                .map_err(|_| "Model client unavailable.")?,
+            responses: ResponsesRelay::new(client, key.into(), model.into()),
         })
     }
 }
@@ -60,7 +56,10 @@ pub fn router(state: Gateway) -> Router {
         .route("/readyz", get(ready))
         .route("/v1/me", get(me))
         .route("/v1/runtime-grants", post(grant))
-        .route("/v1/responses", post(responses))
+        .route(
+            "/v1/responses",
+            post(responses).layer(DefaultBodyLimit::max(MAX_RESPONSES_REQUEST_BYTES)),
+        )
         .with_state(state)
         .layer(DefaultBodyLimit::max(8 * 1024 * 1024))
         .layer(axum::middleware::from_fn(super::correlation))
@@ -159,54 +158,19 @@ async fn grant(
     .map_err(|_| ApiError::internal(id))?;
     tx.commit().await.map_err(|_| ApiError::internal(id))?;
     Ok(Json(
-        json!({"grant":grant,"model":state.model,"accountId":account,"expiresIn":300}),
+        json!({"grant":grant,"model":state.responses.model(),"accountId":account,"expiresIn":300}),
     ))
-}
-pub fn validate_request(body: &Value, model: &str) -> bool {
-    let Some(object) = body.as_object() else {
-        return false;
-    };
-    let allowed = [
-        "model",
-        "input",
-        "instructions",
-        "max_output_tokens",
-        "parallel_tool_calls",
-        "store",
-        "stream",
-        "tools",
-        "text",
-        "include",
-        "tool_choice",
-    ];
-    object.keys().all(|key| allowed.contains(&key.as_str()))
-        && body["model"] == model
-        && body
-            .get("input")
-            .is_some_and(|v| v.is_array() || v.is_string())
-        && body["max_output_tokens"]
-            .as_u64()
-            .is_some_and(|v| v > 0 && v <= 1024)
-        && body.get("store").is_none_or(|v| v == false)
-        && body.get("stream").is_none_or(|v| v == false)
-        && body.get("parallel_tool_calls").is_none_or(|v| v == false)
-        && valid_cursor_tools(body.get("tools"))
-        && body
-            .get("include")
-            .is_none_or(|v| v.as_array().is_some_and(Vec::is_empty))
-        && body
-            .get("tool_choice")
-            .is_none_or(|v| v == "none" || v == "auto")
 }
 async fn responses(
     State(state): State<Gateway>,
     axum::Extension(id): axum::Extension<Uuid>,
     headers: HeaderMap,
-    Json(mut body): Json<Value>,
-) -> Result<Json<Value>, ApiError> {
-    if !validate_request(&body, &state.model) {
-        return Err(ApiError::unauthorized(id));
-    }
+    Json(body): Json<Value>,
+) -> Result<Response, ApiError> {
+    let body = state
+        .responses
+        .prepare(body)
+        .map_err(|_| ApiError::unauthorized(id))?;
     let grant_digest = digest(bearer(&headers, id)?);
     // Keep the grant lock and parent-session validation in one transaction, and
     // consume budget before dispatch so provider failures still spend a call.
@@ -249,30 +213,12 @@ async fn responses(
         return Err(ApiError::unauthorized(id));
     }
     tx.commit().await.map_err(|_| ApiError::internal(id))?;
-    body["store"] = json!(false);
-    body["stream"] = json!(false);
-    // A fixed provider origin; caller supplied URLs and redirects are never accepted.
-    let mut response = state
-        .client
-        .post(&state.upstream)
-        .bearer_auth(&state.key)
-        .json(&body)
-        .send()
+    state
+        .responses
+        .send(body)
         .await
-        .map_err(|_| ApiError::internal(id))?;
-    if !response.status().is_success() {
-        return Err(ApiError::internal(id));
-    }
-    let mut bytes = Vec::new();
-    while let Some(chunk) = response.chunk().await.map_err(|_| ApiError::internal(id))? {
-        if bytes.len() + chunk.len() > 2 * 1024 * 1024 {
-            return Err(ApiError::internal(id));
-        }
-        bytes.extend_from_slice(&chunk);
-    }
-    Ok(Json(
-        serde_json::from_slice(&bytes).map_err(|_| ApiError::internal(id))?,
-    ))
+        .map(|response| response.into_response())
+        .map_err(|_| ApiError::internal(id))
 }
 
 pub async fn run() -> Result<(), &'static str> {
@@ -331,35 +277,10 @@ pub async fn run() -> Result<(), &'static str> {
     }
 }
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn rejects_hosted_tools_storage_and_budget_expansion() {
-        let valid = json!({"model":"proof-model","input":"Help","max_output_tokens":1024,"tools":crate::provider::cursor_tools::test_cursor_tools(),"store":false,"parallel_tool_calls":false,"tool_choice":"auto"});
-        assert!(validate_request(&valid, "proof-model"));
-        for (key, value) in [
-            ("tools", json!([{"type":"computer_use_preview"}])),
-            ("store", json!(true)),
-            ("max_output_tokens", json!(1025)),
-            ("previous_response_id", json!("remote")),
-            ("background", json!(true)),
-            ("model", json!("other")),
-            ("stream", json!(true)),
-            ("parallel_tool_calls", json!(true)),
-            ("tool_choice", json!("required")),
-        ] {
-            let mut body = valid.clone();
-            body[key] = value;
-            assert!(!validate_request(&body, "proof-model"));
-        }
-    }
-}
-
-#[cfg(test)]
 mod integration_tests {
     use super::*;
     use crate::entities::proof_account;
-    use axum::{body::Body, http::Request};
+    use axum::{body::Body, http::Request, response::IntoResponse};
     use http_body_util::BodyExt;
     use std::sync::{
         Arc,
@@ -400,16 +321,31 @@ mod integration_tests {
                 let counter = counter.clone();
                 async move {
                     assert_eq!(headers["authorization"], "Bearer fake-provider-key");
+                    assert_eq!(body["model"], "proof-model");
                     assert_eq!(body["store"], false);
                     assert_eq!(body["stream"], false);
+                    assert_eq!(body["background"], false);
+                    assert_eq!(body["max_output_tokens"], 1024);
                     counter.fetch_add(1, Ordering::SeqCst);
+                    if body["input"] == "Help" {
+                        assert_eq!(body["future_sdk_field"], json!({"nested":true}));
+                        assert_eq!(body["parallel_tool_calls"], true);
+                        assert_eq!(body["tools"][0]["name"], "future_tool");
+                    }
                     if body["input"] == "slow" {
                         tokio::time::sleep(Duration::from_millis(300)).await;
                     }
                     if body["input"] == "oversize" {
-                        return Json(json!({"output":"x".repeat(2 * 1024 * 1024)}));
+                        return Json(json!({"output":"x".repeat(2 * 1024 * 1024)})).into_response();
                     }
-                    Json(json!({"id":"mock-response","output":[]}))
+                    if body["input"] == "provider-error" {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(json!({"error":{"message":"provider rejected request"}})),
+                        )
+                            .into_response();
+                    }
+                    Json(json!({"id":"mock-response","output":[]})).into_response()
                 }
             }),
         );
@@ -423,11 +359,16 @@ mod integration_tests {
         )
         .unwrap();
         // Only this private test module can replace the fixed production origin.
-        gateway.upstream = format!("http://{address}/responses");
-        gateway.client = reqwest::Client::builder()
-            .timeout(Duration::from_millis(100))
-            .build()
-            .unwrap();
+        gateway.responses = ResponsesRelay::for_test(
+            reqwest::Client::builder()
+                .timeout(Duration::from_millis(100))
+                .redirect(reqwest::redirect::Policy::none())
+                .build()
+                .unwrap(),
+            "fake-provider-key",
+            "proof-model",
+            format!("http://{address}/responses"),
+        );
         let app = router(gateway);
         let account = Uuid::new_v4();
         let token = format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple());
@@ -512,7 +453,22 @@ mod integration_tests {
             .unwrap()
             .to_owned();
         let grant = issued["grant"].as_str().unwrap();
-        let body = json!({"model":"proof-model","input":"Help","max_output_tokens":1024,"tools":crate::provider::cursor_tools::test_cursor_tools(),"store":false,"parallel_tool_calls":false});
+        assert_eq!(
+            call(app.clone(), "/v1/responses", grant, json!([])).await.0,
+            StatusCode::UNAUTHORIZED
+        );
+        assert_eq!(count.load(Ordering::SeqCst), 0);
+        let body = json!({
+            "model":"caller-model",
+            "input":"Help",
+            "max_output_tokens":9999,
+            "tools":[{"type":"function","name":"future_tool","parameters":{"type":"object"}}],
+            "store":true,
+            "stream":true,
+            "background":true,
+            "parallel_tool_calls":true,
+            "future_sdk_field":{"nested":true}
+        });
         let mut tasks = Vec::new();
         for _ in 0..6 {
             let app = app.clone();
@@ -605,28 +561,47 @@ mod integration_tests {
             .await
             .unwrap();
         runtime_grant::Entity::update_many()
-            .col_expr(runtime_grant::Column::RemainingCalls, Expr::value(2))
+            .col_expr(runtime_grant::Column::RemainingCalls, Expr::value(3))
             .filter(runtime_grant::Column::TokenDigest.eq(digest(grant)))
             .exec(&pool)
             .await
             .unwrap();
         for input in ["slow", "oversize"] {
-            let (status, error) = call(
-                app.clone(),
-                "/v1/responses",
-                grant,
-                json!({"model":"proof-model","input":input,"max_output_tokens":1024,"tools":crate::provider::cursor_tools::test_cursor_tools(),"store":false,"parallel_tool_calls":false}),
-            )
-            .await;
+            let (status, error) =
+                call(app.clone(), "/v1/responses", grant, json!({"input":input})).await;
             assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
             assert!(!error.to_string().contains("fake-provider-key"));
         }
-        assert_eq!(count.load(Ordering::SeqCst), 6);
-        let oversized=app.clone().oneshot(Request::builder().method("POST").uri("/v1/responses")
-            .header("authorization",format!("Bearer {grant}")).header("content-type","application/json")
-            .body(Body::from(json!({"model":"proof-model","input":"x".repeat(8*1024*1024),"max_output_tokens":1024}).to_string())).unwrap()).await.unwrap();
+        let (status, error) = call(
+            app.clone(),
+            "/v1/responses",
+            grant,
+            json!({"input":"provider-error"}),
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(
+            error,
+            json!({"error":{"message":"provider rejected request"}})
+        );
+        assert_eq!(count.load(Ordering::SeqCst), 7);
+        let oversized = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/v1/responses")
+                    .header("authorization", format!("Bearer {grant}"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(
+                        json!({"input":"x".repeat(MAX_RESPONSES_REQUEST_BYTES)}).to_string(),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
         assert_eq!(oversized.status(), StatusCode::PAYLOAD_TOO_LARGE);
-        assert_eq!(count.load(Ordering::SeqCst), 6);
+        assert_eq!(count.load(Ordering::SeqCst), 7);
         runtime_grant::Entity::delete_by_id(digest(&concurrent_grant))
             .exec(&pool)
             .await

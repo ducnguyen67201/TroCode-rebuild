@@ -327,11 +327,21 @@ pub async fn voice_execute_text(
 ) -> Result<VoiceStatus, WorkerError> {
     require_main(&window)?;
     require_workspace(&auth).await?;
-    let (status, state) = voice
+    let state = voice
         .execute_text(instruction, manager.inner().clone(), auth.inner().clone())
         .await?;
-    crate::overlay::present_guidance(&app, manager.inner().clone(), &state).await?;
-    Ok(status)
+    let outcome =
+        match crate::overlay::present_guidance(&app, manager.inner().clone(), &state).await {
+            Ok(outcome) => outcome,
+            Err(error) => {
+                voice.guidance_failed(state["journey"]["id"].as_str(), error.message);
+                return Err(error);
+            }
+        };
+    if outcome == crate::overlay::PresentationOutcome::Presented {
+        voice.guidance_presented(&state);
+    }
+    Ok(voice.status())
 }
 
 #[tauri::command]

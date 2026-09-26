@@ -18,7 +18,7 @@ endif
 help:
 	@echo "Tro rebuild development commands"
 	@echo "  make setup      Install locked Node and Python dependencies"
-	@echo "  make dev        Start the full local stack with Doppler secrets"
+	@echo "  make dev        Start the hot-reloading local stack with Doppler secrets"
 	@echo "  make dev-local  Start the full fixture stack without Doppler"
 
 setup:

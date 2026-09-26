@@ -7,7 +7,7 @@ use crate::{
     persistence,
     provider::{
         ProviderService, grants as provider_grants, responses as provider_responses,
-        transcription as provider_transcription,
+        responses_relay::MAX_RESPONSES_REQUEST_BYTES, transcription as provider_transcription,
     },
     workspace::{WorkspaceService, handlers as workspace_handlers},
 };
@@ -98,7 +98,8 @@ pub fn router(state: HostedState) -> Router {
         )
         .route(
             "/v1/responses",
-            post(provider_responses::responses).layer(DefaultBodyLimit::max(2 * 1024 * 1024)),
+            post(provider_responses::responses)
+                .layer(DefaultBodyLimit::max(MAX_RESPONSES_REQUEST_BYTES)),
         )
         .route(
             "/v1/workspaces/{workspace_id}/members",

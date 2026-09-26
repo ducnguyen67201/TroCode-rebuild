@@ -68,6 +68,9 @@ accessibility tree or represented as evidence that a native control exists.
 Screenshot capture can be used when accessibility observation fails or is incomplete.
 A bounded screen-only retry stays inside the same native read timeout. Screen capture
 still requires OS permission. Partial AX data never confirms progress automatically.
+It may still place a presentation-only cue when the planned role/label resolves to one
+currently observed element; ambiguity still produces no cue. This is safe because the
+overlay cannot perform input and the learner remains the actor.
 
 Visual location alone does not prove completion. An available, complete accessibility
 postcondition can still drive automatic advancement. Otherwise the learner uses

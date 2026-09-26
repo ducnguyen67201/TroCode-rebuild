@@ -317,6 +317,15 @@ const english = {
   'voice.statusUnavailable': 'Voice status is unavailable.',
   'voice.statusUnverified': 'Voice status could not be verified.',
   'voice.requestFailed': 'Voice guidance could not complete that request.',
+  'voice.findingCue': 'Finding the first thing to show…',
+  'voice.noVisibleCue': 'No visible guidance is ready. Try asking again.',
+  'voice.targetChanged':
+    'The guidance target changed before it could be shown. Try again.',
+  'voice.cueStale':
+    'The guidance became stale before it could be shown. Try again.',
+  'voice.displayUnavailable':
+    'Guidance cannot be shown on the selected display yet.',
+  'voice.refreshFailed': 'Guidance could not refresh. Try again.',
   'voice.permissionRecovery':
     'Allow microphone and keyboard monitoring access, then check permissions again.',
   'voice.phase.disabled': 'Disabled',
@@ -664,6 +673,16 @@ const vietnamese: Record<TranslationKey, string> = {
     'Không thể xác minh trạng thái điều khiển bằng giọng nói.',
   'voice.requestFailed':
     'Hướng dẫn bằng giọng nói không thể hoàn tất yêu cầu này.',
+  'voice.findingCue': 'Đang tìm vị trí đầu tiên để chỉ cho bạn…',
+  'voice.noVisibleCue':
+    'Chưa có hướng dẫn trực quan nào sẵn sàng. Hãy thử hỏi lại.',
+  'voice.targetChanged':
+    'Mục tiêu hướng dẫn đã thay đổi trước khi có thể hiển thị. Hãy thử lại.',
+  'voice.cueStale':
+    'Hướng dẫn đã hết hạn trước khi có thể hiển thị. Hãy thử lại.',
+  'voice.displayUnavailable':
+    'Chưa thể hiển thị hướng dẫn trên màn hình đã chọn.',
+  'voice.refreshFailed': 'Không thể làm mới hướng dẫn. Hãy thử lại.',
   'voice.permissionRecovery':
     'Hãy cho phép truy cập micrô và theo dõi bàn phím rồi kiểm tra quyền lại.',
   'voice.phase.disabled': 'Đã tắt',
@@ -889,7 +908,16 @@ const knownMessages: Partial<Record<string, TranslationKey>> = {
   'Finalizing the instruction…': 'voice.phase.transcribing',
   'Preparing the selected window…': 'voice.phase.dispatching',
   'Preparing a simple walkthrough…': 'voice.phase.planning',
+  'Finding the first thing to show…': 'voice.findingCue',
   'Follow the cursor in the selected window.': 'voice.phase.guiding',
+  'No visible guidance is ready. Try asking again.': 'voice.noVisibleCue',
+  'The guidance target changed before it could be shown. Try again.':
+    'voice.targetChanged',
+  'The guidance became stale before it could be shown. Try again.':
+    'voice.cueStale',
+  'Guidance cannot be shown on the selected display yet.':
+    'voice.displayUnavailable',
+  'Guidance could not refresh. Try again.': 'voice.refreshFailed',
   'Your guidance is ready.': 'voice.phase.completed',
   'Voice guidance cancelled.': 'voice.phase.cancelled',
   'Voice guidance is disabled.': 'voice.phase.disabled',
