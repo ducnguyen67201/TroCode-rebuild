@@ -16,9 +16,7 @@ import {
   writeOnboardingMarker,
   type OnboardingMarker,
 } from './onboarding-state';
-
-const boundaryMessage =
-  'Tro could not verify device readiness. Check your connection to the desktop host and try again.';
+import { localeKey, translate, useLanguage, type AppLocale } from '../../i18n';
 
 export function DeviceOnboardingGate({
   client,
@@ -29,6 +27,7 @@ export function DeviceOnboardingGate({
   skipIntro?: boolean;
   children: ReactNode;
 }) {
+  const { t } = useLanguage();
   const [readiness, setReadiness] = useState<DeviceReadiness | null>(null);
   const [marker, setMarker] = useState(() => readOnboardingMarker());
   const [failed, setFailed] = useState(false);
@@ -58,12 +57,12 @@ export function DeviceOnboardingGate({
     return (
       <main className="device-onboarding-shell">
         <section className="device-onboarding-card" aria-live="polite">
-          <p className="eyebrow">Device checkup</p>
+          <p className="eyebrow">{t('onboarding.eyebrow')}</p>
           <h1>
-            {failed ? 'Device check unavailable' : 'Checking this device…'}
+            {failed ? t('onboarding.unavailable') : t('onboarding.checking')}
           </h1>
           <p>
-            {failed ? boundaryMessage : 'No permission prompt will appear.'}
+            {failed ? t('onboarding.boundaryError') : t('onboarding.noPrompt')}
           </p>
           {failed && (
             <button
@@ -81,7 +80,7 @@ export function DeviceOnboardingGate({
                   });
               }}
             >
-              Try again
+              {t('onboarding.tryAgain')}
             </button>
           )}
         </section>
@@ -121,6 +120,7 @@ export function PermissionCheckup({
   onReadiness?: (readiness: DeviceReadiness) => void;
   onComplete?: (choice: OnboardingMarker['microphoneChoice']) => void;
 }) {
+  const { locale, localizeMessage, t } = useLanguage();
   const [readiness, setReadiness] = useState<DeviceReadiness | null>(
     initialReadiness,
   );
@@ -159,10 +159,7 @@ export function PermissionCheckup({
         accept(value);
       }
     } catch {
-      if (ticket === epoch.current)
-        setError(
-          'The device check did not finish. Your previous status is unchanged.',
-        );
+      if (ticket === epoch.current) setError(t('onboarding.checkFailed'));
     } finally {
       if (ticket === epoch.current) {
         busyRef.current = false;
@@ -180,7 +177,7 @@ export function PermissionCheckup({
         if (ticket === epoch.current) accept(value);
       })
       .catch(() => {
-        if (ticket === epoch.current) setError(boundaryMessage);
+        if (ticket === epoch.current) setError(t('onboarding.boundaryError'));
       });
     return () => {
       epoch.current += 1;
@@ -215,9 +212,7 @@ export function PermissionCheckup({
       if (ticket === epoch.current) setSettingsTarget(target);
     } catch {
       if (ticket === epoch.current)
-        setError(
-          'Tro could not open device settings. Open the page manually, then recheck.',
-        );
+        setError(t('onboarding.openSettingsFailed'));
     } finally {
       if (ticket === epoch.current) {
         busyRef.current = false;
@@ -236,9 +231,7 @@ export function PermissionCheckup({
       busyRef.current = false;
       setBusy(false);
     } catch {
-      setError(
-        'Tro could not relaunch. Close and reopen the app, then recheck.',
-      );
+      setError(t('onboarding.relaunchFailed'));
       busyRef.current = false;
       setBusy(false);
     }
@@ -255,7 +248,7 @@ export function PermissionCheckup({
           className={compact ? '' : 'device-onboarding-card'}
           aria-live="polite"
         >
-          <h2>Checking device permissions…</h2>
+          <h2>{t('onboarding.checkingPermissions')}</h2>
           {error && (
             <>
               <p role="alert">{error}</p>
@@ -263,7 +256,7 @@ export function PermissionCheckup({
                 type="button"
                 onClick={() => void perform(() => client.check())}
               >
-                Try again
+                {t('onboarding.tryAgain')}
               </button>
             </>
           )}
@@ -290,20 +283,17 @@ export function PermissionCheckup({
         className={compact ? '' : 'device-onboarding-card'}
         aria-labelledby="device-checkup-heading"
       >
-        {!compact && <p className="eyebrow">Private device setup</p>}
+        {!compact && <p className="eyebrow">{t('onboarding.privateSetup')}</p>}
         {compact ? (
           <h2 id="device-checkup-heading" ref={heading} tabIndex={-1}>
-            Device permissions
+            {t('onboarding.permissions')}
           </h2>
         ) : (
           <h1 id="device-checkup-heading" ref={heading} tabIndex={-1}>
-            Set up this device
+            {t('onboarding.setup')}
           </h1>
         )}
-        <p>
-          Tro observes only the window you choose. It does not save screen
-          video, and this check retains no audio.
-        </p>
+        <p>{t('onboarding.description')}</p>
         <div className="permission-steps">
           <article
             className={
@@ -315,25 +305,22 @@ export function PermissionCheckup({
             <div className="permission-step-heading">
               <span aria-hidden="true">1</span>
               <div>
-                <h2>Screen &amp; controls</h2>
-                <strong>Required</strong>
+                <h2>{t('onboarding.screenControls')}</h2>
+                <strong>{t('onboarding.required')}</strong>
               </div>
             </div>
             <CapabilityStatus
-              label="Screen capture"
+              label={t('onboarding.screenCapture')}
               capability={readiness.screenCapture}
             />
             {readiness.platform === 'macos' && (
               <CapabilityStatus
-                label="Accessibility"
+                label={t('onboarding.accessibility')}
                 capability={readiness.accessibility}
               />
             )}
             {readiness.platform === 'windows' && (
-              <p className="permission-note">
-                Windows uses its secure window picker when you start Observe.
-                There is no app-list setting to change here.
-              </p>
+              <p className="permission-note">{t('onboarding.windowsPicker')}</p>
             )}
             {settingsTarget && settingsTarget !== 'microphone' && (
               <SettingsHandoff
@@ -351,8 +338,8 @@ export function PermissionCheckup({
                 }
                 caption={
                   screenSettingsTarget === 'accessibility'
-                    ? 'Next, let’s add Tro to Accessibility.'
-                    : 'Let’s open the exact Screen Recording page.'
+                    ? t('onboarding.nextAccessibility')
+                    : t('onboarding.openScreenRecording')
                 }
               >
                 <button
@@ -368,13 +355,15 @@ export function PermissionCheckup({
                 >
                   {busy && step === 'screen'
                     ? settingsTarget
-                      ? 'Rechecking…'
-                      : 'Opening settings…'
+                      ? t('onboarding.rechecking')
+                      : t('onboarding.openingSettings')
                     : settingsTarget && settingsTarget !== 'microphone'
-                      ? 'I changed it — recheck'
+                      ? t('onboarding.changedRecheck')
                       : screenSettingsTarget
-                        ? `Open ${settingsTitle(screenSettingsTarget)} settings`
-                        : 'Recheck screen access'}
+                        ? t('onboarding.openSettings', {
+                            target: settingsTitle(screenSettingsTarget, locale),
+                          })
+                        : t('onboarding.recheckScreen')}
                 </button>
               </GuidedAction>
             )}
@@ -390,18 +379,15 @@ export function PermissionCheckup({
             <div className="permission-step-heading">
               <span aria-hidden="true">2</span>
               <div>
-                <h2>Microphone</h2>
-                <strong>Optional</strong>
+                <h2>{t('onboarding.microphone')}</h2>
+                <strong>{t('onboarding.optional')}</strong>
               </div>
             </div>
             <CapabilityStatus
-              label="Microphone"
+              label={t('onboarding.microphone')}
               capability={readiness.microphone}
             />
-            <p className="permission-note">
-              This prepares optional push-to-talk. Text always works, and the
-              probe stores no samples.
-            </p>
+            <p className="permission-note">{t('onboarding.microphoneNote')}</p>
             {settingsTarget === 'microphone' && (
               <SettingsHandoff
                 platform={readiness.platform}
@@ -413,14 +399,16 @@ export function PermissionCheckup({
                 {readiness.microphone.canRequest && (
                   <GuidedAction
                     active={!compact && step === 'microphone' && !busy}
-                    caption="You can check your microphone here, or keep using text."
+                    caption={t('onboarding.microphoneChoice')}
                   >
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => void request('microphone')}
                     >
-                      {busy ? 'Checking…' : 'Check microphone'}
+                      {busy
+                        ? t('onboarding.checkingMicrophone')
+                        : t('onboarding.checkMicrophone')}
                     </button>
                   </GuidedAction>
                 )}
@@ -434,7 +422,7 @@ export function PermissionCheckup({
                         !busy &&
                         settingsTarget === null
                       }
-                      caption="Open the exact microphone privacy page."
+                      caption={t('onboarding.openMicrophone')}
                     >
                       <button
                         type="button"
@@ -447,11 +435,13 @@ export function PermissionCheckup({
                       >
                         {busy
                           ? settingsTarget === 'microphone'
-                            ? 'Rechecking…'
-                            : 'Opening settings…'
+                            ? t('onboarding.rechecking')
+                            : t('onboarding.openingSettings')
                           : settingsTarget === 'microphone'
-                            ? 'I changed it — recheck'
-                            : 'Open Microphone settings'}
+                            ? t('onboarding.changedRecheck')
+                            : t('onboarding.openSettings', {
+                                target: t('onboarding.microphone'),
+                              })}
                       </button>
                     </GuidedAction>
                   )}
@@ -465,7 +455,7 @@ export function PermissionCheckup({
                       setChoice('text');
                     }}
                   >
-                    Use text instead
+                    {t('onboarding.useText')}
                   </button>
                 )}
               </div>
@@ -483,11 +473,11 @@ export function PermissionCheckup({
               <div className="permission-step-heading">
                 <span aria-hidden="true">3</span>
                 <div>
-                  <h2>Ready to learn</h2>
+                  <h2>{t('onboarding.ready')}</h2>
                   <strong>
                     {readiness.requiresRelaunch
-                      ? 'Relaunch needed'
-                      : 'Final step'}
+                      ? t('onboarding.relaunchNeeded')
+                      : t('onboarding.finalStep')}
                   </strong>
                 </div>
               </div>
@@ -497,7 +487,7 @@ export function PermissionCheckup({
                   disabled={busy}
                   onClick={() => void relaunch()}
                 >
-                  Relaunch Tro
+                  {t('onboarding.relaunch')}
                 </button>
               ) : (
                 <button
@@ -505,7 +495,7 @@ export function PermissionCheckup({
                   disabled={!canComplete(readiness, effectiveChoice)}
                   onClick={() => onComplete?.(effectiveChoice ?? 'text')}
                 >
-                  Continue to Learn
+                  {t('onboarding.continue')}
                 </button>
               )}
             </article>
@@ -517,7 +507,7 @@ export function PermissionCheckup({
           </p>
         )}
         <p className="permission-summary" aria-live="polite">
-          {readiness.message}
+          {localizeMessage(readiness.message, 'onboarding.statusFallback')}
         </p>
         {compact && (
           <div className="permission-actions">
@@ -527,7 +517,7 @@ export function PermissionCheckup({
               disabled={busy}
               onClick={() => void perform(() => client.check())}
             >
-              Recheck device
+              {t('onboarding.recheckDevice')}
             </button>
             {readiness.requiresRelaunch && (
               <button
@@ -535,7 +525,7 @@ export function PermissionCheckup({
                 disabled={busy}
                 onClick={() => void relaunch()}
               >
-                Relaunch Tro
+                {t('onboarding.relaunch')}
               </button>
             )}
           </div>
@@ -558,12 +548,12 @@ function capabilityReady(status: DeviceReadiness['screenCapture']['status']) {
   return status === 'granted' || status === 'available';
 }
 
-function settingsTitle(target: PermissionSettingsTarget) {
+function settingsTitle(target: PermissionSettingsTarget, locale: AppLocale) {
   return target === 'screenCapture'
-    ? 'Screen Recording'
+    ? translate(locale, 'permissionGuide.screenCapture.title')
     : target === 'accessibility'
-      ? 'Accessibility'
-      : 'Microphone';
+      ? translate(locale, 'permissionGuide.accessibility.title')
+      : translate(locale, 'permissionGuide.microphone.title');
 }
 
 function SettingsHandoff({
@@ -573,13 +563,14 @@ function SettingsHandoff({
   platform: DeviceReadiness['platform'];
   target: PermissionSettingsTarget;
 }) {
-  const copy = permissionSettingsCopy(platform, target);
+  const { locale, t } = useLanguage();
+  const copy = permissionSettingsCopy(platform, target, locale);
   return (
     <div className="permission-settings-handoff" aria-live="polite">
-      <strong>{copy.title} settings are open</strong>
+      <strong>{t('onboarding.settingsOpen', { title: copy.title })}</strong>
       <span>{copy.path}</span>
       <p>{copy.instruction}</p>
-      <small>Tro’s floating guide only points. You make every change.</small>
+      <small>{t('onboarding.pointerBoundary')}</small>
     </div>
   );
 }
@@ -591,6 +582,8 @@ function CapabilityStatus({
   label: string;
   capability: DeviceReadiness['screenCapture'];
 }) {
+  const { localizeMessage, t } = useLanguage();
+  const statusKey = localeKey('onboarding.status', capability.status);
   return (
     <div className="capability-status">
       <span
@@ -599,21 +592,12 @@ function CapabilityStatus({
       />
       <div>
         <strong>
-          {label}: {statusLabel(capability.status)}
+          {label}: {statusKey ? t(statusKey) : capability.status}
         </strong>
-        <p>{capability.message}</p>
+        <p>
+          {localizeMessage(capability.message, 'onboarding.capabilityFallback')}
+        </p>
       </div>
     </div>
   );
-}
-
-function statusLabel(status: DeviceReadiness['screenCapture']['status']) {
-  return {
-    granted: 'Ready',
-    available: 'Available',
-    notDetermined: 'Not checked',
-    denied: 'Needs attention',
-    unavailable: 'Unavailable',
-    unknown: 'Not confirmed',
-  }[status];
 }

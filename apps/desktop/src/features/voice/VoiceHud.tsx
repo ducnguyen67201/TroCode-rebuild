@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
+import { useLanguage } from '../../i18n';
 
 export interface HudStatus {
   phase: string;
@@ -41,12 +42,14 @@ export function VoiceHud() {
 }
 
 export function VoiceHudPresentation({ status }: { status: HudStatus }) {
+  const { localizeMessage } = useLanguage();
+  const message = localizeMessage(status.message, 'voice.status.fallback');
   return (
     <div
       className={`voice-hud voice-hud-${status.phase}`}
       role="status"
       aria-live="polite"
-      aria-label={status.message}
+      aria-label={message}
     >
       <span className="voice-wave" aria-hidden="true">
         {Array.from({ length: 13 }, (_, index) => (

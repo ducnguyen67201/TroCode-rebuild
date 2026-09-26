@@ -4,6 +4,7 @@ import type {
   AddWorkspaceMemberRole,
   WorkspaceClient,
 } from '../../platform/workspace-client';
+import { localeKey, useLanguage } from '../../i18n';
 
 export function WorkspaceAccessPanel({
   client,
@@ -12,6 +13,7 @@ export function WorkspaceAccessPanel({
   client: WorkspaceClient;
   workspace: WorkspaceSummary;
 }) {
+  const { t } = useLanguage();
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<AddWorkspaceMemberRole>('student');
@@ -29,8 +31,7 @@ export function WorkspaceAccessPanel({
       const result = await client.members(workspace.workspaceId);
       if (ticket === epoch.current) setMembers(result.members);
     } catch {
-      if (ticket === epoch.current)
-        setError('Workspace members could not be loaded. Try again.');
+      if (ticket === epoch.current) setError(t('workspace.loadError'));
     } finally {
       if (ticket === epoch.current) setLoading(false);
     }
@@ -49,7 +50,7 @@ export function WorkspaceAccessPanel({
     if (busy) return;
     const normalized = email.trim();
     if (!validEmail(normalized)) {
-      setError('Enter the exact Google email for this member.');
+      setError(t('workspace.invalidEmail'));
       return;
     }
     const ticket = ++epoch.current;
@@ -60,15 +61,10 @@ export function WorkspaceAccessPanel({
       await client.addMember(workspace.workspaceId, normalized, role);
       if (ticket !== epoch.current) return;
       setEmail('');
-      setMessage(
-        'Access added. Tro will connect this account after Google verifies that email.',
-      );
+      setMessage(t('workspace.added'));
       await load(ticket);
     } catch {
-      if (ticket === epoch.current)
-        setError(
-          'Access could not be added. Check the email and existing role.',
-        );
+      if (ticket === epoch.current) setError(t('workspace.addError'));
     } finally {
       if (ticket === epoch.current) setBusy(false);
     }
@@ -77,7 +73,7 @@ export function WorkspaceAccessPanel({
   async function remove(member: WorkspaceMember) {
     if (confirming !== member.membershipId) {
       setConfirming(member.membershipId);
-      setMessage(`Confirm removal for ${member.email}.`);
+      setMessage(t('workspace.confirmMessage', { email: member.email }));
       return;
     }
     const ticket = ++epoch.current;
@@ -88,11 +84,10 @@ export function WorkspaceAccessPanel({
       await client.removeMember(workspace.workspaceId, member.membershipId);
       if (ticket !== epoch.current) return;
       setConfirming(null);
-      setMessage('Workspace access removed.');
+      setMessage(t('workspace.removed'));
       await load(ticket);
     } catch {
-      if (ticket === epoch.current)
-        setError('Workspace access could not be removed. Try again.');
+      if (ticket === epoch.current) setError(t('workspace.removeError'));
     } finally {
       if (ticket === epoch.current) setBusy(false);
     }
@@ -105,22 +100,21 @@ export function WorkspaceAccessPanel({
     >
       <div className="card-heading">
         <div>
-          <p className="eyebrow">Workspace authority</p>
-          <h2 id="workspace-access-heading">People with access</h2>
+          <p className="eyebrow">{t('workspace.eyebrow')}</p>
+          <h2 id="workspace-access-heading">{t('workspace.heading')}</h2>
         </div>
-        <span className="badge">{members.length} assigned</span>
+        <span className="badge">
+          {t('workspace.assigned', { count: members.length })}
+        </span>
       </div>
-      <p>
-        Add the exact Google email. Tro connects it automatically after the
-        account signs in—no invitation link required.
-      </p>
+      <p>{t('workspace.description')}</p>
 
       <form
         className="workspace-access-form"
         onSubmit={(event) => void add(event)}
       >
         <label>
-          Google email
+          {t('workspace.email')}
           <input
             autoComplete="email"
             disabled={busy}
@@ -132,7 +126,7 @@ export function WorkspaceAccessPanel({
           />
         </label>
         <label>
-          Role
+          {t('workspace.role')}
           <select
             disabled={busy}
             onChange={(event) =>
@@ -140,51 +134,57 @@ export function WorkspaceAccessPanel({
             }
             value={role}
           >
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
+            <option value="student">{t('role.student')}</option>
+            <option value="teacher">{t('role.teacher')}</option>
           </select>
         </label>
         <button disabled={busy} type="submit">
-          {busy ? 'Saving…' : 'Add access'}
+          {busy ? t('workspace.saving') : t('workspace.add')}
         </button>
       </form>
 
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
       {loading ? (
-        <p>Loading workspace members…</p>
+        <p>{t('workspace.loading')}</p>
       ) : (
         <ul className="workspace-member-list">
-          {members.map((member) => (
-            <li key={member.membershipId}>
-              <span className="workspace-member-identity">
-                <strong>{member.displayName ?? member.email}</strong>
-                {member.displayName && <small>{member.email}</small>}
-              </span>
-              <span className="workspace-member-meta">
-                <span>{member.role}</span>
-                <span className={`member-state member-state--${member.state}`}>
-                  {member.state}
+          {members.map((member) => {
+            const roleKey = localeKey('role', member.role);
+            const stateKey = localeKey('member', member.state);
+            return (
+              <li key={member.membershipId}>
+                <span className="workspace-member-identity">
+                  <strong>{member.displayName ?? member.email}</strong>
+                  {member.displayName && <small>{member.email}</small>}
                 </span>
-              </span>
-              {member.role !== 'owner' && (
-                <button
-                  className={
-                    confirming === member.membershipId
-                      ? 'remove-access is-confirming'
-                      : 'remove-access'
-                  }
-                  disabled={busy}
-                  onClick={() => void remove(member)}
-                  type="button"
-                >
-                  {confirming === member.membershipId
-                    ? 'Confirm removal'
-                    : 'Remove access'}
-                </button>
-              )}
-            </li>
-          ))}
+                <span className="workspace-member-meta">
+                  <span>{roleKey ? t(roleKey) : member.role}</span>
+                  <span
+                    className={`member-state member-state--${member.state}`}
+                  >
+                    {stateKey ? t(stateKey) : member.state}
+                  </span>
+                </span>
+                {member.role !== 'owner' && (
+                  <button
+                    className={
+                      confirming === member.membershipId
+                        ? 'remove-access is-confirming'
+                        : 'remove-access'
+                    }
+                    disabled={busy}
+                    onClick={() => void remove(member)}
+                    type="button"
+                  >
+                    {confirming === member.membershipId
+                      ? t('workspace.confirmRemoval')
+                      : t('workspace.remove')}
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

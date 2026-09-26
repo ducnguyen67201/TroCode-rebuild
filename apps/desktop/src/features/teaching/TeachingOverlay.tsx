@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { TeachingCue } from '@tro/contracts';
+import { useLanguage } from '../../i18n';
 /** SVG pixels only: no DOM input dispatch, pointer movement, or application focus. */
 export function TeachingOverlay({
   cue,
@@ -8,6 +9,7 @@ export function TeachingOverlay({
   cue: TeachingCue;
   origin?: { x: number; y: number };
 }) {
+  const { t } = useLanguage();
   const source = cue.source;
   const x = source.x - origin.x;
   const y = source.y - origin.y;
@@ -16,7 +18,10 @@ export function TeachingOverlay({
   return (
     <svg
       className="teaching-overlay"
-      aria-label={`${cue.gesture} guidance: ${cue.caption}`}
+      aria-label={t('teaching.overlayAria', {
+        gesture: t(`gesture.${cue.gesture}`),
+        caption: cue.caption,
+      })}
     >
       <rect
         x={x}

@@ -11,6 +11,7 @@ import {
 import type { VoiceStatus } from '@tro/contracts';
 import { createPreviewVoice } from '../../platform/preview-voice';
 import { VoiceControlPanel } from './VoiceControlPanel';
+import { LanguageProvider } from '../../i18n';
 
 afterEach(cleanup);
 
@@ -76,8 +77,25 @@ it('shows queued follow-ups in FIFO order while an instruction executes', async 
 
   expect(screen.getByText('Follow-up queue')).toBeTruthy();
   expect(screen.getByLabelText('2 queued')).toBeTruthy();
-  expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-    'Second instruction',
-    'Third instruction',
-  ]);
+  expect(
+    screen.getAllByRole('listitem').map((item) => item.textContent),
+  ).toEqual(['Second instruction', 'Third instruction']);
+});
+
+it('localizes voice chrome without changing the transcript', async () => {
+  const client = createPreviewVoice();
+  render(
+    <LanguageProvider initialLocale="vi">
+      <VoiceControlPanel client={client} />
+    </LanguageProvider>,
+  );
+
+  await screen.findByText('Giữ hai phím. Nói. Thả ra.');
+  fireEvent.change(screen.getByLabelText('Nhập văn bản thay vì nói'), {
+    target: { value: 'open settings' },
+  });
+  fireEvent.click(screen.getByText('Chạy chỉ dẫn'));
+
+  await screen.findByText('open settings');
+  expect(screen.getAllByText('Hoàn tất')).toHaveLength(2);
 });

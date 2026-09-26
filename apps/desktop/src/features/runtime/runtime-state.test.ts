@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { latestStatus, publicError } from './runtime-state';
+import { latestStatus, publicErrorKey } from './runtime-state';
 import { createPreviewClient } from '../../platform/preview-client';
 it('keeps newer snapshots across subscription races', async () => {
   const client = createPreviewClient();
@@ -8,8 +8,8 @@ it('keeps newer snapshots across subscription races', async () => {
   expect(latestStatus(latest, old)).toBe(latest);
 });
 it('does not expose error payloads', () => {
-  expect(publicError({ message: 'secret' })).not.toContain('secret');
-  expect(publicError({ code: 'TIMEOUT' })).toContain('timed out');
+  expect(publicErrorKey({ message: 'secret' })).toBe('runtime.requestError');
+  expect(publicErrorKey({ code: 'TIMEOUT' })).toBe('runtime.timeout');
 });
 it('preview stops and unsubscribes', async () => {
   const client = createPreviewClient();

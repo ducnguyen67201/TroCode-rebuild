@@ -12,8 +12,12 @@ import type { AuthStatus } from '@tro/contracts';
 import type { AuthClient } from '../../platform/auth-client';
 import { createPreviewClient } from '../../platform/preview-client';
 import { AuthGate } from './AuthGate';
+import { LanguageProvider } from '../../i18n';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
 
 it('keeps every protected control out of the DOM until workspace access exists', async () => {
   const client = createPreviewClient();
@@ -152,6 +156,27 @@ it('removes protected UI on a signed-out event and cleans up its subscription', 
 
   rendered.unmount();
   expect(unsubscribe).toHaveBeenCalledOnce();
+});
+
+it('allows choosing Vietnamese before signing in', async () => {
+  const client = createPreviewClient();
+  render(
+    <LanguageProvider initialLocale="en">
+      <AuthGate auth={client.auth} preview>
+        {() => <p>Protected</p>}
+      </AuthGate>
+    </LanguageProvider>,
+  );
+
+  await screen.findByRole('button', { name: 'Continue with Google' });
+  fireEvent.change(screen.getByLabelText('App language'), {
+    target: { value: 'vi' },
+  });
+
+  expect(
+    screen.getByRole('button', { name: 'Tiếp tục với Google' }),
+  ).toBeTruthy();
+  expect(screen.getByText('Không gian học tập của bạn')).toBeTruthy();
 });
 
 function clientWith(overrides: Partial<AuthClient>): AuthClient {

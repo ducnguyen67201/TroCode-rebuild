@@ -93,7 +93,7 @@ test('workspace owner can pre-add exact Google email access', async ({
   await page.getByRole('button', { name: 'Add access' }).click();
 
   await expect(page.getByText('student+robotics@example.com')).toBeVisible();
-  await expect(page.getByText('pending', { exact: true })).toBeVisible();
+  await expect(page.getByText('Pending', { exact: true })).toBeVisible();
   await expect(page.getByText(/^Access added\./)).toBeVisible();
 });
 
@@ -109,6 +109,26 @@ test('signed-out threshold does not overflow a narrow viewport', async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test('Vietnamese app language persists without changing lesson language', async ({
+  page,
+}) => {
+  await page.goto('/?auth=authenticated');
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByLabel('App language').selectOption('vi');
+
+  await expect(page.getByRole('heading', { name: 'Cài đặt' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Học tập' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Học tập' })).toBeVisible();
+  await page.getByRole('button', { name: 'Học tập' }).click();
+  await page.getByRole('button', { name: 'Tìm cửa sổ' }).click();
+  await page.getByLabel('Cửa sổ thực hành').selectOption('1:1');
+  await page.getByRole('button', { name: 'Quan sát', exact: true }).click();
+  await expect(page.getByLabel('Ngôn ngữ hướng dẫn')).toHaveValue('en');
+  await expect(page.getByLabel('Nhập văn bản thay vì nói')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'vi');
 });
 
 const authLayoutCases = [

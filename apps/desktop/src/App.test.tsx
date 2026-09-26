@@ -8,8 +8,12 @@ import {
 } from '@testing-library/react';
 import { App } from './App';
 import { createPreviewClient } from './platform/preview-client';
+import { LanguageProvider } from './i18n';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  localStorage.clear();
+});
 
 it('keeps the active workspace visible and navigates owner tools', async () => {
   const signOut = vi.fn();
@@ -37,7 +41,7 @@ it('keeps the active workspace visible and navigates owner tools', async () => {
 
   const sidebar = screen.getByLabelText('Workspace navigation');
   expect(within(sidebar).getByText('Northstar Robotics')).toBeTruthy();
-  expect(within(sidebar).getByText('owner')).toBeTruthy();
+  expect(within(sidebar).getByText('Owner')).toBeTruthy();
   expect(
     screen.getByRole('button', { name: 'Learn' }).getAttribute('aria-current'),
   ).toBe('page');
@@ -85,4 +89,41 @@ it('does not present owner-only Team navigation to a student', () => {
 
   expect(screen.queryByRole('button', { name: 'Team' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Settings' })).toBeTruthy();
+});
+
+it('switches and persists the complete application interface in Vietnamese', () => {
+  render(
+    <LanguageProvider initialLocale="en">
+      <App
+        client={createPreviewClient({ workspaceRole: 'student' })}
+        session={{
+          user: {
+            accountId: '00000000-0000-0000-0000-000000000001',
+            displayName: 'Ada Learner',
+            email: 'ada@example.com',
+          },
+          workspaces: [
+            {
+              workspaceId: '00000000-0000-0000-0000-000000000002',
+              name: 'Northstar Robotics',
+              role: 'student',
+            },
+          ],
+          signOut: vi.fn(),
+          signingOut: false,
+        }}
+      />
+    </LanguageProvider>,
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+  fireEvent.change(screen.getByLabelText('App language'), {
+    target: { value: 'vi' },
+  });
+
+  expect(screen.getByRole('heading', { name: 'Cài đặt' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Đăng xuất' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Học tập' })).toBeTruthy();
+  expect(document.documentElement.lang).toBe('vi');
+  expect(localStorage.getItem('tro.app-locale')).toBe('vi');
 });

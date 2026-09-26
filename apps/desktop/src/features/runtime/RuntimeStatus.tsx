@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { RuntimeStatus as Status } from '@tro/contracts';
 import type { DesktopClient, Profile } from '../../platform/desktop-client';
-import { latestStatus, publicError } from './runtime-state';
+import { latestStatus, publicErrorKey } from './runtime-state';
+import { localeKey, useLanguage } from '../../i18n';
 const initial: Status = {
   state: 'stopped',
   generationId: null,
@@ -9,6 +10,7 @@ const initial: Status = {
   message: 'Connecting to runtime status…',
 };
 export function RuntimeStatus({ client }: { client: DesktopClient }) {
+  const { localizeMessage, t } = useLanguage();
   const [status, setStatus] = useState(initial);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,7 +31,7 @@ export function RuntimeStatus({ client }: { client: DesktopClient }) {
         receive(await client.status());
       })
       .catch(() => {
-        if (active) setError('Unable to connect to runtime status.');
+        if (active) setError(t('runtime.connectError'));
       });
     return () => {
       active = false;
@@ -43,49 +45,54 @@ export function RuntimeStatus({ client }: { client: DesktopClient }) {
       const incoming = await action();
       setStatus((current) => latestStatus(current, incoming));
     } catch (error) {
-      setError(publicError(error));
+      setError(t(publicErrorKey(error)));
     } finally {
       setBusy(false);
     }
   }
+  const stateKey = localeKey('runtime.state', status.state);
   return (
     <section className="runtime-card" aria-labelledby="runtime-heading">
       <div className="card-heading">
-        <h2 id="runtime-heading">Private teaching runtime</h2>
-        <span className={'badge ' + status.state}>{status.state}</span>
+        <h2 id="runtime-heading">{t('runtime.heading')}</h2>
+        <span className={'badge ' + status.state}>
+          {stateKey ? t(stateKey) : status.state}
+        </span>
       </div>
-      <p role="status">{status.message}</p>
+      <p role="status">
+        {localizeMessage(status.message, 'runtime.status.fallback')}
+      </p>
       <div className="actions">
         <button
           disabled={busy || status.state === 'running'}
           onClick={() => void perform(() => client.start())}
         >
-          Start session
+          {t('runtime.start')}
         </button>
         <button
           className="secondary"
           disabled={busy || status.state !== 'running'}
           onClick={() => void perform(() => client.health())}
         >
-          Check connection
+          {t('runtime.check')}
         </button>
         <button
           className="secondary"
           disabled={status.state === 'stopped'}
           onClick={() => void perform(() => client.stop())}
         >
-          Stop
+          {t('runtime.stop')}
         </button>
         <button
           className="secondary"
           disabled={busy}
           onClick={() => void perform(() => client.restart())}
         >
-          Restart runtime
+          {t('runtime.restart')}
         </button>
       </div>
       <label className="profile">
-        Development profile
+        {t('runtime.profile')}
         <select
           defaultValue=""
           disabled={busy}
@@ -96,11 +103,11 @@ export function RuntimeStatus({ client }: { client: DesktopClient }) {
           }
         >
           <option value="" disabled>
-            Diagnostic only
+            {t('runtime.diagnosticOnly')}
           </option>
-          <option value="teacher">Teacher</option>
-          <option value="student-a">Student A</option>
-          <option value="student-b">Student B</option>
+          <option value="teacher">{t('role.teacher')}</option>
+          <option value="student-a">{t('runtime.studentA')}</option>
+          <option value="student-b">{t('runtime.studentB')}</option>
         </select>
       </label>
       {error && (
@@ -108,10 +115,7 @@ export function RuntimeStatus({ client }: { client: DesktopClient }) {
           {error}
         </p>
       )}
-      <p className="fine-print">
-        A diagnostic session checks the process connection. Teaching and
-        computer actions arrive in the next milestone.
-      </p>
+      <p className="fine-print">{t('runtime.finePrint')}</p>
     </section>
   );
 }
