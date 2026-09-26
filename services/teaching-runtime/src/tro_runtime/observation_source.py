@@ -22,6 +22,9 @@ if TYPE_CHECKING:
 
 from tro_runtime.observations import Element, Observation, Rect, Target
 
+MAX_MODEL_IMAGE_URL_CHARS = 750_000
+SCREENSHOT_DIMENSIONS = (768, 512, 360)
+
 
 def _text(value: str | None, limit: int = 256) -> str:
     return (value or "").encode("utf-8")[:limit].decode("utf-8", errors="ignore")
@@ -130,7 +133,7 @@ class CuaObservationSource:
 
         driver = await self._connect(target)
 
-        async def capture(accessibility: bool) -> WindowStateOutput:
+        async def capture(accessibility: bool, max_dimension: int) -> WindowStateOutput:
             return await driver.get_window_state(
                 GetWindowStateInput(
                     pid=target.pid,
@@ -142,20 +145,33 @@ class CuaObservationSource:
                     screenshot_out_file=None,
                     max_elements=200,
                     max_depth=20,
-                    max_dimension=1200,
+                    max_dimension=max_dimension,
                 )
             )
 
-        async def capture_available() -> WindowStateOutput:
+        accessibility_available = True
+
+        async def capture_available(max_dimension: int) -> WindowStateOutput:
+            nonlocal accessibility_available
             try:
-                return await capture(True)
+                return await capture(accessibility_available, max_dimension)
             except Exception:
-                if not include_image:
+                if not include_image or not accessibility_available:
                     raise
                 # Screen-only guidance remains possible when AX access is unavailable.
-                return await capture(False)
+                accessibility_available = False
+                return await capture(False, max_dimension)
 
-        result = await asyncio.wait_for(capture_available(), 10)
+        async def capture_model_input() -> tuple[WindowStateOutput, str | None]:
+            dimensions = SCREENSHOT_DIMENSIONS if include_image else SCREENSHOT_DIMENSIONS[:1]
+            for max_dimension in dimensions:
+                candidate = await capture_available(max_dimension)
+                candidate_image = self._image_url(candidate) if include_image else None
+                if candidate_image is None or len(candidate_image) <= MAX_MODEL_IMAGE_URL_CHARS:
+                    return candidate, candidate_image
+            raise ValueError("Selected-window image exceeds model limit.")
+
+        result, image = await asyncio.wait_for(capture_model_input(), 10)
         bounds = result.window_bounds
         if result.pid != target.pid or result.window_id != target.window_id or bounds is None:
             raise ValueError("Selected window is unavailable.")
@@ -185,9 +201,9 @@ class CuaObservationSource:
                     _text(item.value),
                 )
             )
-        image = None
         if (
             include_image
+            and image is not None
             and result.screenshot_frame_valid
             and result.screenshot_width
             and result.screenshot_height
@@ -196,15 +212,6 @@ class CuaObservationSource:
             width, height = result.screenshot_width, result.screenshot_height
             if abs(width - height * current.bounds.width / current.bounds.height) > 2:
                 raise ValueError("Screenshot geometry does not match the selected window.")
-            for snapshot in result.images[:1]:
-                if (
-                    snapshot.mime_type not in ("image/png", "image/jpeg")
-                    or len(snapshot.data_base64) > 5_592_408
-                ):
-                    raise ValueError("Invalid selected-window image.")
-                if len(base64.b64decode(snapshot.data_base64, validate=True)) > 4 * 1024 * 1024:
-                    raise ValueError("Selected-window image exceeds limit.")
-                image = f"data:{snapshot.mime_type};base64,{snapshot.data_base64}"
         return Observation(
             str(uuid4()),
             current,
@@ -213,6 +220,24 @@ class CuaObservationSource:
             result.elements_complete is True and not result.truncated and not result.degraded,
             image,
         )
+
+    @staticmethod
+    def _image_url(result: WindowStateOutput) -> str | None:
+        if (
+            not result.screenshot_frame_valid
+            or not result.screenshot_width
+            or not result.screenshot_height
+            or not result.images
+        ):
+            return None
+        snapshot = result.images[0]
+        if snapshot.mime_type not in ("image/png", "image/jpeg"):
+            raise ValueError("Invalid selected-window image.")
+        try:
+            base64.b64decode(snapshot.data_base64, validate=True)
+        except (ValueError, TypeError):
+            raise ValueError("Invalid selected-window image.") from None
+        return f"data:{snapshot.mime_type};base64,{snapshot.data_base64}"
 
     async def close(self) -> None:
         try:

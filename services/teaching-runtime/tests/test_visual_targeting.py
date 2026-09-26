@@ -187,6 +187,58 @@ def test_capture_can_fall_back_to_screen_only_and_checks_image_geometry(monkeypa
     asyncio.run(scenario())
 
 
+def test_capture_retries_at_a_smaller_dimension_to_fit_model_gateway(monkeypatch):
+    import base64
+    import sys
+
+    from tro_runtime.observation_source import CuaObservationSource
+
+    monkeypatch.setitem(
+        sys.modules,
+        "cua_driver",
+        SimpleNamespace(GetWindowStateInput=lambda **kwargs: SimpleNamespace(**kwargs)),
+    )
+
+    async def scenario():
+        calls = []
+
+        async def capture(request):
+            calls.append(request.max_dimension)
+            raw_size = 600_000 if request.max_dimension == 768 else 400_000
+            width = request.max_dimension
+            height = round(width * 4 / 5)
+            return SimpleNamespace(
+                pid=42,
+                window_id=7,
+                window_bounds=SimpleNamespace(x=-100, y=0, width=500, height=400),
+                window_title="Canvas",
+                degraded=False,
+                elements=[],
+                elements_complete=True,
+                truncated=False,
+                screenshot_frame_valid=True,
+                screenshot_width=width,
+                screenshot_height=height,
+                images=[
+                    SimpleNamespace(
+                        mime_type="image/png",
+                        data_base64=base64.b64encode(b"x" * raw_size).decode(),
+                    )
+                ],
+            )
+
+        async def connect(target):
+            return SimpleNamespace(get_window_state=capture)
+
+        source = CuaObservationSource()
+        monkeypatch.setattr(source, "_connect", connect)
+        result = await source.observe(observation().target)
+        assert calls == [768, 512]
+        assert result.image is not None and len(result.image) < 750_000
+
+    asyncio.run(scenario())
+
+
 def test_visual_action_can_complete_from_ax_without_replanning_on_first_changed_frame():
     from tro_runtime.planning import Postcondition
 

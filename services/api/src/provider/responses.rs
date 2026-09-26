@@ -5,6 +5,10 @@ use serde_json::Value;
 use uuid::Uuid;
 
 const MAX_PROVIDER_RESPONSE: usize = 2 * 1024 * 1024;
+const MAX_INPUT_BYTES: usize = 1_500_000;
+const MAX_TEXT_CHARS: usize = 100_000;
+const MAX_IMAGE_URL_CHARS: usize = 750_000;
+const MAX_IMAGES: usize = 8;
 
 pub async fn responses(
     State(state): State<HostedState>,
@@ -12,8 +16,10 @@ pub async fn responses(
     headers: HeaderMap,
     Json(request): Json<Value>,
 ) -> Result<Json<Value>, ApiError> {
-    validate_request(&request, state.providers.guidance_model.as_ref())
-        .map_err(|_| ApiError::provider_invalid(correlation))?;
+    validate_request(&request, state.providers.guidance_model.as_ref()).map_err(|reason| {
+        tracing::warn!(event="provider.responses.rejected", correlation_id=%correlation, reason);
+        ApiError::provider_invalid(correlation)
+    })?;
     let token = grants::grant_bearer(&headers, correlation)?;
     grants::consume(&state.providers, token, "agent", None, None, correlation).await?;
     let started = std::time::Instant::now();
@@ -45,8 +51,8 @@ pub async fn responses(
         .map_err(|_| ApiError::provider_unavailable(correlation))
 }
 
-fn validate_request(value: &Value, model: &str) -> Result<(), ()> {
-    let object = value.as_object().ok_or(())?;
+fn validate_request(value: &Value, model: &str) -> Result<(), &'static str> {
+    let object = value.as_object().ok_or("request_not_object")?;
     let allowed = [
         "model",
         "input",
@@ -85,34 +91,37 @@ fn validate_request(value: &Value, model: &str) -> Result<(), ()> {
         || object
             .get("tool_choice")
             .is_some_and(|value| !matches!(value.as_str(), Some("auto" | "none")))
-        || !valid_cursor_tools(object.get("tools"))
     {
-        return Err(());
+        return Err("request_contract");
     }
-    let input = object.get("input").ok_or(())?;
-    let serialized = serde_json::to_vec(input).map_err(|_| ())?;
-    if serialized.len() > 1_500_000 {
-        return Err(());
+    if !valid_cursor_tools(object.get("tools")) {
+        return Err("cursor_tools");
+    }
+    let input = object.get("input").ok_or("input_missing")?;
+    let serialized = serde_json::to_vec(input).map_err(|_| "input_serialization")?;
+    if serialized.len() > MAX_INPUT_BYTES {
+        return Err("input_too_large");
     }
     let mut images = 0_usize;
     inspect_input(input, &mut images)?;
-    if images > 8 {
-        return Err(());
+    if images > MAX_IMAGES {
+        return Err("too_many_images");
     }
     Ok(())
 }
 
-fn inspect_input(value: &Value, images: &mut usize) -> Result<(), ()> {
+fn inspect_input(value: &Value, images: &mut usize) -> Result<(), &'static str> {
     match value {
         Value::String(text) => {
-            if text.len() > 100_000 || text.starts_with("http://") || text.starts_with("https://") {
-                return Err(());
-            }
             if text.starts_with("data:image/") {
                 *images += 1;
-                if text.len() > 750_000 {
-                    return Err(());
+                if text.len() > MAX_IMAGE_URL_CHARS {
+                    return Err("image_too_large");
                 }
+            } else if text.len() > MAX_TEXT_CHARS {
+                return Err("text_too_large");
+            } else if text.starts_with("http://") || text.starts_with("https://") {
+                return Err("remote_input_url");
             }
         }
         Value::Array(values) => {
@@ -167,9 +176,32 @@ mod tests {
     #[test]
     fn rejects_oversized_or_remote_input_before_upstream_dispatch() {
         let mut request = json!({"model":"guidance","input":"show me","store":false,"max_output_tokens":1024,"parallel_tool_calls":false,"tools":crate::provider::cursor_tools::test_cursor_tools()});
-        request["input"] = json!("x".repeat(1_500_001));
+        request["input"] = json!("x".repeat(MAX_TEXT_CHARS + 1));
+        assert_eq!(
+            validate_request(&request, "guidance"),
+            Err("text_too_large")
+        );
+        request["input"] = json!(format!(
+            "data:image/png;base64,{}",
+            "A".repeat(MAX_IMAGE_URL_CHARS)
+        ));
+        assert_eq!(
+            validate_request(&request, "guidance"),
+            Err("image_too_large")
+        );
+        request["input"] = json!("x".repeat(MAX_INPUT_BYTES + 1));
         assert!(validate_request(&request, "guidance").is_err());
         request["input"] = json!("https://example.com/private-image");
-        assert!(validate_request(&request, "guidance").is_err());
+        assert_eq!(
+            validate_request(&request, "guidance"),
+            Err("remote_input_url")
+        );
+    }
+
+    #[test]
+    fn accepts_bounded_data_image_above_the_text_limit() {
+        let image = format!("data:image/png;base64,{}", "A".repeat(MAX_TEXT_CHARS + 1));
+        let request = json!({"model":"guidance","input":[{"role":"user","content":[{"type":"input_image","image_url":image}]}],"store":false,"max_output_tokens":1024,"parallel_tool_calls":false,"tools":crate::provider::cursor_tools::test_cursor_tools()});
+        assert!(validate_request(&request, "guidance").is_ok());
     }
 }
