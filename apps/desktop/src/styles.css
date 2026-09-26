@@ -1145,6 +1145,123 @@ select {
   }
 }
 
+.voice-panel {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid #506757;
+  border-radius: 18px;
+  background: #f8fff9;
+}
+.voice-heading-row,
+.voice-actions,
+.voice-text-fallback > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.voice-heading-row h2 {
+  margin: 0;
+}
+.voice-phase {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  text-transform: capitalize;
+}
+.voice-shortcut kbd {
+  display: inline-block;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #163b2e;
+  border-bottom-width: 3px;
+  border-radius: 8px;
+  background: white;
+  font: 600 1rem system-ui;
+}
+.voice-text-fallback {
+  margin-top: 1rem;
+}
+.voice-text-fallback label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+.voice-text-fallback input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem;
+  font: inherit;
+}
+.voice-transcript,
+.voice-confirmation {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border-left: 4px solid #147f68;
+  background: white;
+}
+.voice-queue {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px solid #bfd2c5;
+  border-radius: 12px;
+  background: #f1f8f3;
+}
+.voice-queue-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.voice-queue-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.voice-queue-heading span {
+  min-width: 1.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #163b2e;
+  color: white;
+  text-align: center;
+  font-weight: 700;
+}
+.voice-queue p {
+  margin: 0.65rem 0 0;
+  color: #466253;
+}
+.voice-queue ol {
+  margin: 0.75rem 0 0;
+  padding-left: 1.5rem;
+}
+.voice-queue li {
+  padding: 0.55rem 0.25rem;
+  border-top: 1px solid #d7e5da;
+}
+.voice-queue li:first-child {
+  border-top: 0;
+}
+.voice-confirmation {
+  border-left-color: #b16900;
+}
+.voice-error {
+  color: #9b1c1c;
+}
+.voice-recovery {
+  color: #5b4824;
+}
+.link-button {
+  background: transparent;
+  color: #075f50;
+  text-decoration: underline;
+  padding: 0;
+}
+@media (max-width: 640px) {
+  .voice-heading-row,
+  .voice-text-fallback > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .teaching-panel {
   margin: 2rem 0;
   padding: 1.5rem;
@@ -1306,11 +1423,86 @@ select {
   background: #fff;
   overflow: hidden;
 }
+html.transparent-window,
+html.transparent-window body,
+html.transparent-window #root,
 body.overlay-page,
 body.overlay-page #root {
   background: transparent;
   margin: 0;
   overflow: hidden;
+}
+body.voice-hud-page,
+body.voice-hud-page #root {
+  background: transparent;
+  margin: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+.voice-hud {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 86px;
+  height: 34px;
+  margin: 3px auto;
+  border: 1px solid #ffffff2e;
+  border-radius: 999px;
+  background: #050505f5;
+  box-shadow: 0 6px 18px #0005;
+}
+.voice-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 18px;
+}
+.voice-wave i {
+  width: 2px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fff;
+  transform-origin: center;
+}
+.voice-hud-listening .voice-wave i {
+  animation: voice-wave 620ms ease-in-out infinite alternate;
+}
+.voice-hud-transcribing .voice-wave,
+.voice-hud-dispatching .voice-wave {
+  animation: voice-breathe 900ms ease-in-out infinite;
+}
+.voice-hud-confirmation .voice-wave i,
+.voice-hud-failed .voice-wave i {
+  background: #ffc35c;
+}
+.voice-wave i:nth-child(2n) {
+  height: 12px;
+  animation-delay: -180ms;
+}
+.voice-wave i:nth-child(3n) {
+  height: 16px;
+  animation-delay: -360ms;
+}
+.voice-wave i:nth-child(5n) {
+  height: 10px;
+  animation-delay: -90ms;
+}
+@keyframes voice-wave {
+  from {
+    transform: scaleY(0.45);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes voice-breathe {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.94);
+  }
 }
 @keyframes cue-pulse {
   to {
@@ -1318,7 +1510,10 @@ body.overlay-page #root {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cue-pulse {
+  .cue-pulse,
+  .voice-hud-listening .voice-wave i,
+  .voice-hud-transcribing .voice-wave,
+  .voice-hud-dispatching .voice-wave {
     animation: none;
   }
 }

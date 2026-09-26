@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, RootModel, confloat, conint, 
 
 
 class ProtocolVersion(IntEnum):
-    integer_2 = 2
+    integer_3 = 3
 
 
 class Kind(Enum):
@@ -41,6 +41,7 @@ class Kind1(Enum):
 
 class Capability(Enum):
     diagnostic = 'diagnostic'
+    selected_window_actions = 'selected_window_actions'
 
 
 class RuntimeReady(BaseModel):
@@ -59,7 +60,7 @@ class RuntimeReady(BaseModel):
     )
     kind: Kind1
     schemaDigest: constr(pattern=r'^[0-9a-f]{64}$')
-    capabilities: list[Capability] = Field(..., max_length=1)
+    capabilities: list[Capability] = Field(..., max_length=2)
 
 
 class Kind2(Enum):
@@ -787,6 +788,272 @@ class Kind30(Enum):
     runtime_planControlResult = 'runtime.planControlResult'
 
 
+class PreparedInstruction(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    preparationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    utteranceId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    target: Target
+    expiresAt: constr(min_length=20, max_length=40)
+
+
+class Kind31(Enum):
+    runtime_prepareInstruction = 'runtime.prepareInstruction'
+
+
+class RuntimePrepareInstruction(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind31
+    utteranceId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+
+
+class Kind32(Enum):
+    runtime_instructionPrepared = 'runtime.instructionPrepared'
+
+
+class RuntimeInstructionPrepared(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind32
+    prepared: PreparedInstruction
+
+
+class Kind33(Enum):
+    runtime_executeInstruction = 'runtime.executeInstruction'
+
+
+class ModelConfig1(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    origin: constr(max_length=2048)
+    grant: constr(pattern=r'^[0-9a-f]{64}$')
+    model: constr(min_length=1, max_length=128)
+
+
+class RuntimeExecuteInstruction(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind33
+    utteranceId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    preparationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    instruction: constr(min_length=1, max_length=2000)
+    modelConfig: ModelConfig1
+
+
+class Kind34(Enum):
+    runtime_instructionAccepted = 'runtime.instructionAccepted'
+
+
+class RuntimeInstructionAccepted(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind34
+    runId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+
+
+class Kind35(Enum):
+    runtime_actionDecision = 'runtime.actionDecision'
+
+
+class Decision(Enum):
+    approve = 'approve'
+    reject = 'reject'
+
+
+class RuntimeActionDecision(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind35
+    runId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    confirmationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    decision: Decision
+
+
+class Kind36(Enum):
+    runtime_actionDecisionResult = 'runtime.actionDecisionResult'
+
+
+class RuntimeActionDecisionResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind36
+    accepted: bool
+
+
+class Kind37(Enum):
+    runtime_cancelAction = 'runtime.cancelAction'
+
+
+class RuntimeCancelAction(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind37
+    runId: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    )
+
+
+class Kind38(Enum):
+    runtime_actionCancelResult = 'runtime.actionCancelResult'
+
+
+class RuntimeActionCancelResult(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    requestId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    correlationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind38
+    cancelled: bool
+
+
+class Kind39(Enum):
+    runtime_actionStatus = 'runtime.actionStatus'
+
+
+class Phase1(Enum):
+    executing = 'executing'
+    confirmation = 'confirmation'
+    completed = 'completed'
+    failed = 'failed'
+    cancelled = 'cancelled'
+
+
+class RuntimeActionStatus(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    protocolVersion: ProtocolVersion
+    generationId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    kind: Kind39
+    eventId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    runId: constr(
+        pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    )
+    revision: conint(ge=1, le=9007199254740991)
+    phase: Phase1
+    summary: constr(max_length=256)
+    actionsUsed: conint(ge=0, le=12)
+    confirmationId: (
+        constr(
+            pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        )
+        | None
+    )
+    confirmationReason: constr(max_length=256) | None
+
+
 class TeachingState(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -1003,6 +1270,15 @@ class RuntimeMessage(
         | RuntimeRefreshCueResult
         | RuntimePlanControl
         | RuntimePlanControlResult
+        | RuntimePrepareInstruction
+        | RuntimeInstructionPrepared
+        | RuntimeExecuteInstruction
+        | RuntimeInstructionAccepted
+        | RuntimeActionDecision
+        | RuntimeActionDecisionResult
+        | RuntimeCancelAction
+        | RuntimeActionCancelResult
+        | RuntimeActionStatus
     ]
 ):
     root: (
@@ -1037,4 +1313,13 @@ class RuntimeMessage(
         | RuntimeRefreshCueResult
         | RuntimePlanControl
         | RuntimePlanControlResult
+        | RuntimePrepareInstruction
+        | RuntimeInstructionPrepared
+        | RuntimeExecuteInstruction
+        | RuntimeInstructionAccepted
+        | RuntimeActionDecision
+        | RuntimeActionDecisionResult
+        | RuntimeCancelAction
+        | RuntimeActionCancelResult
+        | RuntimeActionStatus
     ) = Field(..., title='RuntimeMessage')

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections import deque
+from collections.abc import Awaitable, Callable
 from dataclasses import asdict, replace
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
@@ -21,7 +24,11 @@ if TYPE_CHECKING:
 
 
 class TeachingSession:
-    def __init__(self, source: ObservationSource | None = None) -> None:
+    def __init__(
+        self,
+        source: ObservationSource | None = None,
+        event_sink: Callable[[dict[str, Any]], Awaitable[None]] | None = None,
+    ) -> None:
         self.source = source
         self.agent: GuidanceAgent | None = None
         self.model_config: dict[str, str] | None = None
@@ -45,6 +52,13 @@ class TeachingSession:
             "reason": "none",
         }
         self.timings: deque[dict[str, Any]] = deque(maxlen=200)
+        self.event_sink = event_sink
+        self.prepared: dict[str, Any] | None = None
+        self.action_task: asyncio.Task[None] | None = None
+        self.action_cancelled: asyncio.Event | None = None
+        self.action_guard: Any | None = None
+        self.action_run_id: str | None = None
+        self.action_revision = 0
 
     def measure(self, phase: str, started: float) -> None:
         self.timings.append(
@@ -106,6 +120,150 @@ class TeachingSession:
     def record(self, kind: Any, **metadata: str) -> None:
         if self.store is not None and self.session_id is not None:
             self.store.append(str(uuid4()), self.session_id, kind, metadata)
+
+    async def prepare_instruction(self, request: dict[str, Any]) -> dict[str, Any]:
+        if self.action_task is not None and not self.action_task.done():
+            raise ValueError("An action is already running.")
+        if self.source is None:
+            self.source = CuaObservationSource()
+        if not isinstance(self.source, CuaObservationSource):
+            targets = await self.source.list_targets()
+            if not targets:
+                raise ValueError("No eligible external window is available.")
+            target = targets[0]
+        else:
+            target = await self.source.frontmost_target()
+        observation = await self.source.observe(target, include_image=True)
+        preparation_id = str(uuid4())
+        self.prepared = {
+            "preparationId": preparation_id,
+            "utteranceId": request["utteranceId"],
+            "target": observation.target,
+            "expires": time.monotonic() + 90,
+        }
+        return {
+            "preparationId": preparation_id,
+            "utteranceId": request["utteranceId"],
+            "target": asdict(observation.target),
+            "expiresAt": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        }
+
+    async def execute_instruction(self, request: dict[str, Any]) -> str:
+        prepared = self.prepared
+        if (
+            prepared is None
+            or prepared["preparationId"] != request["preparationId"]
+            or prepared["utteranceId"] != request["utteranceId"]
+            or prepared["expires"] <= time.monotonic()
+            or self.action_task is not None
+        ):
+            raise ValueError("Instruction preparation is no longer current.")
+        if not request["instruction"].strip():
+            raise ValueError("Instruction is empty.")
+        from tro_runtime.action_agent import ComputerActionAgent
+        from tro_runtime.action_run import ActionGuard
+        from tro_runtime.computer import SelectedWindowComputer
+        from tro_runtime.model_client import create_model
+
+        if not isinstance(self.source, CuaObservationSource):
+            raise ValueError("Direct computer control requires the native CUA source.")
+
+        run_id = str(uuid4())
+        self.action_run_id = run_id
+        self.action_revision = 0
+        cancelled = asyncio.Event()
+        self.action_cancelled = cancelled
+
+        async def event(partial: dict[str, object]) -> None:
+            self.action_revision += 1
+            if self.event_sink is not None:
+                await self.event_sink(
+                    {
+                        "protocolVersion": request["protocolVersion"],
+                        "generationId": request["generationId"],
+                        "kind": "runtime.actionStatus",
+                        "eventId": str(uuid4()),
+                        "runId": run_id,
+                        "revision": self.action_revision,
+                        "phase": partial["phase"],
+                        "summary": partial.get("summary", ""),
+                        "actionsUsed": partial.get("actionsUsed", 0),
+                        "confirmationId": partial.get("confirmationId"),
+                        "confirmationReason": partial.get("confirmationReason"),
+                    }
+                )
+
+        guard = ActionGuard(run_id, event)
+        self.action_guard = guard
+        computer = SelectedWindowComputer(self.source, prepared["target"], guard.confirm, cancelled)
+        config = request["modelConfig"]
+        agent = ComputerActionAgent(
+            create_model(config["origin"], config["grant"], config["model"]), computer, guard
+        )
+
+        async def run() -> None:
+            await event({"phase": "executing", "summary": "Working in the selected window."})
+            outcome = "failed"
+            terminal = {
+                "phase": "failed",
+                "summary": "The selected-window instruction could not be completed.",
+                "actionsUsed": computer.actions_used,
+            }
+            try:
+                await agent.run(request["instruction"])
+                outcome = "completed"
+                terminal = {
+                    "phase": "completed",
+                    "summary": "Instruction completed.",
+                    "actionsUsed": computer.actions_used,
+                }
+            except asyncio.CancelledError:
+                outcome = "cancelled"
+                terminal = {
+                    "phase": "cancelled",
+                    "summary": "Instruction cancelled.",
+                    "actionsUsed": computer.actions_used,
+                }
+            except Exception:
+                pass
+            finally:
+                self.record("action_outcome", run_id=run_id, outcome=outcome)
+                self.prepared = None
+                self.action_guard = None
+                self.action_cancelled = None
+                self.action_run_id = None
+                self.action_task = None
+            # Publish terminal state only after the runtime can accept a fresh
+            # preparation, so the desktop FIFO can dispatch its next item.
+            terminal["actionsUsed"] = computer.actions_used
+            await event(terminal)
+
+        self.action_task = asyncio.create_task(run())
+        return run_id
+
+    def decide_action(self, run_id: str, confirmation_id: str, approved: bool) -> bool:
+        if self.action_run_id != run_id or self.action_guard is None:
+            return False
+        accepted = bool(self.action_guard.decide(confirmation_id, approved))
+        if accepted:
+            self.record(
+                "action_decision",
+                run_id=run_id,
+                confirmation_id=confirmation_id,
+                decision="approved" if approved else "rejected",
+            )
+        return accepted
+
+    async def cancel_action(self, run_id: str | None = None) -> bool:
+        if self.action_task is None or (run_id is not None and self.action_run_id != run_id):
+            return False
+        if self.action_cancelled is not None:
+            self.action_cancelled.set()
+        if self.action_guard is not None:
+            self.action_guard.cancel()
+        self.action_task.cancel()
+        await asyncio.gather(self.action_task, return_exceptions=True)
+        return True
 
     def projection(self, session_id: str | None) -> dict[str, Any]:
         self.revision += 1
@@ -344,6 +502,7 @@ class TeachingSession:
             )
 
     async def close(self) -> None:
+        await self.cancel_action()
         self.progress = None
         self.objective = ""
         self.replans_remaining = 0

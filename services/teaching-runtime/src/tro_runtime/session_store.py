@@ -20,6 +20,8 @@ EvidenceKind = Literal[
     "check_mismatch",
     "check_unknown",
     "check_interrupted",
+    "action_outcome",
+    "action_decision",
 ]
 KINDS = frozenset(
     {
@@ -34,6 +36,8 @@ KINDS = frozenset(
         "check_mismatch",
         "check_unknown",
         "check_interrupted",
+        "action_outcome",
+        "action_decision",
     }
 )
 
@@ -64,14 +68,14 @@ class SessionStore:
         try:
             self._db = sqlite3.connect(directory / "sessions.sqlite3", timeout=2)
             version = self._db.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1):
+            if version not in (0, 1, 2):
                 raise ValueError("Unsupported session store version.")
             self._db.execute("PRAGMA journal_mode=WAL")
             self._db.execute("PRAGMA synchronous=FULL")
             self._db.execute("""CREATE TABLE IF NOT EXISTS evidence (
                 id TEXT PRIMARY KEY, session_id TEXT NOT NULL, kind TEXT NOT NULL,
                 recorded_at REAL NOT NULL, metadata TEXT NOT NULL)""")
-            self._db.execute("PRAGMA user_version=1")
+            self._db.execute("PRAGMA user_version=2")
             self._db.commit()
             (directory / "sessions.sqlite3").chmod(0o600)
             unfinished = self._db.execute(
@@ -104,7 +108,17 @@ class SessionStore:
             raise ValueError("Unknown evidence source.")
         # Persist identifiers/outcomes only; never screenshots, raw AX trees, or credentials.
         if not set(metadata).issubset(
-            {"cue_id", "observation_id", "check_id", "outcome", "plan_id", "step_index"}
+            {
+                "cue_id",
+                "observation_id",
+                "check_id",
+                "outcome",
+                "plan_id",
+                "step_index",
+                "run_id",
+                "confirmation_id",
+                "decision",
+            }
         ):
             raise ValueError("Evidence metadata contains unsupported fields.")
         body = json.dumps(metadata, allow_nan=False, sort_keys=True)

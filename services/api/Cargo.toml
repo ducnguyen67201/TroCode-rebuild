@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 publish = false
 [dependencies]
-axum = "=0.8.6"
+axum = { version = "=0.8.6", features = ["multipart"] }
 tokio.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -24,6 +24,7 @@ sha2 = "=0.10.9"
 jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["aws_lc_rs"] }
 object_store = { version = "=0.14.2", features = ["aws"] }
 url = "=2.5.7"
+hound = "=3.5.1"
 tro-api-migration = { path = "migration" }
 tro-contracts = { path = "../../packages/contracts" }
 [dev-dependencies]

@@ -68,6 +68,39 @@ async fn run_hosted() -> Result<(), &'static str> {
                 .await
                 .map_err(|_| "Hosted migration failed.")
         }
+        "seed-local-workspace" => {
+            if std::env::var("TRO_ALLOW_LOCAL_WORKSPACE_SEED").as_deref() != Ok("1")
+                || url::Url::parse(&config.database_url)
+                    .ok()
+                    .and_then(|database| database.host_str().map(str::to_owned))
+                    .as_deref()
+                    != Some("127.0.0.1")
+            {
+                return Err("Local workspace seed requires an explicit loopback database.");
+            }
+            let email = std::env::args()
+                .nth(2)
+                .ok_or("Local workspace seed requires an email.")?;
+            let workspace_name = std::env::args()
+                .nth(3)
+                .ok_or("Local workspace seed requires a workspace name.")?;
+            tro_api::workspace::seed_local_development_workspace(
+                &state.database,
+                tro_api::workspace::LocalDevelopmentWorkspaceSeed {
+                    owner_account_id: uuid::Uuid::from_u128(
+                        0x8c13_7e2d_e35e_4cf8_8c54_31d8_b385_79a1,
+                    ),
+                    owner_membership_id: uuid::Uuid::from_u128(
+                        0x4f98_adce_fa06_48c0_a42c_ab2c_2b62_743e,
+                    ),
+                    workspace_id: uuid::Uuid::from_u128(0xd0af_b9d5_ed0d_4e44_8b12_4ae3_62d4_e45f),
+                    workspace_name: &workspace_name,
+                    member_email: &email,
+                },
+            )
+            .await
+            .map_err(|_| "Unable to seed the local development workspace.")
+        }
         "serve" => {
             let listener = tokio::net::TcpListener::bind(config.bind)
                 .await
@@ -79,6 +112,6 @@ async fn run_hosted() -> Result<(), &'static str> {
                 .await
                 .map_err(|_| "Hosted API stopped unexpectedly.")
         }
-        _ => Err("Hosted mode supports serve or migrate."),
+        _ => Err("Hosted mode supports serve, migrate, or seed-local-workspace."),
     }
 }

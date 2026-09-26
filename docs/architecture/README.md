@@ -2,7 +2,8 @@
 
 This directory explains the implementation. [The master specification](../rebuild-architecture.md)
 remains authoritative for requirements, product decisions and P0–P9 acceptance.
-The learner performs every external-app action (F10).
+F10 guided teaching is observation-only; F11 is a separate, explicit,
+selected-window voice/text control mode with bounded actions and confirmation.
 
 ## Read in this order
 
@@ -24,7 +25,7 @@ flowchart TB
     Session[TeachingSession]
     Planner[GuidanceAgent / local Agents SDK]
     Progress[PlanProgress / local deterministic checks]
-    CUA[Read-only CUA observation]
+    CUA[Bounded selected-window CUA]
     DB[(SQLite evidence)]
     Overlay[Click-through visual overlay]
     UI <--> Host
@@ -44,8 +45,10 @@ flowchart TB
   App --> CUA
 ```
 
-The agent loop runs locally. Model inference is remote. Guidance is visual: no
-real pointer motion, input injection, app launch or focus control is exposed.
+The agent loop runs locally and model inference is remote. F10 guidance remains
+visual: no real pointer motion, input injection, app launch or focus control is
+exposed. F11 exposes only a Python-owned selected-window ComputerTool adapter;
+React never receives raw input tools, audio or provider credentials.
 
 See [Reliable native lesson](reliable-lesson.md) for recovery, proof provisioning,
 readiness and the manual acceptance evidence workflow.

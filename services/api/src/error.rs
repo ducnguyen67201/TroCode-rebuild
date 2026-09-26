@@ -110,6 +110,60 @@ impl ApiError {
             true,
         )
     }
+    pub fn provider_grant_conflict(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::CONFLICT,
+            "PROVIDER_GRANT_EXISTS",
+            "Model access was already prepared for this instruction.",
+            id,
+            false,
+        )
+    }
+    pub fn provider_unauthorized(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::UNAUTHORIZED,
+            "PROVIDER_GRANT_INVALID",
+            "Model access has expired. Retry the instruction.",
+            id,
+            false,
+        )
+    }
+    pub fn provider_budget(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::TOO_MANY_REQUESTS,
+            "PROVIDER_BUDGET_EXHAUSTED",
+            "This instruction reached its model budget.",
+            id,
+            false,
+        )
+    }
+    pub fn provider_sequence(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::CONFLICT,
+            "TRANSCRIPTION_SEQUENCE_INVALID",
+            "The voice instruction is incomplete. Retry it.",
+            id,
+            false,
+        )
+    }
+    pub fn provider_invalid(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::BAD_REQUEST,
+            "PROVIDER_REQUEST_INVALID",
+            "The model request is invalid.",
+            id,
+            false,
+        )
+    }
+    pub fn provider_unavailable(id: Uuid) -> Self {
+        Self::new(
+            StatusCode::BAD_GATEWAY,
+            "PROVIDER_UNAVAILABLE",
+            "Model service is temporarily unavailable. Try again.",
+            id,
+            true,
+        )
+    }
     pub fn workspace_invalid_request(id: Uuid) -> Self {
         Self::new(
             StatusCode::BAD_REQUEST,

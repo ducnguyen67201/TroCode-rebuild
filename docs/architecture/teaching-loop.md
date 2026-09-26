@@ -13,6 +13,13 @@ in the planning observation. Future targets may appear after earlier steps.
 Plans never contain executable native actions. Visual regions are bound to their
 planning screenshot; see [visual targeting](visual-targeting.md) for freshness rules.
 
+F11 is a separate path, not an executable teaching plan. Chord-down pins and
+observes one frontmost window while Rust captures rolling completed audio files.
+Release freezes the final transcript once, then starts one bounded ComputerTool
+run. Partial transcripts never enter the agent. Consequential work suspends the
+same live task for a one-shot main-window decision; it is never converted into a
+durable plan or replayed after failure.
+
 The controller takes a fresh observation before presenting. Every later cue is
 resolved again against the selected window. Duplicate or missing semantic targets
 never become guessed coordinates.

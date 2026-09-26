@@ -3,6 +3,7 @@ import protocolSchema from '../schema/protocol.schema.json';
 import statusSchema from '../schema/status.schema.json';
 import authSchema from '../schema/auth.schema.json';
 import workspaceSchema from '../schema/workspace.schema.json';
+import voiceSchema from '../schema/voice.schema.json';
 import type { TeachingState, RuntimeMessage } from './generated';
 import type { RuntimeStatus } from './generated-status';
 import type { AuthStatus } from './generated-auth';
@@ -10,6 +11,7 @@ import type {
   WorkspaceMember,
   WorkspaceMemberList,
 } from './generated-workspace';
+import type { VoiceStatus } from './generated-voice';
 const ajv = new Ajv({
   strict: true,
   allowUnionTypes: true,
@@ -24,6 +26,7 @@ const workspaceMemberValidator = ajv.compile<WorkspaceMember>({
   $ref: '#/definitions/WorkspaceMember',
   definitions: workspaceSchema.definitions,
 });
+const voiceStatusValidator = ajv.compile<VoiceStatus>(voiceSchema);
 export function parseMessage(value: unknown): RuntimeMessage {
   if (!messageValidator(value)) throw new Error('Invalid runtime message');
   return value;
@@ -47,6 +50,11 @@ export function parseWorkspaceMemberList(value: unknown): WorkspaceMemberList {
 export function parseWorkspaceMember(value: unknown): WorkspaceMember {
   if (!workspaceMemberValidator(value))
     throw new Error('Invalid workspace member');
+  return value;
+}
+
+export function parseVoiceStatus(value: unknown): VoiceStatus {
+  if (!voiceStatusValidator(value)) throw new Error('Invalid voice status');
   return value;
 }
 

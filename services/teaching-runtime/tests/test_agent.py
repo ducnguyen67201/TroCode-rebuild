@@ -22,6 +22,20 @@ def test_private_model_origin_is_bounded(origin):
         create_model(origin, "grant", "model")
 
 
+def test_private_model_allows_exact_loopback_http_only_when_native_debug_enables_it(
+    monkeypatch,
+):
+    origin = "http://127.0.0.1:4319"
+    monkeypatch.delenv("TRO_RUNTIME_ALLOW_LOOPBACK_HTTP", raising=False)
+    with pytest.raises(ValueError):
+        create_model(origin, "grant", "model")
+
+    monkeypatch.setenv("TRO_RUNTIME_ALLOW_LOOPBACK_HTTP", "1")
+    assert create_model(origin, "grant", "model").model == "model"
+    with pytest.raises(ValueError):
+        create_model("http://localhost:4319", "grant", "model")
+
+
 def test_planner_is_bounded_structured_and_observation_only(monkeypatch):
     from test_planning import step
 

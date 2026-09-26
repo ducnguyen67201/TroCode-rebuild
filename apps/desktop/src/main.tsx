@@ -8,8 +8,11 @@ import type { PreviewAuthScenario } from './platform/preview-client';
 import type { PreviewWorkspaceRole } from './platform/preview-client';
 import { tauriClient } from './platform/tauri-client';
 import './styles.css';
+import { VoiceHud } from './features/voice/VoiceHud';
 // Preview is explicitly requested by the dev:ui command, never a bridge fallback.
 const search = new URLSearchParams(location.search);
+if (search.has('voiceHud') || search.has('overlay'))
+  document.documentElement.classList.add('transparent-window');
 const previewScenario = search.get('auth');
 const previewWorkspaceRole = search.get('workspaceRole');
 const client =
@@ -25,7 +28,9 @@ const client =
     : tauriClient;
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {search.has('overlay') ? (
+    {search.has('voiceHud') ? (
+      <VoiceHud />
+    ) : search.has('overlay') ? (
       <OverlayWindow />
     ) : (
       <AuthGate auth={client.auth} preview={client.preview}>

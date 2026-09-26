@@ -5,6 +5,12 @@ import { createHash, randomUUID } from 'node:crypto';
 import { spawn, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { staging, filesUnder } from './package-runtime.mjs';
+const infoPlist = await readFile(
+  join(process.cwd(), 'apps/desktop/src-tauri/Info.plist'),
+  'utf8',
+);
+if (!infoPlist.includes('<key>NSMicrophoneUsageDescription</key>'))
+  throw new Error('Packaged macOS microphone purpose string is missing.');
 const manifest = JSON.parse(
   await readFile(join(staging, 'manifest.json'), 'utf8'),
 );
@@ -52,7 +58,7 @@ try {
     let ready = false;
     const generationId = randomUUID();
     const frame = (kind) => ({
-      protocolVersion: 2,
+      protocolVersion: 3,
       kind: `runtime.${kind}`,
       requestId: randomUUID(),
       correlationId: randomUUID(),

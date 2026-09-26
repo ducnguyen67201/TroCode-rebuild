@@ -1,0 +1,17 @@
+[
+  {
+    "name": "english settings",
+    "chunks": ["open the settings", "the settings page"],
+    "expected": "open the settings page"
+  },
+  {
+    "name": "vietnamese punctuation",
+    "chunks": ["mở phần cài đặt", "cài đặt, rồi cuộn xuống"],
+    "expected": "mở phần cài đặt, rồi cuộn xuống"
+  },
+  {
+    "name": "natural repeated word",
+    "chunks": ["move down down", "down one item"],
+    "expected": "move down down one item"
+  }
+]

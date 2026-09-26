@@ -5,6 +5,7 @@ import { RuntimeStatus } from './features/runtime/RuntimeStatus';
 import type { AuthenticatedContext } from './features/auth/AuthGate';
 import { WorkspaceAccessPanel } from './features/workspace/WorkspaceAccessPanel';
 import { AppSidebar, type AppSection } from './features/navigation/AppSidebar';
+import { VoiceControlPanel } from './features/voice/VoiceControlPanel';
 
 export function App({
   client,
@@ -59,6 +60,7 @@ export function App({
                 <p className="preview">Preview — simulated runtime</p>
               )}
               <RuntimeStatus client={client} />
+              <VoiceControlPanel client={client.voice} />
               <TeachingPanel client={client} />
             </>
           )}

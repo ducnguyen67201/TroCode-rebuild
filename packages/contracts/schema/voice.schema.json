@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VoiceStatus",
+  "type": "object",
+  "properties": {
+    "phase": {
+      "type": "string",
+      "enum": [
+        "disabled",
+        "idle",
+        "listening",
+        "transcribing",
+        "dispatching",
+        "executing",
+        "confirmation",
+        "completed",
+        "cancelled",
+        "failed"
+      ]
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "utteranceId": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "runId": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "partialTranscript": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "finalTranscript": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "queuedInstructions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      },
+      "maxItems": 4
+    },
+    "targetTitle": {
+      "type": ["string", "null"],
+      "maxLength": 256
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "shortcut": {
+      "type": "string",
+      "enum": ["Command+Control", "Left Control+Left Alt", "Unavailable"]
+    },
+    "permissions": {
+      "$ref": "#/definitions/VoicePermissions"
+    },
+    "confirmation": {
+      "anyOf": [
+        { "$ref": "#/definitions/VoiceConfirmation" },
+        { "type": "null" }
+      ]
+    },
+    "actionsUsed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 12
+    }
+  },
+  "required": [
+    "phase",
+    "revision",
+    "utteranceId",
+    "runId",
+    "partialTranscript",
+    "finalTranscript",
+    "queuedInstructions",
+    "targetTitle",
+    "message",
+    "shortcut",
+    "permissions",
+    "confirmation",
+    "actionsUsed"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "PermissionState": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "notNeeded",
+        "prompt",
+        "granted",
+        "denied",
+        "unavailable"
+      ]
+    },
+    "VoicePermissions": {
+      "title": "VoicePermissions",
+      "type": "object",
+      "properties": {
+        "microphone": { "$ref": "#/definitions/PermissionState" },
+        "keyboardMonitoring": { "$ref": "#/definitions/PermissionState" },
+        "ready": { "type": "boolean" },
+        "recovery": { "type": "string", "maxLength": 256 }
+      },
+      "required": ["microphone", "keyboardMonitoring", "ready", "recovery"],
+      "additionalProperties": false
+    },
+    "VoiceConfirmation": {
+      "title": "VoiceConfirmation",
+      "type": "object",
+      "properties": {
+        "confirmationId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 256 }
+      },
+      "required": ["confirmationId", "summary"],
+      "additionalProperties": false
+    }
+  }
+}

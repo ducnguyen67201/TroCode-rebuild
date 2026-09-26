@@ -1,7 +1,7 @@
 {
   "identifier": "teaching-overlay",
   "description": "Presentation only; no runtime, account or native control authority.",
-  "windows": ["teaching-overlay-*"],
+  "windows": ["teaching-overlay-*", "voice-hud"],
   "permissions": [
     "core:event:allow-listen",
     "core:event:allow-unlisten",

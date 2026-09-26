@@ -34,7 +34,48 @@ pub fn prepare(app: &tauri::AppHandle) -> Result<(), WorkerError> {
             WorkerError::new("NOT_READY", "Click-through presentation unavailable.")
         })?;
     }
+    let hud = tauri::WebviewWindowBuilder::new(
+        app,
+        "voice-hud",
+        tauri::WebviewUrl::App("index.html?voiceHud=1".into()),
+    )
+    .title("Tro voice status")
+    .inner_size(92.0, 40.0)
+    .decorations(false)
+    .transparent(true)
+    .shadow(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .focusable(false)
+    .focused(false)
+    .visible(false)
+    .content_protected(true)
+    .build()
+    .map_err(|_| WorkerError::new("NOT_READY", "Voice status display unavailable."))?;
+    hud.set_ignore_cursor_events(true)
+        .map_err(|_| WorkerError::new("NOT_READY", "Voice status display unavailable."))?;
+    position_voice_hud(app, &hud);
     Ok(())
+}
+
+fn position_voice_hud(app: &tauri::AppHandle, hud: &tauri::WebviewWindow) {
+    let monitor = app
+        .get_webview_window("main")
+        .and_then(|main| main.current_monitor().ok().flatten())
+        .or_else(|| hud.current_monitor().ok().flatten());
+    let Some(monitor) = monitor else {
+        let _ = hud.center();
+        return;
+    };
+    let scale = monitor.scale_factor();
+    let logical_width = 92.0_f64;
+    let physical_width = (logical_width * scale).round().max(1.0) as u32;
+    let top_margin = (18.0_f64 * scale).round() as i32;
+    let monitor_position = monitor.position();
+    let monitor_size = monitor.size();
+    let x = monitor_position.x + monitor_size.width.saturating_sub(physical_width) as i32 / 2;
+    let y = monitor_position.y + top_margin;
+    let _ = hud.set_position(tauri::PhysicalPosition::new(x, y));
 }
 
 pub fn hide(app: &tauri::AppHandle) {
@@ -47,11 +88,34 @@ pub fn hide(app: &tauri::AppHandle) {
             values.clear();
         }
         for (label, window) in handle.webview_windows() {
-            if label.starts_with("teaching-overlay-") {
+            if label.starts_with("teaching-overlay-") || label == "voice-hud" {
                 let _ = window.hide();
             }
         }
     });
+}
+
+pub fn show_voice(app: &tauri::AppHandle, status: &crate::voice::VoiceStatus) {
+    let handle = app.clone();
+    let status = status.clone();
+    let _ = app.run_on_main_thread(move || {
+        let Some(window) = handle.get_webview_window("voice-hud") else { return; };
+        let visible = voice_hud_visible(&status.phase);
+        if visible {
+            position_voice_hud(&handle, &window);
+            let _ = window.emit("voice-hud-status", serde_json::json!({"phase":status.phase,"revision":status.revision,"message":status.message}));
+            let _ = window.show();
+        } else {
+            let _ = window.hide();
+        }
+    });
+}
+
+fn voice_hud_visible(phase: &str) -> bool {
+    matches!(
+        phase,
+        "listening" | "transcribing" | "dispatching" | "executing" | "confirmation"
+    )
 }
 
 pub fn epoch(app: &tauri::AppHandle) -> u64 {
@@ -199,6 +263,27 @@ fn present_on_main(
 pub struct OverlayState {
     values: std::sync::Mutex<std::collections::HashMap<String, Value>>,
     epoch: std::sync::atomic::AtomicU64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::voice_hud_visible;
+
+    #[test]
+    fn voice_hud_exists_only_for_active_or_confirmation_states() {
+        for phase in [
+            "listening",
+            "transcribing",
+            "dispatching",
+            "executing",
+            "confirmation",
+        ] {
+            assert!(voice_hud_visible(phase));
+        }
+        for phase in ["disabled", "ready", "failed", "completed", "cancelled"] {
+            assert!(!voice_hud_visible(phase));
+        }
+    }
 }
 
 #[tauri::command]

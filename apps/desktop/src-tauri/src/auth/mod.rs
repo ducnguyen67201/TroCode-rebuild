@@ -217,6 +217,40 @@ impl AuthManager {
         }
     }
 
+    pub async fn provider_grant(
+        &self,
+        subject_id: uuid::Uuid,
+        voice: bool,
+    ) -> Result<(api_client::ProviderGrant, String), WorkerError> {
+        self.require_workspace_access().await?;
+        let (api, access_token) = self.session_access().await?;
+        let origin = api.provider_origin();
+        api.provider_grant(&access_token, subject_id, voice)
+            .await
+            .map(|grant| (grant, origin))
+            .map_err(|error| authenticated_request_failure(&error))
+    }
+
+    pub async fn transcribe(
+        &self,
+        grant: &str,
+        sequence: u32,
+        duration_ms: u64,
+        final_chunk: bool,
+        prompt: &str,
+        wav: Vec<u8>,
+    ) -> Result<api_client::ChunkTranscript, WorkerError> {
+        let (api, _) = self.session_access().await?;
+        api.transcribe(grant, sequence, duration_ms, final_chunk, prompt, wav)
+            .await
+            .map_err(|_| {
+                WorkerError::new(
+                    "TRANSCRIPTION_UNAVAILABLE",
+                    "Voice transcription is unavailable. Retry explicitly.",
+                )
+            })
+    }
+
     pub async fn workspace_members(
         &self,
         workspace_id: &str,

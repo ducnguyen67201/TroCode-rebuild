@@ -19,6 +19,12 @@ fn main() {
             "proof_connect",
             "overlay_current",
             "observation_permissions",
+            "voice_status",
+            "voice_enable",
+            "voice_disable",
+            "voice_execute_text",
+            "voice_cancel",
+            "voice_decide",
         ]),
     ))
     .expect("Tauri build configuration");

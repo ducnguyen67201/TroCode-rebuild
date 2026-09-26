@@ -22,13 +22,34 @@ TEACHING_REQUESTS = frozenset(
         "runtime.configure",
         "runtime.refreshCue",
         "runtime.planControl",
+        "runtime.prepareInstruction",
+        "runtime.executeInstruction",
+        "runtime.actionDecision",
     }
 )
 
 
+def safe_failure_details(kind: str) -> tuple[str, str]:
+    """Return a diagnostic category that never includes native/provider details."""
+    if kind == "runtime.prepareInstruction":
+        return (
+            "NOT_READY",
+            "Selected-window observation is unavailable. Check observation permissions.",
+        )
+    if kind == "runtime.executeInstruction":
+        return (
+            "NOT_READY",
+            "The selected-window action could not start.",
+        )
+    return (
+        "NOT_READY",
+        "Observation or guidance is unavailable. Retry explicitly.",
+    )
+
+
 async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
     runtime = Runtime()
-    teaching = TeachingSession()
+    teaching: TeachingSession
     loop = asyncio.get_running_loop()
     ordinary: asyncio.Queue[dict[str, Any]] = asyncio.Queue(32)
     controls: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue(4)
@@ -38,6 +59,11 @@ async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
     def write(value: dict[str, Any]) -> None:
         destination.write(encode_message(value))
         destination.flush()
+
+    async def emit(value: dict[str, Any]) -> None:
+        write(value)
+
+    teaching = TeachingSession(event_sink=emit)
 
     def failure(request: dict[str, Any], code: str, message: str) -> dict[str, Any]:
         return {
@@ -57,13 +83,14 @@ async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
         if (
             request is not None
             and request["kind"] not in TEACHING_REQUESTS
-            and request["kind"] not in ("runtime.stop", "runtime.shutdown")
+            and request["kind"] not in ("runtime.stop", "runtime.shutdown", "runtime.cancelAction")
         ):
             write(runtime.handle(request))
             return
         queue = (
             controls
-            if request is None or request["kind"] in ("runtime.stop", "runtime.shutdown")
+            if request is None
+            or request["kind"] in ("runtime.stop", "runtime.shutdown", "runtime.cancelAction")
             else ordinary
         )
         try:
@@ -146,6 +173,64 @@ async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
                     }
                 )
                 return
+            if request["kind"] == "runtime.prepareInstruction":
+                prepared = await teaching.prepare_instruction(request)
+                write(
+                    {
+                        **{
+                            key: request[key]
+                            for key in (
+                                "protocolVersion",
+                                "requestId",
+                                "correlationId",
+                                "generationId",
+                            )
+                        },
+                        "kind": "runtime.instructionPrepared",
+                        "prepared": prepared,
+                    }
+                )
+                return
+            if request["kind"] == "runtime.executeInstruction":
+                run_id = await teaching.execute_instruction(request)
+                write(
+                    {
+                        **{
+                            key: request[key]
+                            for key in (
+                                "protocolVersion",
+                                "requestId",
+                                "correlationId",
+                                "generationId",
+                            )
+                        },
+                        "kind": "runtime.instructionAccepted",
+                        "runId": run_id,
+                    }
+                )
+                return
+            if request["kind"] == "runtime.actionDecision":
+                accepted = teaching.decide_action(
+                    request["runId"],
+                    request["confirmationId"],
+                    request["decision"] == "approve",
+                )
+                write(
+                    {
+                        **{
+                            key: request[key]
+                            for key in (
+                                "protocolVersion",
+                                "requestId",
+                                "correlationId",
+                                "generationId",
+                            )
+                        },
+                        "kind": "runtime.actionDecisionResult",
+                        "accepted": accepted,
+                    }
+                )
+                return
             kind = await teaching.handle(request)
             write(
                 {
@@ -161,13 +246,8 @@ async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
             raise
         except Exception:
             # Native errors can contain screen text, paths, or application titles.
-            write(
-                failure(
-                    request,
-                    "NOT_READY",
-                    "Observation or guidance is unavailable. Retry explicitly.",
-                )
-            )
+            code, message = safe_failure_details(request["kind"])
+            write(failure(request, code, message))
 
     threading.Thread(target=read, daemon=True, name="tro-stdin").start()
     control_wait = asyncio.create_task(controls.get())
@@ -197,6 +277,25 @@ async def serve_async(source: BinaryIO, destination: BinaryIO) -> int:
                     write(failure(queued, "NOT_READY", "Request cancelled by stop."))
                 if request is None:
                     break
+                if request["kind"] == "runtime.cancelAction":
+                    cancelled = await teaching.cancel_action(request["runId"])
+                    write(
+                        {
+                            **{
+                                key: request[key]
+                                for key in (
+                                    "protocolVersion",
+                                    "requestId",
+                                    "correlationId",
+                                    "generationId",
+                                )
+                            },
+                            "kind": "runtime.actionCancelResult",
+                            "cancelled": cancelled,
+                        }
+                    )
+                    control_wait = asyncio.create_task(controls.get())
+                    continue
                 write(runtime.handle(request))
                 await asyncio.wait_for(teaching.close(), 2)
                 control_wait = asyncio.create_task(controls.get())

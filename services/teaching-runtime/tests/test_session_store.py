@@ -45,3 +45,24 @@ def test_reopen_labels_unfinished_check_without_inventing_success(tmp_path):
     store = SessionStore(tmp_path, account)
     assert [row["kind"] for row in store.read(session)] == ["check_started", "check_interrupted"]
     store.close()
+
+
+def test_action_evidence_is_metadata_only(tmp_path):
+    account, session = str(uuid4()), str(uuid4())
+    store = SessionStore(tmp_path, account)
+    try:
+        assert store.append(
+            str(uuid4()),
+            session,
+            "action_outcome",
+            {"run_id": str(uuid4()), "outcome": "completed"},
+        )
+        with pytest.raises(ValueError):
+            store.append(
+                str(uuid4()),
+                session,
+                "action_outcome",
+                {"transcript": "private"},
+            )
+    finally:
+        store.close()

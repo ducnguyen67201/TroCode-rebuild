@@ -42,7 +42,7 @@ class Runtime:
                 **reply,
                 "kind": "runtime.ready",
                 "schemaDigest": DIGEST,
-                "capabilities": ["diagnostic"],
+                "capabilities": ["diagnostic", "selected_window_actions"],
             }
         if self.generation is None or self.generation != request["generationId"]:
             return error("NOT_READY", "Initialize the current runtime first.")

@@ -19,6 +19,12 @@
     "allow-account-select",
     "allow-teaching-request",
     "allow-proof-connect",
-    "allow-observation-permissions"
+    "allow-observation-permissions",
+    "allow-voice-status",
+    "allow-voice-enable",
+    "allow-voice-disable",
+    "allow-voice-execute-text",
+    "allow-voice-cancel",
+    "allow-voice-decide"
   ]
 }

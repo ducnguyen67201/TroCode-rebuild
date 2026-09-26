@@ -6,6 +6,7 @@ import type {
 } from '@tro/contracts';
 import type { AuthClient } from './auth-client';
 import type { DesktopClient } from './desktop-client';
+import { createPreviewVoice } from './preview-voice';
 
 export type PreviewAuthScenario =
   | 'signedOut'
@@ -101,6 +102,7 @@ export function createPreviewClient(
         );
       },
     },
+    voice: createPreviewVoice(),
     teaching: createPreviewTeaching(),
     status: async () => status,
     start: () => change('running'),
