@@ -94,16 +94,6 @@ export function TeachingPanel({ client }: { client: DesktopClient }) {
   return (
     <section className="teaching-panel" aria-label="Visual teaching">
       <h2>See where. Try it yourself.</h2>
-      <button
-        onClick={() => {
-          void teaching
-            .permissions()
-            .then(setError)
-            .catch(() => setError('Permission check unavailable.'));
-        }}
-      >
-        Observation permissions
-      </button>
       <p>
         Tro shows visual guidance. You perform every click, drag, keystroke and
         scroll.

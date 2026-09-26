@@ -1,0 +1,9 @@
+{
+  "identifier": "permission-guide",
+  "description": "Read-only state for the click-through native settings guide.",
+  "windows": ["permission-settings-guide"],
+  "permissions": [
+    "core:default",
+    "allow-permission-settings-guide-current"
+  ]
+}

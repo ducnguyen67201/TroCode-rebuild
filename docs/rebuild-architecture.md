@@ -1025,3 +1025,37 @@ validator make the next acceptance run reproducible. See
 [reliable lesson architecture](architecture/reliable-lesson.md).
 These source changes do not close P1/P2: real-model lesson trials, installed worker
 permission attribution, Windows and display/latency acceptance remain pending.
+
+### Native permission onboarding decision — 2026-09-26
+
+The first authenticated desktop run includes a device permission checkup, with the
+same checkup available later from Settings. Screen observation is required for the
+screen-aware teaching journey. On macOS this covers Screen Recording and
+Accessibility; on Windows it reports supported/unknown capability honestly and
+defers actual selected-window proof to observation instead of presenting a macOS-like
+permission claim. Microphone access is optional and may be skipped because C09 keeps
+the complete text/button journey available with the microphone disabled. Camera
+access is not requested or declared in this milestone.
+
+The checkup uses a local teaching-pointer treatment to point at the next control
+inside Tro. After an explicit learner click, the native host may open the exact,
+allowlisted operating-system settings destination for that permission: Screen &
+System Audio Recording, Accessibility or Microphone on macOS, and Microphone on
+Windows. A separate nonactivating, click-through Tro guide may remain above that
+settings page to explain the current path, toggle, + button and Applications → Tro.app
+add/drag fallback. It uses fixed instructional placement rather than claiming dynamic
+knowledge of OS control geometry. When the native host can read the public bounds of
+the macOS System Settings window, it places that fixed guide beside the permission
+app list and points back toward the list; it does not identify or target an individual
+OS control. The in-app pointer disappears after this handoff. Tro never drives the real pointer, clicks, toggles,
+drags, drops or draws over an operating-system consent prompt; the learner performs
+every settings action. Windows screen observation continues to use its secure picker
+at Observe time rather than presenting a macOS-like permission page.
+
+Permission prompts or settings launches occur only after an explicit learner click;
+denied or revoked access produces a fresh recheck and an explicit relaunch state where
+the platform requires it. The microphone readiness probe discards samples in memory
+and does not create an audio or video recording. Packaged Windows x64 and macOS arm64
+acceptance must cover first run, exact-route opening, denial, recovery, revocation,
+relaunch, the microphone-skipped silent path, the guide's click-through behavior, and
+zero injected external input.

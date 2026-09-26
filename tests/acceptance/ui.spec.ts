@@ -176,3 +176,60 @@ test('auth layouts remain within narrow and desktop viewports', async ({
 
   expect(errors).toEqual([]);
 });
+
+test('permission onboarding scenarios stay truthful and viewport-safe', async ({
+  page,
+}) => {
+  const cases = [
+    ['fresh', 'Open Screen Recording settings'],
+    ['screenDenied', 'Open Screen Recording settings'],
+    ['relaunchRequired', 'Relaunch Tro'],
+    ['microphoneUnavailable', 'Use text instead'],
+    ['windowsMicrophoneDenied', 'Open Microphone settings'],
+    ['ready', 'Continue to Learn'],
+  ] as const;
+
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 1280, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const [scenario, action] of cases) {
+      await page.goto(`/?auth=authenticated&permissions=${scenario}`);
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      await expect(page.getByRole('button', { name: action })).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true);
+    }
+  }
+});
+
+test('macOS permission recovery advances through exact settings destinations', async ({
+  page,
+}) => {
+  await page.goto('/?auth=authenticated&permissions=fresh');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+
+  await page
+    .getByRole('button', { name: 'Open Screen Recording settings' })
+    .click();
+  await expect(
+    page.getByText(/Drag Tro\.app from Applications into the app list/),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'I changed it — recheck' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Open Accessibility settings' }),
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Open Accessibility settings' })
+    .click();
+  await page.getByRole('button', { name: 'I changed it — recheck' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Check microphone' }),
+  ).toBeVisible();
+});

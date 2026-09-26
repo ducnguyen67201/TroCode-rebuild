@@ -35,12 +35,16 @@ zeroize = "=1.8.2"
 cpal = { version = "=0.18.2", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+block2 = "=0.6.2"
+core-foundation = "=0.10.1"
 core-foundation-sys = "=0.8.7"
 core-graphics = "=0.25.0"
+objc2-av-foundation = { version = "=0.3.2", features = ["AVCaptureDevice", "AVMediaFormat", "block2"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows-sys = { version = "=0.60.2", features = ["Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
 rdev = "=0.5.3"
+windows = { version = "=0.61.3", features = ["Graphics_Capture"] }
+windows-sys = { version = "=0.60.2", features = ["Win32_Foundation", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
 [dev-dependencies]
 tempfile = "=3.23.0"
 [[bin]]

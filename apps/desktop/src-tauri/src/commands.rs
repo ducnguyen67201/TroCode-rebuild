@@ -21,6 +21,16 @@ fn require_main(window: &tauri::WebviewWindow) -> Result<(), WorkerError> {
     }
 }
 
+#[tauri::command]
+pub fn app_relaunch(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+) -> Result<(), WorkerError> {
+    require_main(&window)?;
+    app.request_restart();
+    Ok(())
+}
+
 async fn require_workspace(auth: &AuthManager) -> Result<(), WorkerError> {
     auth.require_workspace_access().await
 }
