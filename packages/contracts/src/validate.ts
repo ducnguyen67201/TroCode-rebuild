@@ -4,6 +4,7 @@ import statusSchema from '../schema/status.schema.json';
 import authSchema from '../schema/auth.schema.json';
 import workspaceSchema from '../schema/workspace.schema.json';
 import voiceSchema from '../schema/voice.schema.json';
+import deviceReadinessSchema from '../schema/device-readiness.schema.json';
 import type { TeachingState, RuntimeMessage } from './generated';
 import type { RuntimeStatus } from './generated-status';
 import type { AuthStatus } from './generated-auth';
@@ -12,6 +13,10 @@ import type {
   WorkspaceMemberList,
 } from './generated-workspace';
 import type { VoiceStatus } from './generated-voice';
+import type {
+  DeviceReadiness,
+  PermissionSettingsGuide,
+} from './generated-device-readiness';
 const ajv = new Ajv({
   strict: true,
   allowUnionTypes: true,
@@ -27,6 +32,13 @@ const workspaceMemberValidator = ajv.compile<WorkspaceMember>({
   definitions: workspaceSchema.definitions,
 });
 const voiceStatusValidator = ajv.compile<VoiceStatus>(voiceSchema);
+const deviceReadinessValidator = ajv.compile<DeviceReadiness>(
+  deviceReadinessSchema,
+);
+const permissionSettingsGuideValidator = ajv.compile<PermissionSettingsGuide>({
+  $ref: '#/definitions/PermissionSettingsGuide',
+  definitions: deviceReadinessSchema.definitions,
+});
 export function parseMessage(value: unknown): RuntimeMessage {
   if (!messageValidator(value)) throw new Error('Invalid runtime message');
   return value;
@@ -38,6 +50,20 @@ export function parseStatus(value: unknown): RuntimeStatus {
 
 export function parseAuthStatus(value: unknown): AuthStatus {
   if (!authStatusValidator(value)) throw new Error('Invalid auth status');
+  return value;
+}
+
+export function parseDeviceReadiness(value: unknown): DeviceReadiness {
+  if (!deviceReadinessValidator(value))
+    throw new Error('Invalid device readiness');
+  return value;
+}
+
+export function parsePermissionSettingsGuide(
+  value: unknown,
+): PermissionSettingsGuide {
+  if (!permissionSettingsGuideValidator(value))
+    throw new Error('Invalid permission settings guide');
   return value;
 }
 

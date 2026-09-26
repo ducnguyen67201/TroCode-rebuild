@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-device-permission-request"
+description = "Enables the device_permission_request command without any pre-configured scope."
+commands.allow = ["device_permission_request"]
+
+[[permission]]
+identifier = "deny-device-permission-request"
+description = "Denies the device_permission_request command without any pre-configured scope."
+commands.deny = ["device_permission_request"]

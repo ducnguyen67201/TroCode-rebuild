@@ -1,459 +1,152 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "NativeProofEvidence",
-  "oneOf": [
-    {
-      "title": "NativeProofEvidence",
+  "definitions": {
+    "Result": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "commit",
-        "os",
-        "arch",
-        "installerSha256",
-        "signing",
-        "tester",
-        "observedAt",
-        "checks"
-      ],
+      "required": ["status", "reason"],
       "properties": {
-        "commit": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{40}$"
-        },
-        "os": {
-          "type": "string",
-          "minLength": 1
-        },
-        "arch": {
-          "enum": ["arm64", "x64"]
-        },
-        "installerSha256": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "signing": {
-          "enum": ["unsigned", "ad-hoc", "signed", "notarized"]
-        },
-        "tester": {
-          "type": "string",
-          "minLength": 1
-        },
-        "observedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
+        "status": { "enum": ["pass", "fail", "not_run"] },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "Timings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["localTransition", "stop", "model"],
+      "properties": {
+        "localTransition": { "$ref": "#/definitions/TimingSamples" },
+        "stop": { "$ref": "#/definitions/TimingSamples" },
+        "model": { "$ref": "#/definitions/TimingSamples" }
+      }
+    },
+    "TimingSamples": {
+      "type": "array",
+      "maxItems": 200,
+      "items": { "type": "number", "minimum": 0, "maximum": 3600000 }
+    }
+  },
+  "oneOf": [
+    {
+      "title": "NativeProofEvidenceV1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "os", "arch", "installerSha256", "signing", "tester", "observedAt", "checks"],
+      "properties": {
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "os": { "type": "string", "minLength": 1 },
+        "arch": { "enum": ["arm64", "x64"] },
+        "installerSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "signing": { "enum": ["unsigned", "ad-hoc", "signed", "notarized"] },
+        "tester": { "type": "string", "minLength": 1 },
+        "observedAt": { "type": "string", "format": "date-time" },
         "checks": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "cleanInstall",
-            "permissionAttribution",
-            "clickThrough",
-            "allGesturesManual",
-            "zeroInjectedInput",
-            "freshChecks",
-            "stopDuringWork",
-            "accountIsolation",
-            "mixedDpi",
-            "realModel"
-          ],
+          "required": ["cleanInstall", "permissionAttribution", "clickThrough", "allGesturesManual", "zeroInjectedInput", "freshChecks", "stopDuringWork", "accountIsolation", "mixedDpi", "realModel"],
           "properties": {
-            "cleanInstall": {
-              "type": "boolean"
-            },
-            "permissionAttribution": {
-              "type": "boolean"
-            },
-            "clickThrough": {
-              "type": "boolean"
-            },
-            "allGesturesManual": {
-              "type": "boolean"
-            },
-            "zeroInjectedInput": {
-              "type": "boolean"
-            },
-            "freshChecks": {
-              "type": "boolean"
-            },
-            "stopDuringWork": {
-              "type": "boolean"
-            },
-            "accountIsolation": {
-              "type": "boolean"
-            },
-            "mixedDpi": {
-              "type": "boolean"
-            },
-            "realModel": {
-              "type": "boolean"
-            }
+            "cleanInstall": { "type": "boolean" },
+            "permissionAttribution": { "type": "boolean" },
+            "clickThrough": { "type": "boolean" },
+            "allGesturesManual": { "type": "boolean" },
+            "zeroInjectedInput": { "type": "boolean" },
+            "freshChecks": { "type": "boolean" },
+            "stopDuringWork": { "type": "boolean" },
+            "accountIsolation": { "type": "boolean" },
+            "mixedDpi": { "type": "boolean" },
+            "realModel": { "type": "boolean" }
           }
         }
       }
     },
     {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "NativeProofEvidence",
+      "title": "NativeProofEvidenceV2",
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "commit",
-        "os",
-        "arch",
-        "installerSha256",
-        "signing",
-        "tester",
-        "observedAt",
-        "checks",
-        "version",
-        "timings"
-      ],
+      "required": ["version", "commit", "os", "arch", "installerSha256", "signing", "tester", "observedAt", "checks", "timings"],
       "properties": {
-        "commit": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{40}$"
-        },
-        "os": {
-          "type": "string",
-          "minLength": 1
-        },
-        "arch": {
-          "enum": ["arm64", "x64"]
-        },
-        "installerSha256": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "signing": {
-          "enum": ["unsigned", "ad-hoc", "signed", "notarized"]
-        },
-        "tester": {
-          "type": "string",
-          "minLength": 1
-        },
-        "observedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
+        "version": { "const": 2 },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "os": { "type": "string", "minLength": 1 },
+        "arch": { "enum": ["arm64", "x64"] },
+        "installerSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "signing": { "enum": ["unsigned", "ad-hoc", "signed", "notarized"] },
+        "tester": { "type": "string", "minLength": 1 },
+        "observedAt": { "type": "string", "format": "date-time" },
         "checks": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "cleanInstall",
-            "permissionAttribution",
-            "clickThrough",
-            "allGesturesManual",
-            "zeroInjectedInput",
-            "freshChecks",
-            "stopDuringWork",
-            "accountIsolation",
-            "mixedDpi",
-            "realModel",
-            "lessonThreeTrials",
-            "canvasProbe",
-            "nativeApp",
-            "permissionRevocation",
-            "replanRecovery",
-            "windowChanges",
-            "noOrphanWorker"
-          ],
+          "required": ["cleanInstall", "permissionAttribution", "clickThrough", "allGesturesManual", "zeroInjectedInput", "freshChecks", "stopDuringWork", "accountIsolation", "mixedDpi", "realModel", "lessonThreeTrials", "canvasProbe", "nativeApp", "permissionRevocation", "replanRecovery", "windowChanges", "noOrphanWorker"],
           "properties": {
-            "cleanInstall": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "permissionAttribution": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "clickThrough": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "allGesturesManual": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "zeroInjectedInput": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "freshChecks": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "stopDuringWork": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "accountIsolation": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "mixedDpi": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "realModel": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "lessonThreeTrials": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "canvasProbe": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "nativeApp": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "permissionRevocation": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "replanRecovery": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "windowChanges": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            },
-            "noOrphanWorker": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["status", "reason"],
-              "properties": {
-                "status": {
-                  "enum": ["pass", "fail", "not_run"]
-                },
-                "reason": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 500
-                }
-              }
-            }
+            "cleanInstall": { "$ref": "#/definitions/Result" },
+            "permissionAttribution": { "$ref": "#/definitions/Result" },
+            "clickThrough": { "$ref": "#/definitions/Result" },
+            "allGesturesManual": { "$ref": "#/definitions/Result" },
+            "zeroInjectedInput": { "$ref": "#/definitions/Result" },
+            "freshChecks": { "$ref": "#/definitions/Result" },
+            "stopDuringWork": { "$ref": "#/definitions/Result" },
+            "accountIsolation": { "$ref": "#/definitions/Result" },
+            "mixedDpi": { "$ref": "#/definitions/Result" },
+            "realModel": { "$ref": "#/definitions/Result" },
+            "lessonThreeTrials": { "$ref": "#/definitions/Result" },
+            "canvasProbe": { "$ref": "#/definitions/Result" },
+            "nativeApp": { "$ref": "#/definitions/Result" },
+            "permissionRevocation": { "$ref": "#/definitions/Result" },
+            "replanRecovery": { "$ref": "#/definitions/Result" },
+            "windowChanges": { "$ref": "#/definitions/Result" },
+            "noOrphanWorker": { "$ref": "#/definitions/Result" }
           }
         },
-        "version": {
-          "const": 2
-        },
-        "timings": {
+        "timings": { "$ref": "#/definitions/Timings" }
+      }
+    },
+    {
+      "title": "NativeProofEvidenceV3",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit", "os", "arch", "installerSha256", "signing", "tester", "observedAt", "checks", "timings"],
+      "properties": {
+        "version": { "const": 3 },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "os": { "type": "string", "minLength": 1 },
+        "arch": { "enum": ["arm64", "x64"] },
+        "installerSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "signing": { "enum": ["unsigned", "ad-hoc", "signed", "notarized"] },
+        "tester": { "type": "string", "minLength": 1 },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "checks": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["localTransition", "stop", "model"],
+          "required": ["cleanInstall", "permissionAttribution", "clickThrough", "allGesturesManual", "zeroInjectedInput", "freshChecks", "stopDuringWork", "accountIsolation", "mixedDpi", "realModel", "lessonThreeTrials", "canvasProbe", "nativeApp", "permissionRevocation", "replanRecovery", "windowChanges", "noOrphanWorker", "firstRunOnboarding", "screenDeniedRecovery", "permissionRelaunch", "microphoneGrantedOrProbed", "microphoneSkippedSilentPath", "noCameraRequest", "noRetainedMedia"],
           "properties": {
-            "localTransition": {
-              "type": "array",
-              "maxItems": 200,
-              "items": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 3600000
-              }
-            },
-            "stop": {
-              "type": "array",
-              "maxItems": 200,
-              "items": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 3600000
-              }
-            },
-            "model": {
-              "type": "array",
-              "maxItems": 200,
-              "items": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 3600000
-              }
-            }
+            "cleanInstall": { "$ref": "#/definitions/Result" },
+            "permissionAttribution": { "$ref": "#/definitions/Result" },
+            "clickThrough": { "$ref": "#/definitions/Result" },
+            "allGesturesManual": { "$ref": "#/definitions/Result" },
+            "zeroInjectedInput": { "$ref": "#/definitions/Result" },
+            "freshChecks": { "$ref": "#/definitions/Result" },
+            "stopDuringWork": { "$ref": "#/definitions/Result" },
+            "accountIsolation": { "$ref": "#/definitions/Result" },
+            "mixedDpi": { "$ref": "#/definitions/Result" },
+            "realModel": { "$ref": "#/definitions/Result" },
+            "lessonThreeTrials": { "$ref": "#/definitions/Result" },
+            "canvasProbe": { "$ref": "#/definitions/Result" },
+            "nativeApp": { "$ref": "#/definitions/Result" },
+            "permissionRevocation": { "$ref": "#/definitions/Result" },
+            "replanRecovery": { "$ref": "#/definitions/Result" },
+            "windowChanges": { "$ref": "#/definitions/Result" },
+            "noOrphanWorker": { "$ref": "#/definitions/Result" },
+            "firstRunOnboarding": { "$ref": "#/definitions/Result" },
+            "screenDeniedRecovery": { "$ref": "#/definitions/Result" },
+            "permissionRelaunch": { "$ref": "#/definitions/Result" },
+            "microphoneGrantedOrProbed": { "$ref": "#/definitions/Result" },
+            "microphoneSkippedSilentPath": { "$ref": "#/definitions/Result" },
+            "noCameraRequest": { "$ref": "#/definitions/Result" },
+            "noRetainedMedia": { "$ref": "#/definitions/Result" }
           }
-        }
+        },
+        "timings": { "$ref": "#/definitions/Timings" }
       }
     }
   ]

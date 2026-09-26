@@ -10,6 +10,8 @@ pub mod modifier_chord;
 #[cfg(feature = "desktop")]
 mod overlay;
 #[cfg(feature = "desktop")]
+mod permission_guide;
+#[cfg(feature = "desktop")]
 mod permissions;
 pub mod voice;
 pub mod worker;
@@ -27,13 +29,16 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().with_handler(|app, _, event| {
             if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
                 overlay::hide(app);
+                permission_guide::hide(app);
                 let manager=app.state::<Arc<manager::RuntimeManager>>().inner().clone();
                 let voice=app.state::<Arc<voice::VoiceManager>>().inner().clone();
                 tauri::async_runtime::spawn(async move { voice.cancel(Some(&manager)).await; manager.stop().await; });
             }
         }).build())
         .manage(overlay::OverlayState::default())
+        .manage(permission_guide::PermissionGuideState::default())
         .invoke_handler(tauri::generate_handler![
+            commands::app_relaunch,
             commands::auth_status,
             commands::auth_sign_in_google,
             commands::auth_retry,
@@ -56,7 +61,10 @@ pub fn run() {
             commands::voice_cancel,
             commands::voice_decide,
             overlay::overlay_current,
-            permissions::observation_permissions
+            permission_guide::permission_settings_guide_current,
+            permissions::device_readiness,
+            permissions::device_permission_request,
+            permissions::device_permission_settings
         ])
         .setup(move |app| {
             let program=if cfg!(debug_assertions) { config::development_program()? }
@@ -72,6 +80,7 @@ pub fn run() {
                 .map_err(std::io::Error::other)?);
             app.manage(listener.clone());
             overlay::prepare(app.handle())?;
+            permission_guide::prepare(app.handle())?;
             use tauri_plugin_global_shortcut::GlobalShortcutExt;
             app.global_shortcut().register("CommandOrControl+Shift+Escape")
                 .map_err(|_| "Emergency Stop shortcut is unavailable; resolve the shortcut conflict before starting Tro.")?;
@@ -138,6 +147,7 @@ pub fn run() {
                     let should_arm = auto_arm.update(authenticated);
                     if !authenticated {
                         overlay::hide(&handle);
+                        permission_guide::hide(&handle);
                         let _ = handle.state::<Arc<modifier_chord::ModifierListener>>().set_enabled(false);
                         let voice = handle.state::<Arc<voice::VoiceManager>>().inner().clone();
                         let runtime = handle.state::<Arc<manager::RuntimeManager>>().inner().clone();
@@ -169,6 +179,12 @@ pub fn run() {
     let cleanup_complete = Arc::new(std::sync::atomic::AtomicBool::new(false));
     app.run(move |handle, event| {
         use std::sync::atomic::Ordering;
+        if let tauri::RunEvent::WindowEvent { label, event, .. } = &event
+            && label == "main"
+            && let tauri::WindowEvent::Focused(focused) = event
+        {
+            permission_guide::main_focus_changed(handle, *focused);
+        }
         if let tauri::RunEvent::ExitRequested { api, .. } = event {
             if cleanup_complete.load(Ordering::SeqCst) {
                 return;

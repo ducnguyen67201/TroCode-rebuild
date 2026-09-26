@@ -1,6 +1,7 @@
 import { createPreviewTeaching } from './preview-teaching';
 import type {
   AuthStatus,
+  DeviceReadiness,
   RuntimeStatus,
   WorkspaceMember,
 } from '@tro/contracts';
@@ -17,9 +18,18 @@ export type PreviewAuthScenario =
   | 'offline'
   | 'error';
 
+export type PreviewPermissionScenario =
+  | 'fresh'
+  | 'ready'
+  | 'screenDenied'
+  | 'relaunchRequired'
+  | 'microphoneUnavailable'
+  | 'windowsMicrophoneDenied';
+
 interface PreviewClientOptions {
   authScenario?: PreviewAuthScenario;
   workspaceRole?: PreviewWorkspaceRole;
+  permissionScenario?: PreviewPermissionScenario;
 }
 
 export type PreviewWorkspaceRole = 'owner' | 'teacher' | 'student';
@@ -55,6 +65,9 @@ export function createPreviewClient(
     message: 'Ready to preview a diagnostic session.',
   };
   const listeners = new Set<(value: RuntimeStatus) => void>();
+  let readiness = previewReadiness(options.permissionScenario ?? 'ready');
+  let pendingSettingsTarget:
+    'screenCapture' | 'accessibility' | 'microphone' | null = null;
   const auth = createPreviewAuth(
     options.authScenario ?? 'signedOut',
     workspace,
@@ -103,6 +116,57 @@ export function createPreviewClient(
       },
     },
     voice: createPreviewVoice(),
+    device: {
+      check: async () => {
+        if (pendingSettingsTarget) {
+          const target = pendingSettingsTarget;
+          pendingSettingsTarget = null;
+          if (target === 'screenCapture') {
+            readiness = {
+              ...readiness,
+              screenCapture: readyCapability('Screen Recording is ready.'),
+            };
+          } else if (target === 'accessibility') {
+            readiness = {
+              ...readiness,
+              accessibility: readyCapability('Accessibility is ready.'),
+            };
+          } else {
+            readiness = {
+              ...readiness,
+              microphone: readyCapability(
+                'Microphone is ready. This preview retained no audio.',
+                false,
+              ),
+            };
+          }
+        }
+        return readiness;
+      },
+      request: async (kind) => {
+        await previewPause();
+        if (
+          kind === 'microphone' &&
+          options.permissionScenario !== 'microphoneUnavailable'
+        ) {
+          readiness = {
+            ...readiness,
+            microphone: readyCapability(
+              'Microphone is ready. This preview retained no audio.',
+              false,
+            ),
+          };
+        }
+        return readiness;
+      },
+      openSettings: async (target) => {
+        await previewPause();
+        pendingSettingsTarget = target;
+      },
+      relaunch: async () => {
+        readiness = { ...readiness, requiresRelaunch: false };
+      },
+    },
     teaching: createPreviewTeaching(),
     status: async () => status,
     start: () => change('running'),
@@ -116,6 +180,108 @@ export function createPreviewClient(
         listeners.delete(listener);
       };
     },
+  };
+}
+
+function previewReadiness(
+  scenario: PreviewPermissionScenario,
+): DeviceReadiness {
+  if (scenario === 'windowsMicrophoneDenied') {
+    return {
+      platform: 'windows',
+      requiresRelaunch: false,
+      message: 'Windows capture support is ready for preview.',
+      screenCapture: {
+        status: 'available',
+        required: true,
+        canRequest: false,
+        recovery: 'none',
+        message: 'The Windows picker will confirm the selected window.',
+      },
+      accessibility: {
+        status: 'available',
+        required: false,
+        canRequest: false,
+        recovery: 'none',
+        message: 'Windows does not require a separate Accessibility grant.',
+      },
+      microphone: {
+        status: 'denied',
+        required: false,
+        canRequest: false,
+        recovery: 'manualSettings',
+        message: 'Desktop app microphone access is off.',
+      },
+    };
+  }
+  const ready = scenario === 'ready' || scenario === 'microphoneUnavailable';
+  const denied = scenario === 'screenDenied';
+  const relaunch = scenario === 'relaunchRequired';
+  const screenReady = ready || relaunch;
+  return {
+    platform: 'macos',
+    requiresRelaunch: relaunch,
+    message: 'Preview device readiness is simulated.',
+    screenCapture: {
+      status: screenReady ? 'granted' : denied ? 'denied' : 'unknown',
+      required: true,
+      canRequest: !screenReady && !denied,
+      recovery: relaunch
+        ? 'relaunch'
+        : denied
+          ? 'manualSettings'
+          : screenReady
+            ? 'none'
+            : 'request',
+      message: relaunch
+        ? 'Screen Recording changed. Relaunch Tro before observing.'
+        : denied
+          ? 'Allow Tro in System Settings → Privacy & Security → Screen Recording.'
+          : screenReady
+            ? 'Screen Recording is ready.'
+            : 'Screen Recording has not been confirmed.',
+    },
+    accessibility: {
+      status: screenReady ? 'granted' : denied ? 'denied' : 'unknown',
+      required: true,
+      canRequest: !screenReady && !denied,
+      recovery: denied ? 'manualSettings' : screenReady ? 'none' : 'request',
+      message: screenReady
+        ? 'Accessibility is ready.'
+        : 'Allow Tro in System Settings → Privacy & Security → Accessibility.',
+    },
+    microphone: {
+      status:
+        scenario === 'microphoneUnavailable'
+          ? 'unavailable'
+          : ready
+            ? 'granted'
+            : 'notDetermined',
+      required: false,
+      canRequest: scenario !== 'microphoneUnavailable',
+      recovery:
+        scenario === 'microphoneUnavailable'
+          ? 'manualSettings'
+          : ready
+            ? 'none'
+            : 'request',
+      message:
+        scenario === 'microphoneUnavailable'
+          ? 'No microphone is available. Text remains available.'
+          : ready
+            ? 'Microphone is ready.'
+            : 'Microphone setup is optional.',
+    },
+  };
+}
+
+function readyCapability(message: string, required = true) {
+  return {
+    status: 'granted' as const,
+    required,
+    canRequest: false,
+    recovery: 'none' as const,
+    message,
   };
 }
 

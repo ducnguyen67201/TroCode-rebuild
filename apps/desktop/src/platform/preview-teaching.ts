@@ -93,8 +93,6 @@ export function createPreviewTeaching(): TeachingClient {
         'Simulation only: preview cannot observe external actions.';
       return publish();
     },
-    permissions: async () =>
-      'Preview uses simulated observations and makes no native permission requests.',
     connectProof: async () => {
       state = {
         ...state,

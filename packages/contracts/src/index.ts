@@ -17,9 +17,21 @@ export type {
   VoicePermissions,
   VoiceStatus,
 } from './generated-voice';
+export type {
+  CapabilityStatus,
+  DeviceCapability,
+  DevicePlatform,
+  DeviceReadiness,
+  PermissionRequestKind,
+  PermissionSettingsGuide,
+  PermissionSettingsTarget,
+  RecoveryAction,
+} from './generated-device-readiness';
 export {
   parseAuthStatus,
+  parseDeviceReadiness,
   parseMessage,
+  parsePermissionSettingsGuide,
   parseStatus,
   parseTeaching,
   parseVoiceStatus,

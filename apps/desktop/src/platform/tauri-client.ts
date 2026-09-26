@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import {
   parseAuthStatus,
+  parseDeviceReadiness,
   parseStatus,
   parseTeaching,
   parseWorkspaceMember,
@@ -58,22 +59,23 @@ export const tauriClient: DesktopClient = {
         }
       }),
   },
+  device: {
+    check: async () => parseDeviceReadiness(await invoke('device_readiness')),
+    request: async (kind) =>
+      parseDeviceReadiness(await invoke('device_permission_request', { kind })),
+    openSettings: async (target) => {
+      await invoke('device_permission_settings', { target });
+    },
+    relaunch: async () => {
+      await invoke('app_relaunch');
+    },
+  },
   teaching: {
     subscribe: (listener) =>
       listen('teaching-state', (event) =>
         listener(parseTeaching(event.payload)),
       ),
     planControl: (action) => teaching('planControl', { action }),
-    permissions: async () => {
-      const value = await invoke<{
-        screenCapture: boolean | null;
-        accessibility: boolean | null;
-        message: string;
-      }>('observation_permissions', { request: true });
-      if (typeof value.message !== 'string')
-        throw new Error('Invalid permission response');
-      return value.message;
-    },
     ask: (question, locale) => teaching('ask', { question, locale }),
     connectProof: async () => {
       await call('proof_connect');

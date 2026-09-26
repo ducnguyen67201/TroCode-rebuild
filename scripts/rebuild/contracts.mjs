@@ -41,6 +41,7 @@ try {
     ['auth', '-auth'],
     ['workspace', '-workspace'],
     ['voice', '-voice'],
+    ['device-readiness', '-device-readiness'],
   ]) {
     const source = join(
       root,
@@ -52,6 +53,7 @@ try {
       await compile(schema, schema.title, {
         bannerComment: '/* Generated. Do not edit. */',
         style: { singleQuote: true },
+        unreachableDefinitions: schemaName === 'device-readiness',
       }),
     );
     if (schemaName === 'voice') {

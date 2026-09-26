@@ -11,7 +11,7 @@ const schema = JSON.parse(
   ),
 );
 const fixture = () => ({
-  version: 2,
+  version: 3,
   commit: 'a'.repeat(40),
   os: 'macOS',
   arch: 'arm64',
@@ -20,7 +20,7 @@ const fixture = () => ({
   tester: 'fixture',
   observedAt: '2026-09-13T00:00:00Z',
   checks: Object.fromEntries(
-    schema.oneOf[1].properties.checks.required.map((name) => [
+    schema.oneOf[2].properties.checks.required.map((name) => [
       name,
       { status: 'pass', reason: 'Synthetic validator test only.' },
     ]),
@@ -54,4 +54,21 @@ test('rejects extra content and accepts historical evidence only as historical',
   );
   assert.deepEqual(assessEvidence(historic).valid, true);
   assert.deepEqual(assessEvidence(historic).accepted, false);
+  const versionTwo = fixture();
+  versionTwo.version = 2;
+  versionTwo.checks = Object.fromEntries(
+    schema.oneOf[1].properties.checks.required.map((name) => [
+      name,
+      { status: 'pass', reason: 'Historical validator fixture.' },
+    ]),
+  );
+  assert.equal(assessEvidence(versionTwo).valid, true);
+  assert.equal(assessEvidence(versionTwo).accepted, false);
+});
+
+test('rejects incomplete permission-onboarding evidence', () => {
+  const value = fixture();
+  delete value.checks.microphoneSkippedSilentPath;
+  assert.equal(assessEvidence(value).valid, false);
+  assert.equal(assessEvidence(value).accepted, false);
 });

@@ -6,6 +6,7 @@ import type { AuthenticatedContext } from './features/auth/AuthGate';
 import { WorkspaceAccessPanel } from './features/workspace/WorkspaceAccessPanel';
 import { AppSidebar, type AppSection } from './features/navigation/AppSidebar';
 import { VoiceControlPanel } from './features/voice/VoiceControlPanel';
+import { SettingsPanel } from './features/settings/SettingsPanel';
 
 export function App({
   client,
@@ -83,7 +84,11 @@ export function App({
           )}
 
           {section === 'settings' && (
-            <SettingsPanel session={session} workspaceName={workspace.name} />
+            <SettingsPanel
+              client={client}
+              session={session}
+              workspaceName={workspace.name}
+            />
           )}
 
           <footer>
@@ -92,55 +97,5 @@ export function App({
         </div>
       </section>
     </main>
-  );
-}
-
-function SettingsPanel({
-  session,
-  workspaceName,
-}: {
-  session: AuthenticatedContext;
-  workspaceName: string;
-}) {
-  const workspace = session.workspaces[0]!;
-  return (
-    <section className="settings-panel" aria-labelledby="settings-heading">
-      <div className="section-intro">
-        <p className="eyebrow">Account & access</p>
-        <h1 id="settings-heading">Settings</h1>
-        <p>Your profile and secure device session for this workspace.</p>
-      </div>
-
-      <div className="settings-grid">
-        <article>
-          <p className="settings-label">Profile</p>
-          <strong>{session.user.displayName}</strong>
-          <span>{session.user.email}</span>
-        </article>
-        <article>
-          <p className="settings-label">Workspace</p>
-          <strong>{workspaceName}</strong>
-          <span className="settings-role">{workspace.role}</span>
-        </article>
-      </div>
-
-      <div className="device-session">
-        <div>
-          <strong>Secure device session</strong>
-          <p>
-            Your sign-in stays on this device and is checked against current
-            workspace access.
-          </p>
-        </div>
-        <button
-          className="sign-out-button"
-          disabled={session.signingOut}
-          onClick={session.signOut}
-          type="button"
-        >
-          {session.signingOut ? 'Signing out…' : 'Sign out'}
-        </button>
-      </div>
-    </section>
   );
 }
