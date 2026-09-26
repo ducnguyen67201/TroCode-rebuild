@@ -48,14 +48,22 @@ try {
       `packages/contracts/schema/${schemaName}.schema.json`,
     );
     const schema = JSON.parse(await readFile(source, 'utf8'));
-    await output(
-      `packages/contracts/src/generated${suffix}.ts`,
-      await compile(schema, schema.title, {
-        bannerComment: '/* Generated. Do not edit. */',
-        style: { singleQuote: true },
-        unreachableDefinitions: schemaName === 'device-readiness',
-      }),
-    );
+    let typeScript = await compile(schema, schema.title, {
+      bannerComment: '/* Generated. Do not edit. */',
+      style: { singleQuote: true },
+      unreachableDefinitions: schemaName === 'device-readiness',
+    });
+    if (schemaName === 'voice') {
+      const language = schema.definitions?.TranscriptionLanguage;
+      if (!Array.isArray(language?.enum) || !language.enum.length)
+        throw new Error('Voice transcription languages must be a closed enum.');
+      if (!language.enum.includes(language.default))
+        throw new Error('Voice transcription language default must be valid.');
+      const values = language.enum.map((value) => `'${value}'`).join(', ');
+      typeScript += `\nexport const TRANSCRIPTION_LANGUAGES = [${values}] as const satisfies readonly TranscriptionLanguage[];\n`;
+      typeScript += `export const DEFAULT_TRANSCRIPTION_LANGUAGE: TranscriptionLanguage = '${language.default}';\n`;
+    }
+    await output(`packages/contracts/src/generated${suffix}.ts`, typeScript);
     if (schemaName === 'voice') {
       const rust = join(temporary, 'generated_voice.rs');
       run('cargo', [

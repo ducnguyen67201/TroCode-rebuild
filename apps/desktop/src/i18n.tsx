@@ -45,15 +45,27 @@ const english = {
   'app.team.title': 'Your workspace, your people.',
   'app.team.description':
     'Keep the roster intentional. Access begins only after Google verifies the exact email you add here.',
-  'settings.eyebrow': 'Account & access',
+  'settings.eyebrow': 'Account, voice & access',
   'settings.title': 'Settings',
   'settings.description':
-    'Your profile and secure device session for this workspace.',
+    'Your profile, voice preference, and secure device session for this workspace.',
   'settings.profile': 'Profile',
   'settings.workspace': 'Workspace',
   'settings.secureSession': 'Secure device session',
   'settings.secureSessionDescription':
     'Your sign-in stays on this device and is checked against current workspace access.',
+  'voiceLanguage.category': 'Voice',
+  'voiceLanguage.label': 'Transcription language',
+  'voiceLanguage.description':
+    'Choose the language you expect to speak. English and Vietnamese focus recognition; Auto detects the input language. Changes apply to your next voice instruction and do not translate it.',
+  'voiceLanguage.vietnamese': 'Vietnamese',
+  'voiceLanguage.english': 'English',
+  'voiceLanguage.auto': 'Auto',
+  'voiceLanguage.saving': 'Saving…',
+  'voiceLanguage.unavailable':
+    'Transcription language is unavailable. Try again.',
+  'voiceLanguage.saveError':
+    'Transcription language could not be saved. Try again.',
   'onboarding.boundaryError':
     'Tro could not verify device readiness. Check your connection to the desktop host and try again.',
   'onboarding.eyebrow': 'Device checkup',
@@ -378,15 +390,27 @@ const vietnamese: Record<TranslationKey, string> = {
   'app.team.title': 'Không gian của bạn, thành viên của bạn.',
   'app.team.description':
     'Quản lý danh sách thành viên có chủ đích. Quyền truy cập chỉ bắt đầu sau khi Google xác minh đúng email bạn thêm tại đây.',
-  'settings.eyebrow': 'Tài khoản và quyền truy cập',
+  'settings.eyebrow': 'Tài khoản, giọng nói và quyền truy cập',
   'settings.title': 'Cài đặt',
   'settings.description':
-    'Hồ sơ và phiên thiết bị bảo mật của bạn trong không gian làm việc này.',
+    'Hồ sơ, tùy chọn giọng nói và phiên thiết bị bảo mật của bạn trong không gian làm việc này.',
   'settings.profile': 'Hồ sơ',
   'settings.workspace': 'Không gian làm việc',
   'settings.secureSession': 'Phiên thiết bị bảo mật',
   'settings.secureSessionDescription':
     'Thông tin đăng nhập được giữ trên thiết bị này và được đối chiếu với quyền truy cập hiện tại.',
+  'voiceLanguage.category': 'Giọng nói',
+  'voiceLanguage.label': 'Ngôn ngữ nhận dạng giọng nói',
+  'voiceLanguage.description':
+    'Chọn ngôn ngữ bạn dự định nói. Tiếng Anh và tiếng Việt giúp tập trung nhận dạng; Tự động sẽ phát hiện ngôn ngữ đầu vào. Thay đổi áp dụng cho chỉ dẫn bằng giọng nói tiếp theo và không dịch nội dung đó.',
+  'voiceLanguage.vietnamese': 'Tiếng Việt',
+  'voiceLanguage.english': 'Tiếng Anh',
+  'voiceLanguage.auto': 'Tự động',
+  'voiceLanguage.saving': 'Đang lưu…',
+  'voiceLanguage.unavailable':
+    'Không thể tải ngôn ngữ nhận dạng giọng nói. Hãy thử lại.',
+  'voiceLanguage.saveError':
+    'Không thể lưu ngôn ngữ nhận dạng giọng nói. Hãy thử lại.',
   'onboarding.boundaryError':
     'Tro không thể xác minh trạng thái sẵn sàng của thiết bị. Hãy kiểm tra kết nối với ứng dụng máy tính rồi thử lại.',
   'onboarding.eyebrow': 'Kiểm tra thiết bị',

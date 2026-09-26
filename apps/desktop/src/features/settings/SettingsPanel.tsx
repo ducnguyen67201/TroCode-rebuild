@@ -2,6 +2,7 @@ import type { AuthenticatedContext } from '../auth/AuthGate';
 import type { DesktopClient } from '../../platform/desktop-client';
 import { PermissionCheckup } from '../onboarding/PermissionOnboarding';
 import { LanguageSelect, localeKey, useLanguage } from '../../i18n';
+import { VoiceLanguageSetting } from './VoiceLanguageSetting';
 
 export function SettingsPanel({
   client,
@@ -45,6 +46,8 @@ export function SettingsPanel({
         </div>
         <LanguageSelect compact />
       </div>
+
+      <VoiceLanguageSetting client={client.voice} />
 
       <div className="device-permissions-card">
         <PermissionCheckup client={client.device} compact />
