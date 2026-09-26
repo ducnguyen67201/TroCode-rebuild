@@ -176,6 +176,7 @@ describe('wire conformance', () => {
       targetTitle: null,
       message: 'Ready.',
       shortcut: 'Command+Control',
+      transcriptionLanguage: 'vi',
       permissions: {
         microphone: 'granted',
         keyboardMonitoring: 'granted',
@@ -186,6 +187,14 @@ describe('wire conformance', () => {
       actionsUsed: 0,
     };
     expect(parseVoiceStatus(value)).toEqual(value);
+    const missingLanguage: Record<string, unknown> = { ...value };
+    delete missingLanguage.transcriptionLanguage;
+    expect(() => parseVoiceStatus(missingLanguage)).toThrow(
+      'Invalid voice status',
+    );
+    expect(() =>
+      parseVoiceStatus({ ...value, transcriptionLanguage: 'fr' }),
+    ).toThrow('Invalid voice status');
     expect(() => parseVoiceStatus({ ...value, audio: 'bytes' })).toThrow(
       'Invalid voice status',
     );

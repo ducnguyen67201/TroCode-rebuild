@@ -1,9 +1,12 @@
-import type { VoiceStatus } from '@tro/contracts';
+import type { TranscriptionLanguage, VoiceStatus } from '@tro/contracts';
 
 export interface VoiceClient {
   status(): Promise<VoiceStatus>;
   enable(): Promise<VoiceStatus>;
   disable(): Promise<VoiceStatus>;
+  setTranscriptionLanguage(
+    language: TranscriptionLanguage,
+  ): Promise<VoiceStatus>;
   executeText(instruction: string): Promise<VoiceStatus>;
   cancel(): Promise<VoiceStatus>;
   decide(

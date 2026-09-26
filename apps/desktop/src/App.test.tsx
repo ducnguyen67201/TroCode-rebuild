@@ -53,6 +53,13 @@ it('keeps the active workspace visible and navigates owner tools', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy();
   expect(screen.getByText('ada@example.com')).toBeTruthy();
+  expect(
+    (
+      (await screen.findByLabelText(
+        'Transcription language',
+      )) as HTMLSelectElement
+    ).value,
+  ).toBe('vi');
   fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
   expect(signOut).toHaveBeenCalledOnce();
 
@@ -60,7 +67,7 @@ it('keeps the active workspace visible and navigates owner tools', async () => {
   expect(screen.getByRole('button', { name: 'Start session' })).toBeTruthy();
 });
 
-it('does not present owner-only Team navigation to a student', () => {
+it('does not present owner-only Team navigation to a student', async () => {
   render(
     <App
       client={createPreviewClient({ workspaceRole: 'student' })}
@@ -85,4 +92,6 @@ it('does not present owner-only Team navigation to a student', () => {
 
   expect(screen.queryByRole('button', { name: 'Team' })).toBeNull();
   expect(screen.getByRole('button', { name: 'Settings' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+  expect(await screen.findByLabelText('Transcription language')).toBeTruthy();
 });

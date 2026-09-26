@@ -13,6 +13,7 @@ export type {
   WorkspaceMemberList,
 } from './generated-workspace';
 export type {
+  TranscriptionLanguage,
   VoiceConfirmation,
   VoicePermissions,
   VoiceStatus,
@@ -27,6 +28,10 @@ export type {
   PermissionSettingsTarget,
   RecoveryAction,
 } from './generated-device-readiness';
+export {
+  DEFAULT_TRANSCRIPTION_LANGUAGE,
+  TRANSCRIPTION_LANGUAGES,
+} from './generated-voice';
 export {
   parseAuthStatus,
   parseDeviceReadiness,

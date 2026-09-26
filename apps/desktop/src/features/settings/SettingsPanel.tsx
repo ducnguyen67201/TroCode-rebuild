@@ -1,6 +1,7 @@
 import type { AuthenticatedContext } from '../auth/AuthGate';
 import type { DesktopClient } from '../../platform/desktop-client';
 import { PermissionCheckup } from '../onboarding/PermissionOnboarding';
+import { VoiceLanguageSetting } from './VoiceLanguageSetting';
 
 export function SettingsPanel({
   client,
@@ -15,9 +16,12 @@ export function SettingsPanel({
   return (
     <section className="settings-panel" aria-labelledby="settings-heading">
       <div className="section-intro">
-        <p className="eyebrow">Account &amp; access</p>
+        <p className="eyebrow">Account, voice &amp; access</p>
         <h1 id="settings-heading">Settings</h1>
-        <p>Your profile and secure device session for this workspace.</p>
+        <p>
+          Your profile, voice preference and secure device session for this
+          workspace.
+        </p>
       </div>
 
       <div className="settings-grid">
@@ -32,6 +36,8 @@ export function SettingsPanel({
           <span className="settings-role">{workspace.role}</span>
         </article>
       </div>
+
+      <VoiceLanguageSetting client={client.voice} />
 
       <div className="device-permissions-card">
         <PermissionCheckup client={client.device} compact />

@@ -638,6 +638,11 @@ agent action silently uploads arbitrary files or changes a final grade.
 - [ ] Capture memory-only audio and upload complete 1,250 ms WAV chunks with
       250 ms overlap through the fixed `gpt-transcribe` proxy. Merge in sequence;
       partial, failed, empty or incomplete transcription never dispatches.
+- [ ] Store a device-local transcription preference with exactly Auto, English
+      and Vietnamese. A fresh or invalid setting defaults to Vietnamese; Auto
+      omits language hints, while English/Vietnamese send `en`/`vi` for every
+      chunk in the capture-time snapshot. This guides recognition and does not
+      translate the instruction.
 - [ ] Dispatch the final transcript once to an expiring one-window preparation.
       Bound the ComputerTool run to 30 seconds, 12 actions and four model turns;
       revalidate the target before each mutation and require main-window approval
@@ -950,6 +955,17 @@ two requests in flight and deterministic ordered merging. This is an application
 tradeoff, not a claim that file transcription always beats realtime latency.
 P7-A/P8 acceptance must record actual EN/VI/noisy accuracy, billed duration,
 request count and reference-network latency on packaged macOS and Windows.
+The Settings surface exposes exactly Auto, English and Vietnamese for the next
+voice instruction. Rust persists the non-secret preference under the local app
+configuration and snapshots it when a chord-down capture is admitted, so every
+chunk in one utterance uses the same hint even if Settings changes mid-capture.
+The voice contract schema is the sole authority for the closed language codes
+and Vietnamese default; generated TypeScript and Rust bindings carry those
+values across the UI, native host and hosted proxy boundaries.
+Auto sends no `languages[]` field, English sends only `en`, and Vietnamese sends
+only `vi`; Vietnamese is the fresh-install and invalid-storage fallback. These
+are expected-input transcription hints, not translation or a guarantee of
+accuracy, and packaged acceptance must exercise all three choices.
 The bounded action loop uses the compiled `gpt-5.6-sol` model identifier; model
 policy is source-controlled and cannot be overridden by deployment environment.
 The native debug launcher alone permits the exact `http://127.0.0.1` model
